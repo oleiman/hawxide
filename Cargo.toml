@@ -1,0 +1,16 @@
+[package]
+name = "hawxide"
+version = "0.1.0"
+authors = ["Oren Leiman <oleiman3@gatech.edu>"]
+license = "GPL-3.0"
+description = "A command-line ray tracer based on https://raytracing.github.io/"
+readme = "README.md"
+homepage = "https://github.com/oleiman/hawxide"
+repository = "https://github.com/oleiman/hawxide"
+keywords = ["cli", "ray", "trace", "path", "weekend"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.8.5"
