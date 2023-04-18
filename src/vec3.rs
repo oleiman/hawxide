@@ -3,13 +3,23 @@
 use std::ops;
 use std::fmt;
 use std::assert;
+use std::io::Write;
 use crate::util::random::{random_double, random_double_in_range};
 
 
 #[derive(Copy, Clone)]
 pub struct Vec3(pub f64, pub f64, pub f64);
+
 pub type Point3 = Vec3;
+#[allow(non_snake_case)]
+pub const fn Point3(x: f64, y: f64, z: f64) -> Point3 {
+    return Vec3(x, y, z);
+}
 pub type Color = Vec3;
+#[allow(non_snake_case)]
+pub const fn Color(r: f64, g: f64, b: f64) -> Point3 {
+    return Vec3(r, g, b);
+}
 
 impl Vec3 {
     pub fn x(&self) -> &f64 { return &self.0; }
@@ -81,6 +91,7 @@ impl Vec3 {
     }
 
 }
+
 
 // Maybe dot should pass by value (implicity copy)?
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
@@ -297,5 +308,13 @@ impl fmt::Display for Vec3 {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({:.2}, {:.2}, {:.2})", self.0, self.1, self.2)
     }
+}
+
+pub fn write_color<W: Write>(col : &Color, writer: &mut W) {
+    writeln!(writer, "{} {} {}",
+        (255.999 * col.0) as i32,
+        (255.999 * col.1) as i32,
+        (255.999 * col.2) as i32
+    );
 }
 
