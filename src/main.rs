@@ -26,18 +26,14 @@ fn main() {
     const ASPECT_RATIO : f64 = 16.0 / 9.0;
     const IMAGE_WIDTH : i32 = 400;
     const IMAGE_HEIGHT : i32 = ((IMAGE_WIDTH as f64) / ASPECT_RATIO) as i32;
+    const SAMPLES_PER_PIX : i32 = 100;
 
     // Camera
 
     const VIEWPORT_HEIGHT : f64 = 2.0;
-    const VIEWPORT_WIDTH : f64 = ASPECT_RATIO * VIEWPORT_HEIGHT as f64;
     const FOCAL_LENGTH : f64 = 1.0;
 
-    const ORIGIN : Point3 = Point3(0., 0., 0.);
-    const HORIZONTAL : Vec3 = Vec3(VIEWPORT_WIDTH, 0., 0.);
-    const VERTICAL : Vec3 = Vec3(0., VIEWPORT_HEIGHT, 0.);
-    let lower_left : Point3 =
-        ORIGIN - (HORIZONTAL / 2) - (VERTICAL / 2) - Vec3(0., 0., FOCAL_LENGTH);
+    let cam = Camera::new(ASPECT_RATIO, VIEWPORT_HEIGHT, FOCAL_LENGTH);
 
     // Render
 
@@ -59,17 +55,19 @@ fn main() {
     writeln!(stdout, "255");
 
     for j in (0..IMAGE_HEIGHT).rev() {
-        // TODO(oren): write with flush?
         write!(stderr, "\rScanlines remaining: {} ", j);
+        stderr.flush();
         for i in 0..IMAGE_WIDTH {
-            let u : f64 = (i as f64) / ((IMAGE_WIDTH - 1) as f64);
-            let v : f64 = (j as f64) / ((IMAGE_HEIGHT - 1) as f64);
-            let r : Ray = Ray {
-                origin: ORIGIN,
-                dir: lower_left + (u * HORIZONTAL) + (v * VERTICAL) - ORIGIN,
-            };
-            let pixel_color : Color = ray_color(&r, &world);
-            write_color(&pixel_color, &mut stdout);
+            let mut pixel_color = Color(0., 0., 0.);
+            for s in 0..SAMPLES_PER_PIX {
+                let u : f64 =
+                    (i as f64 + random::random_double()) / ((IMAGE_WIDTH - 1) as f64);
+                let v : f64 =
+                    (j as f64 + random::random_double()) / ((IMAGE_HEIGHT - 1) as f64);
+                let r = cam.get_ray(u, v);
+                pixel_color += ray_color(&r, &world);
+            }
+            write_color(&mut stdout, &pixel_color, SAMPLES_PER_PIX);
         }
     }
 

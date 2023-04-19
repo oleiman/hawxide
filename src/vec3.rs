@@ -4,7 +4,10 @@ use std::ops;
 use std::fmt;
 use std::assert;
 use std::io::Write;
-use crate::util::random::{random_double, random_double_in_range};
+use crate::util::{
+    random::{random_double, random_double_in_range},
+    clamp
+};
 
 
 #[derive(Copy, Clone)]
@@ -22,9 +25,13 @@ pub const fn Color(r: f64, g: f64, b: f64) -> Point3 {
 }
 
 impl Vec3 {
-    pub fn x(&self) -> &f64 { return &self.0; }
-    pub fn y(&self) -> &f64 { return &self.1; }
-    pub fn z(&self) -> &f64 { return &self.2; }
+    pub fn x(&self) -> f64 { return self.0; }
+    pub fn y(&self) -> f64 { return self.1; }
+    pub fn z(&self) -> f64 { return self.2; }
+
+    pub fn r(&self) -> f64 { return self.0; }
+    pub fn g(&self) -> f64 { return self.1; }
+    pub fn b(&self) -> f64 { return self.2; }
 
     pub fn len(&self) -> f64 { return self.len_squared().sqrt(); }
     pub fn len_squared(&self) -> f64 {
@@ -310,11 +317,17 @@ impl fmt::Display for Vec3 {
     }
 }
 
-pub fn write_color<W: Write>(col : &Color, writer: &mut W) {
+pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i32) {
+    // Divide the color by the number of samples
+
+    let r = col.r() / samples_per_pixel as f64;
+    let g = col.g() / samples_per_pixel as f64;
+    let b = col.b() / samples_per_pixel as f64;
+
     writeln!(writer, "{} {} {}",
-        (255.999 * col.0) as i32,
-        (255.999 * col.1) as i32,
-        (255.999 * col.2) as i32
+        (255.999 * r.clamp(0., 0.999)) as i32,
+        (255.999 * g.clamp(0., 0.999)) as i32,
+        (255.999 * b.clamp(0., 0.999)) as i32
     );
 }
 
