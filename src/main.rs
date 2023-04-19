@@ -13,9 +13,16 @@ fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
     }
     match world.hit(r, 0.001, INFINITY) {
         Some(hr) => {
-            let target = hr.p + hr.norm + Vec3::random_unit_vector();
-            // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
-            0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
+            // let target = hr.p + hr.norm + Vec3::random_unit_vector();
+            // // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
+            // 0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
+            match hr.mat.scatter(r, &hr) {
+                Some((attenuation, scattered)) => {
+                    attenuation * ray_color(&scattered, world, depth-1)
+                }
+                _ => Color(0., 0., 0.)
+            }
+
         },
         _ => {
             let unit_dir : Vec3 = r.dir.unit_vector();
@@ -47,14 +54,52 @@ fn main() {
     let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
 
+    static MATERIAL_GROUND : Lambertian = Lambertian{albedo: Color(0.8, 0.8, 0.0)};
+    static MATERIAL_CENTER : Lambertian = Lambertian{albedo: Color(0.1, 0.2, 0.5)};
+    // static MATERIAL_LEFT : Metal = Metal{
+    //     albedo: Color(0.8, 0.8, 0.8),
+    //     fuzz: 0.3,
+    // };
+
+    // static MATERIAL_CENTER : Dielectric = Dielectric{ir: 1.5};
+    static MATERIAL_LEFT : Dielectric = Dielectric{ir: 1.5};
+    static MATERIAL_RIGHT : Metal = Metal{
+        albedo: Color(0.8, 0.6, 0.2),
+        fuzz: 0.0,
+    };
+
     let mut world = HittableList::new();
-    world.add(Box::new(Sphere{
-        center: Point3(0., 0., -1.),
-        radius: 0.5,
-    }));
+
     world.add(Box::new(Sphere{
         center: Point3(0., -100.5, -1.),
         radius: 100.,
+        mat: &MATERIAL_GROUND,
+    }));
+
+    world.add(Box::new(Sphere{
+        center: Point3(0., 0., -1.),
+        radius: 0.5,
+        mat: &MATERIAL_CENTER,
+    }));
+
+    world.add(Box::new(Sphere{
+        center: Point3(-1.0, 0.0, -1.0),
+        radius: 0.5,
+        mat: &MATERIAL_LEFT,
+    }));
+
+    // Negative radius keeps same geometry but the surface normal is flipped.
+    // this results in a sort of glass bubble thing
+    world.add(Box::new(Sphere{
+        center: Point3(-1.0, 0.0, -1.0),
+        radius: -0.4,
+        mat: &MATERIAL_LEFT,
+    }));
+
+    world.add(Box::new(Sphere{
+        center: Point3(1.0, 0.0, -1.0),
+        radius: 0.5,
+        mat: &MATERIAL_RIGHT,
     }));
 
     writeln!(stdout, "P3");

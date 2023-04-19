@@ -1,15 +1,18 @@
 use crate::vec3::{Vec3, Point3, dot};
 use crate::ray::Ray;
+use crate::material::Material;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub p: Point3,
     pub norm: Vec3,
+    pub mat: &'a (dyn Material + 'static),
     pub t: f64,
-    front_face: bool,
+    pub front_face: bool,
 }
 
-impl HitRecord {
-    pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3, t: f64) -> HitRecord {
+impl<'a> HitRecord<'a> {
+    pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3, t: f64, mat: &'a (dyn Material + 'static))
+               -> HitRecord<'a> {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
         // ray, thereby telling us whether the ray is inside or outside
@@ -25,6 +28,7 @@ impl HitRecord {
                 true => *out_norm,
                 false => -out_norm,
             },
+            mat: mat,
             t: t,
             front_face: front_face,
         }

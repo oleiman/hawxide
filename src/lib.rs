@@ -5,6 +5,7 @@ pub mod hit;
 pub mod sphere;
 pub mod hittable_list;
 pub mod camera;
+pub mod material;
 
 pub use vec3::Vec3;
 pub use vec3::Color;
@@ -17,5 +18,6 @@ pub use hit::Hittable;
 pub use camera::Camera;
 pub use util::{INFINITY};
 pub use util::random;
+pub use material::{Material, Lambertian, Metal, Dielectric};
 
 

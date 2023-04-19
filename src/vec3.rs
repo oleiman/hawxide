@@ -38,16 +38,15 @@ impl Vec3 {
         return self.0 * self.0 + self.1 * self.1 + self.2 * self.2;
     }
 
-    pub fn near_zero(&self) -> bool {
-        let s : f64 = 1e-8;
-        return self.0.abs() < s && self.1.abs() < s && self.2.abs() < s;
-    }
-
     pub fn unit_vector(&self) -> Vec3 {
         return self / self.len();
     }
 
-    // TODO(oren): random
+    pub fn near_zero(&self) -> bool {
+        const S : f64 = 1e-8;
+        return (self.0.abs() < S) && (self.1.abs() < S) && (self.2.abs() < S);
+    }
+
     pub fn random() -> Self {
         return Vec3(random_double(), random_double(), random_double());
     }
@@ -118,9 +117,10 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
 }
 
 pub fn refract(uv : &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-    // TODO(oren)
-    assert!(false);
-    return Vec3(0.,0.,0.);
+    let cos_theta = f64::min(dot(&-uv, n), 1.0);
+    let r_out_perp = etai_over_etat * (uv + &(cos_theta * n));
+    let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
+    return r_out_perp + r_out_parallel;
 }
 
 // TODO(oren): would be nice if these could take references
