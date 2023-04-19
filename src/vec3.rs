@@ -320,9 +320,9 @@ impl fmt::Display for Vec3 {
 pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i32) {
     // Divide the color by the number of samples
 
-    let r = col.r() / samples_per_pixel as f64;
-    let g = col.g() / samples_per_pixel as f64;
-    let b = col.b() / samples_per_pixel as f64;
+    let r = (col.r() / samples_per_pixel as f64).sqrt();
+    let g = (col.g() / samples_per_pixel as f64).sqrt();
+    let b = (col.b() / samples_per_pixel as f64).sqrt();
 
     writeln!(writer, "{} {} {}",
         (255.999 * r.clamp(0., 0.999)) as i32,
