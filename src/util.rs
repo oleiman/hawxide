@@ -1,5 +1,5 @@
 
-pub const INFINITY : f64 = 1.0;
+pub const INFINITY : f64 = f64::INFINITY;
 pub const PI : f64 = 3.1415926535897932385;
 
 pub fn degrees_to_radians(deg : f64) -> f64 {
