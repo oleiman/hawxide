@@ -3,15 +3,25 @@ use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
 
-// use std::boxed::Box;
+use std::rc::Rc;
 
-pub struct Sphere<'a> {
+pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: &'a (dyn Material + 'static),
+    pub mat: Rc<dyn Material>,
 }
 
-impl<'a> Hittable for Sphere<'a> {
+impl Sphere {
+    pub fn new(center: &Point3, radius: f64, mat: &Rc<dyn Material>) -> Sphere {
+        Sphere {
+            center: *center,
+            radius: radius,
+            mat: mat.clone(),
+        }
+    }
+}
+
+impl Hittable for Sphere {
     fn hit(&self, r : &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // vector in the direction from sphere center to the ray origin
         let oc : Vec3 = r.origin - self.center;
@@ -40,11 +50,11 @@ impl<'a> Hittable for Sphere<'a> {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r1, self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r1, &self.mat))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r2, self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r2, &self.mat))
         } else {
             None
         }

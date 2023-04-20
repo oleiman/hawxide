@@ -5,6 +5,7 @@ use hawxide::*;
 
 use std::io::{Write, BufWriter};
 use std::boxed::Box;
+use std::rc::Rc;
 
 fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
 
@@ -52,7 +53,7 @@ fn main() {
     let vup = Vec3(0., 1., 0.);
     let fov = 20.0 as f64;
     let dist_to_focus = (lookfrom - lookat).len();
-    let aperture = 2.0 as f64;
+    let aperture = 1.0 as f64;
 
     let cam =
         Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO, aperture, dist_to_focus);
@@ -62,51 +63,58 @@ fn main() {
     let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
 
-    static MATERIAL_GROUND : Lambertian = Lambertian{albedo: Color(0.8, 0.8, 0.0)};
-    static MATERIAL_CENTER : Lambertian = Lambertian{albedo: Color(0.1, 0.2, 0.5)};
-    static MATERIAL_LEFT : Dielectric = Dielectric{ir: 1.5};
-    static MATERIAL_RIGHT : Metal = Metal{
-        albedo: Color(0.8, 0.6, 0.2),
-        fuzz: 0.0,
-    };
-
-    static MATERIAL_BLUE : Lambertian = Lambertian{albedo: Color(0., 0., 1.)};
-    static MATERIAL_RED : Lambertian = Lambertian{albedo: Color(1., 0., 0.)};
+    let material_ground: Rc<dyn Material> =
+        Rc::new(Lambertian{
+            albedo: Color(0.8, 0.8, 0.0),
+        });
+    let material_center: Rc<dyn Material> =
+        Rc::new(Lambertian{
+            albedo: Color(0.1, 0.2, 0.5),
+        });
+    let material_left: Rc<dyn Material> =
+        Rc::new(Dielectric{
+            ir: 1.5,
+        });
+    let material_right: Rc<dyn Material> =
+        Rc::new(Metal{
+            albedo: Color(0.8, 0.6, 0.2),
+            fuzz: 0.0,
+        });
 
     let mut world = HittableList::new();
 
-    world.add(Box::new(Sphere{
-        center: Point3(0., -100.5, -1.),
-        radius: 100.,
-        mat: &MATERIAL_GROUND,
-    }));
+    world.add(Box::new(Sphere::new(
+        &Point3(0., -100.5, -1.),
+        100.,
+        &material_ground,
+    )));
 
-    world.add(Box::new(Sphere{
-        center: Point3(0., 0., -1.),
-        radius: 0.5,
-        mat: &MATERIAL_CENTER,
-    }));
+    world.add(Box::new(Sphere::new(
+        &Point3(0., 0., -1.),
+        0.5,
+        &material_center,
+    )));
 
-    world.add(Box::new(Sphere{
-        center: Point3(-1.0, 0.0, -1.0),
-        radius: 0.5,
-        mat: &MATERIAL_LEFT,
-    }));
+    world.add(Box::new(Sphere::new(
+        &Point3(-1., 0., -1.),
+        0.5,
+        &material_left,
+    )));
 
     // Negative radius keeps same geometry but the surface normal is flipped.
     // this results in a sort of glass bubble thing
-    world.add(Box::new(Sphere{
-        center: Point3(-1.0, 0.0, -1.0),
-        radius: -0.45,
-        mat: &MATERIAL_LEFT,
-    }));
 
-    world.add(Box::new(Sphere{
-        center: Point3(1.0, 0.0, -1.0),
-        radius: 0.5,
-        mat: &MATERIAL_RIGHT,
-    }));
+    world.add(Box::new(Sphere::new(
+        &Point3(-1., 0., -1.),
+        0.5,
+        &material_left,
+    )));
 
+    world.add(Box::new(Sphere::new(
+        &Point3(1., 0., -1.),
+        0.5,
+        &material_right,
+    )));
 
     writeln!(stdout, "P3");
     writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
