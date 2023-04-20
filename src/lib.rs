@@ -16,7 +16,7 @@ pub use sphere::Sphere;
 pub use hittable_list::HittableList;
 pub use hit::Hittable;
 pub use camera::Camera;
-pub use util::{INFINITY};
+pub use util::{INFINITY, PI};
 pub use util::random;
 pub use material::{Material, Lambertian, Metal, Dielectric};
 

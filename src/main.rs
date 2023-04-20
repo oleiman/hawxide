@@ -47,7 +47,12 @@ fn main() {
     const VIEWPORT_HEIGHT : f64 = 2.0;
     const FOCAL_LENGTH : f64 = 1.0;
 
-    let cam = Camera::new(ASPECT_RATIO, VIEWPORT_HEIGHT, FOCAL_LENGTH);
+    let lookfrom = Point3(-2., 2., 1.);
+    let lookat = Point3(0., 0., -1.);
+    let vup = Vec3(0., 1., 0.);
+    let fov = 20.0 as f64;
+
+    let cam = Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO);
 
     // Render
 
@@ -56,17 +61,14 @@ fn main() {
 
     static MATERIAL_GROUND : Lambertian = Lambertian{albedo: Color(0.8, 0.8, 0.0)};
     static MATERIAL_CENTER : Lambertian = Lambertian{albedo: Color(0.1, 0.2, 0.5)};
-    // static MATERIAL_LEFT : Metal = Metal{
-    //     albedo: Color(0.8, 0.8, 0.8),
-    //     fuzz: 0.3,
-    // };
-
-    // static MATERIAL_CENTER : Dielectric = Dielectric{ir: 1.5};
     static MATERIAL_LEFT : Dielectric = Dielectric{ir: 1.5};
     static MATERIAL_RIGHT : Metal = Metal{
         albedo: Color(0.8, 0.6, 0.2),
         fuzz: 0.0,
     };
+
+    static MATERIAL_BLUE : Lambertian = Lambertian{albedo: Color(0., 0., 1.)};
+    static MATERIAL_RED : Lambertian = Lambertian{albedo: Color(1., 0., 0.)};
 
     let mut world = HittableList::new();
 
@@ -92,7 +94,7 @@ fn main() {
     // this results in a sort of glass bubble thing
     world.add(Box::new(Sphere{
         center: Point3(-1.0, 0.0, -1.0),
-        radius: -0.4,
+        radius: -0.45,
         mat: &MATERIAL_LEFT,
     }));
 
@@ -101,6 +103,7 @@ fn main() {
         radius: 0.5,
         mat: &MATERIAL_RIGHT,
     }));
+
 
     writeln!(stdout, "P3");
     writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
