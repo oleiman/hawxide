@@ -47,12 +47,15 @@ fn main() {
     const VIEWPORT_HEIGHT : f64 = 2.0;
     const FOCAL_LENGTH : f64 = 1.0;
 
-    let lookfrom = Point3(-2., 2., 1.);
+    let lookfrom = Point3(3., 3., 2.);
     let lookat = Point3(0., 0., -1.);
     let vup = Vec3(0., 1., 0.);
     let fov = 20.0 as f64;
+    let dist_to_focus = (lookfrom - lookat).len();
+    let aperture = 2.0 as f64;
 
-    let cam = Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO);
+    let cam =
+        Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO, aperture, dist_to_focus);
 
     // Render
 
