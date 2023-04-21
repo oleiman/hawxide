@@ -28,22 +28,38 @@ impl Camera {
     ) -> Camera {
         let theta = util::degrees_to_radians(vfov);
         let h = (theta / 2.).tan();
+
+        // we still have a sort of view port sitting between the lens and
+        // the focus plane, which is sort of a projection of the viewport,
+        // but now we calculate our rays incrementally across the focus plane
+        // instead of the viewport
         let view_height = 2.0 * h;
         let view_width = aspect_ratio * (view_height as f64);
 
+        // (u,v,w) forms an orthonormal basis for the lens, viewport,
+        // and focus plane, which are parallel
         let w = (lookfrom - lookat).unit_vector();
         let u = (vec3::cross(vup, &w)).unit_vector();
         let v = vec3::cross(&w, &u);
 
+        eprintln!("Camera: from: {}, at: {}", lookfrom, lookat);
+        eprintln!("Camera: u: {}, v: {}, w: {}", u, v, w);
+
+        // Origin is now the center of the lens
         let origin = *lookfrom;
+
+        // Actual dimensions of the focus plane
         let horizontal = focus_dist * view_width * u;
         let vertical = focus_dist * view_height * v;
+        let lower_left = origin - horizontal / 2 - vertical / 2 - focus_dist * w;
+
+        let lens_radius = aperture / 2.;
         Camera {
             origin,
-            lower_left: origin - horizontal / 2 - vertical / 2 - focus_dist * w,
+            lower_left,
             horizontal, vertical,
             u, v, w,
-            lens_radius: aperture / 2.,
+            lens_radius,
         }
     }
 
