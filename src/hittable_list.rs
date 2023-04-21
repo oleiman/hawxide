@@ -9,8 +9,8 @@ pub struct HittableList {
 }
 
 impl HittableList {
-    pub fn new() -> HittableList {
-        HittableList {
+    pub fn new() -> Self {
+        Self {
             objects: Vec::new(),
         }
     }
@@ -20,6 +20,16 @@ impl HittableList {
     pub fn add(&mut self, obj: Box<dyn Hittable>) {
         self.objects.push(obj);
     }
+
+    pub fn len(&self) -> usize {
+        return self.objects.len();
+    }
+}
+
+impl Default for HittableList {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Hittable for HittableList {
@@ -27,16 +37,14 @@ impl Hittable for HittableList {
         let mut opt_rec : Option<HitRecord> = None;
         let mut closest : f64 = t_max;
 
-        for obj in self.objects.iter() {
-            opt_rec = match obj.hit(r, t_min, closest) {
-                Some(hr) => {
-                    closest = hr.t;
-                    Some(hr)
-                },
-                _ => opt_rec,
-            };
+        for obj in &self.objects {
+            if let Some(hr) = obj.hit(r, t_min, closest) {
+                closest = hr.t;
+                opt_rec = Some(hr);
+            }
         }
 
         opt_rec
     }
 }
+

@@ -39,13 +39,10 @@ impl Camera {
         let horizontal = focus_dist * view_width * u;
         let vertical = focus_dist * view_height * v;
         Camera {
-            origin: origin,
+            origin,
             lower_left: origin - horizontal / 2 - vertical / 2 - focus_dist * w,
-            horizontal: horizontal,
-            vertical: vertical,
-            u: u,
-            v: v,
-            w: w,
+            horizontal, vertical,
+            u, v, w,
             lens_radius: aperture / 2.,
         }
     }

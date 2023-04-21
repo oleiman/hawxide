@@ -67,9 +67,10 @@ impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
                -> Option<(Color,Ray)> {
         let attenuation = Color(1., 1., 1.);
-        let refraction_ratio : f64 = match rec.front_face {
-            true => 1.0 / self.ir,
-            false => self.ir,
+        let refraction_ratio : f64 = if rec.front_face {
+            1.0 / self.ir
+        } else {
+            self.ir
         };
 
         let unit_direction = ray_in.dir.unit_vector();
@@ -78,29 +79,22 @@ impl Material for Dielectric {
 
         let cannot_refract: bool =
             (refraction_ratio * sin_theta > 1.0) ||
-            Dielectric::reflectance(cos_theta, refraction_ratio) > random::random_double();
+            Dielectric::reflectance(cos_theta, refraction_ratio) > random::double();
 
-        match cannot_refract {
-            true => {
-                Some((attenuation,
-                      Ray{
-                          origin: rec.p,
-                          dir: vec3::reflect(&unit_direction, &rec.norm),
-                      }
-                ))
-            }
-            false => {
-                Some((attenuation,
-                      Ray{
-                          origin: rec.p,
-                          dir: vec3::refract(&unit_direction, &rec.norm, refraction_ratio),
-                      }
-                ))
-            }
+        if cannot_refract {
+            Some((attenuation,
+                  Ray{
+                      origin: rec.p,
+                      dir: vec3::reflect(&unit_direction, &rec.norm),
+                  }
+            ))
+        } else {
+            Some((attenuation,
+                  Ray{
+                      origin: rec.p,
+                      dir: vec3::refract(&unit_direction, &rec.norm, refraction_ratio),
+                  }
+            ))
         }
-
-        // let refracted = vec3::refract(&unit_direction, &rec.norm, refraction_ratio);
-
-        // Some((Color(1.0, 1.0, 1.0), Ray{origin: rec.p, dir: refracted}))
     }
 }

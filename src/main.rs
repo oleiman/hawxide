@@ -12,25 +12,40 @@ fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
     if depth <= 0 {
         return Color(0., 0., 0.);
     }
-    match world.hit(r, 0.001, INFINITY) {
-        Some(hr) => {
-            // let target = hr.p + hr.norm + Vec3::random_unit_vector();
-            // // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
-            // 0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
-            match hr.mat.scatter(r, &hr) {
-                Some((attenuation, scattered)) => {
-                    attenuation * ray_color(&scattered, world, depth-1)
-                }
-                _ => Color(0., 0., 0.)
-            }
-
-        },
-        _ => {
-            let unit_dir : Vec3 = r.dir.unit_vector();
-            let t : f64 = 0.5 * (unit_dir.y() + 1.0);
-            (1.0 - t) * Color(1., 1., 1.) + t * Color(0.5, 0.7, 1.0)
-        },
+    if let Some(hr) = world.hit(r, 0.001, INFINITY) {
+        // let target = hr.p + hr.norm + Vec3::random_unit_vector();
+        // // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
+        // 0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
+        if let Some((attenuation, scattered)) =  hr.mat.scatter(r, &hr) {
+            attenuation * ray_color(&scattered, world, depth-1)
+        } else {
+            Color(0., 0., 0.)
+        }
+    } else {
+        let unit_dir : Vec3 = r.dir.unit_vector();
+        let t : f64 = 0.5 * (unit_dir.y() + 1.0);
+        (1.0 - t) * Color(1., 1., 1.) + t * Color(0.5, 0.7, 1.0)
     }
+
+    // match world.hit(r, 0.001, INFINITY) {
+    //     Some(hr) => {
+    //         // let target = hr.p + hr.norm + Vec3::random_unit_vector();
+    //         // // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
+    //         // 0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
+    //         match hr.mat.scatter(r, &hr) {
+    //             Some((attenuation, scattered)) => {
+    //                 attenuation * ray_color(&scattered, world, depth-1)
+    //             }
+    //             _ => Color(0., 0., 0.)
+    //         }
+
+    //     },
+    //     _ => {
+    //         let unit_dir : Vec3 = r.dir.unit_vector();
+    //         let t : f64 = 0.5 * (unit_dir.y() + 1.0);
+    //         (1.0 - t) * Color(1., 1., 1.) + t * Color(0.5, 0.7, 1.0)
+    //     },
+    // }
 }
 
 fn random_scene() -> HittableList {
@@ -46,11 +61,11 @@ fn random_scene() -> HittableList {
 
     for a in -11..11 {
         for b in -11..11 {
-            let choose_mat = random::random_double();
+            let choose_mat = random::double();
             let center = Point3(
-                a as f64 + 0.9 * random::random_double(),
+                f64::from(a) + 0.9 * random::double(),
                 0.2,
-                b as f64 + 0.9 * random::random_double(),
+                f64::from(b) + 0.9 * random::double(),
             );
 
             if ((center - Point3(4., 0.2, 0.)).len() > 0.9) {
@@ -69,7 +84,7 @@ fn random_scene() -> HittableList {
                             &center, 0.2,
                             &(Rc::new(Metal{
                                 albedo: Color::random_in_range(0.5, 1.),
-                                fuzz: random::random_double_in_range(0., 0.5),
+                                fuzz: random::double_in_range(0., 0.5),
                             }) as Rc<dyn Material>)
                         ))
                     },
@@ -109,7 +124,7 @@ fn random_scene() -> HittableList {
         }) as Rc<dyn Material>)
     )));
 
-    return world;
+    world
 }
 
 fn main() {
@@ -130,9 +145,9 @@ fn main() {
     let lookfrom = Point3(13., 2., 3.);
     let lookat = Point3(0., 0., -0.);
     let vup = Vec3(0., 1., 0.);
-    let fov = 20.0 as f64;
+    let fov = 20.0_f64;
     let dist_to_focus = 10.0;
-    let aperture = 0.1 as f64;
+    let aperture = 0.1_f64;
 
     let cam =
         Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO, aperture, dist_to_focus);
@@ -208,9 +223,9 @@ fn main() {
             let mut pixel_color = Color(0., 0., 0.);
             for s in 0..SAMPLES_PER_PIX {
                 let u : f64 =
-                    (i as f64 + random::random_double()) / ((IMAGE_WIDTH - 1) as f64);
+                    (f64::from(i) + random::double()) / f64::from(IMAGE_WIDTH - 1);
                 let v : f64 =
-                    (j as f64 + random::random_double()) / ((IMAGE_HEIGHT - 1) as f64);
+                    (f64::from(j) + random::double()) / f64::from(IMAGE_HEIGHT - 1);
                 let r = cam.get_ray(u, v);
                 pixel_color += ray_color(&r, &world, MAX_DEPTH);
             }

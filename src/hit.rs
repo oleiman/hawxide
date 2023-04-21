@@ -26,22 +26,24 @@ impl HitRecord {
         let front_face : bool  = dot(&r.dir, out_norm) < 0.;
         HitRecord {
             p: *p,
-            norm: match front_face {
-                true => *out_norm,
-                false => -out_norm,
+            norm: if front_face {
+                *out_norm
+            } else {
+                -out_norm
             },
             mat: Rc::clone(mat),
-            t: t,
-            front_face: front_face,
+            t,
+            front_face,
         }
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, out_norm: &Vec3) {
 
         self.front_face = dot(&r.dir, out_norm) < 0.;
-        self.norm = match self.front_face {
-            true => *out_norm,
-            false => -out_norm,
+        self.norm = if self.front_face {
+            *out_norm
+        } else {
+            -out_norm
         };
     }
 }

@@ -15,7 +15,7 @@ impl Sphere {
     pub fn new(center: &Point3, radius: f64, mat: &Rc<dyn Material>) -> Sphere {
         Sphere {
             center: *center,
-            radius: radius,
+            radius,
             mat: mat.clone(),
         }
     }
