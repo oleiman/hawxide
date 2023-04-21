@@ -33,14 +33,93 @@ fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
     }
 }
 
+fn random_scene() -> HittableList {
+    let mut world = HittableList::new();
+
+    let ground_material: Rc<dyn Material> =
+        Rc::new(Lambertian{albedo: Color(0.5, 0.5, 0.5)});
+    world.add(Box::new(Sphere::new(
+        &Point3(0., -1000., 0.),
+        1000.,
+        &ground_material
+    )));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random::random_double();
+            let center = Point3(
+                a as f64 + 0.9 * random::random_double(),
+                0.2,
+                b as f64 + 0.9 * random::random_double(),
+            );
+
+            if ((center - Point3(4., 0.2, 0.)).len() > 0.9) {
+                world.add(match choose_mat {
+                    i if i < 0.8 => {
+                        Box::new(Sphere::new(
+                            &center,
+                            0.2,
+                            &(Rc::new(Lambertian{
+                                albedo: Color::random() * Color::random(),
+                            }) as Rc<dyn Material>)
+                        ))
+                    },
+                    j if j < 0.95 => {
+                        Box::new(Sphere::new(
+                            &center, 0.2,
+                            &(Rc::new(Metal{
+                                albedo: Color::random_in_range(0.5, 1.),
+                                fuzz: random::random_double_in_range(0., 0.5),
+                            }) as Rc<dyn Material>)
+                        ))
+                    },
+                    _ => {
+                        Box::new(Sphere::new(
+                            &center, 0.2,
+                            &(Rc::new(Dielectric{
+                                ir: 1.5,
+                            }) as Rc<dyn Material>)
+                        ))
+                    }
+                }
+                );
+            }
+        }
+    }
+
+    world.add(Box::new(Sphere::new(
+        &Point3(0., 1., 0.), 1.0,
+        &(Rc::new(Dielectric{
+            ir: 1.5,
+        }) as Rc<dyn Material>)
+    )));
+
+    world.add(Box::new(Sphere::new(
+        &Point3(-4., 1., 0.), 1.0,
+        &(Rc::new(Lambertian{
+            albedo: Color(0.4, 0.2, 0.1),
+        }) as Rc<dyn Material>)
+    )));
+
+    world.add(Box::new(Sphere::new(
+        &Point3(4., 1., 0.), 1.0,
+        &(Rc::new(Metal{
+            albedo: Color(0.7, 0.6, 0.5),
+            fuzz: 0.0,
+        }) as Rc<dyn Material>)
+    )));
+
+    return world;
+}
+
 fn main() {
 
     // Image
 
-    const ASPECT_RATIO : f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH : i32 = 400;
+    const ASPECT_RATIO : f64 = 3.0 / 2.0;
+    const IMAGE_WIDTH : i32 = 1200;
     const IMAGE_HEIGHT : i32 = ((IMAGE_WIDTH as f64) / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIX : i32 = 100;
+    const SAMPLES_PER_PIX : i32 = 10;
     const MAX_DEPTH : i32 = 50;
 
     // Camera
@@ -48,12 +127,12 @@ fn main() {
     const VIEWPORT_HEIGHT : f64 = 2.0;
     const FOCAL_LENGTH : f64 = 1.0;
 
-    let lookfrom = Point3(3., 3., 2.);
-    let lookat = Point3(0., 0., -1.);
+    let lookfrom = Point3(13., 2., 3.);
+    let lookat = Point3(0., 0., -0.);
     let vup = Vec3(0., 1., 0.);
     let fov = 20.0 as f64;
-    let dist_to_focus = (lookfrom - lookat).len();
-    let aperture = 1.0 as f64;
+    let dist_to_focus = 10.0;
+    let aperture = 0.1 as f64;
 
     let cam =
         Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO, aperture, dist_to_focus);
@@ -115,6 +194,8 @@ fn main() {
         0.5,
         &material_right,
     )));
+
+    world = random_scene();
 
     writeln!(stdout, "P3");
     writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
