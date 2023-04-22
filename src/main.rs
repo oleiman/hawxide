@@ -71,9 +71,11 @@ fn random_scene() -> HittableList {
             if ((center - Point3(4., 0.2, 0.)).len() > 0.9) {
                 world.add(match choose_mat {
                     i if i < 0.8 => {
-                        Box::new(Sphere::new(
+                        Box::new(MovingSphere::new(
                             &center,
-                            0.2,
+                            &(center + Vec3(0.0, random::double_in_range(0.0, 0.5), 0.0)),
+                            0.0, 1.0, // times
+                            0.2,      // radius
                             &(Rc::new(Lambertian{
                                 albedo: Color::random() * Color::random(),
                             }) as Rc<dyn Material>)
@@ -131,10 +133,10 @@ fn main() {
 
     // Image
 
-    const ASPECT_RATIO : f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH : i32 = 1200;
+    const ASPECT_RATIO : f64 = 16.0 / 9.0;
+    const IMAGE_WIDTH : i32 = 400;
     const IMAGE_HEIGHT : i32 = ((IMAGE_WIDTH as f64) / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIX : i32 = 10;
+    const SAMPLES_PER_PIX : i32 = 100;
     const MAX_DEPTH : i32 = 50;
 
     // Camera
@@ -150,7 +152,8 @@ fn main() {
     let aperture = 0.1_f64;
 
     let cam =
-        Camera::new(&lookfrom, &lookat, &vup, fov, ASPECT_RATIO, aperture, dist_to_focus);
+        Camera::new(&lookfrom, &lookat, &vup, fov,
+                    ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
 

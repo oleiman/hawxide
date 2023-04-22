@@ -4,6 +4,7 @@ use crate::vec3::{Vec3, Point3};
 use crate::vec3;
 use crate::ray::Ray;
 use crate::util;
+use crate::util::random;
 
 
 pub struct Camera {
@@ -15,6 +16,8 @@ pub struct Camera {
     v: Vec3,
     w: Vec3,
     lens_radius: f64,
+    time0 : f64,
+    time1 : f64,
 }
 
 impl Camera {
@@ -24,7 +27,9 @@ impl Camera {
                vfov: f64,
                aspect_ratio: f64,
                aperture: f64,
-               focus_dist: f64
+               focus_dist: f64,
+               time0: f64,
+               time1: f64,
     ) -> Camera {
         let theta = util::degrees_to_radians(vfov);
         let h = (theta / 2.).tan();
@@ -60,18 +65,21 @@ impl Camera {
             horizontal, vertical,
             u, v, w,
             lens_radius,
+            time0, time1,
         }
     }
 
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.u * rd.x() + self.v * rd.y();
+        // generate randomly timed rays out into the scene
         Ray {
             origin: self.origin + offset,
             dir: self.lower_left +
                 (s * self.horizontal) +
                 (t * self.vertical) -
                 self.origin - offset,
+            time: random::double_in_range(self.time0, self.time1),
         }
     }
 }

@@ -27,9 +27,9 @@ impl Hittable for Sphere {
         let oc : Vec3 = r.origin - self.center;
 
         // use the quadratic formula to determine whether the Ray intersects
-        // this Sphere for some value of `t`. i.e. r.at(t) lies on the sphere
-        // can check back in the book for the algebra that yields the following
-        // parameters.
+        // this Sphere surface for some value of `t`. i.e. r.at(t) lies on the 
+        // sphere can check back in the book for the algebra that yields the
+        // following parameters. See Weekend book for the algebra.
 
         let a : f64 = r.dir.len_squared();
         let half_b : f64 = dot(&oc, &r.dir);
@@ -46,7 +46,6 @@ impl Hittable for Sphere {
         let r1 : f64 = (-half_b - sqrtd) / a;
         let r2 : f64 = (-half_b + sqrtd) / a;
 
-        // if t_range.contains(&r1) {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;

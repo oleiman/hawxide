@@ -21,7 +21,12 @@ impl Material for Lambertian {
         if scatter_direction.near_zero() {
             scatter_direction = rec.norm;
         }
-        Some((self.albedo, Ray{origin: rec.p, dir: scatter_direction,}))
+        Some((self.albedo,
+              Ray{
+                  origin: rec.p,
+                  dir: scatter_direction,
+                  time: ray_in.time,}
+        ))
     }
 }
 
@@ -41,6 +46,7 @@ impl Material for Metal {
         let scattered = Ray {
             origin: rec.p,
             dir: reflected + f * Vec3::random_in_unit_sphere(),
+            time: ray_in.time,
         };
         if vec3::dot(&scattered.dir, &rec.norm) <= 0.0 {
             return None;
@@ -86,6 +92,7 @@ impl Material for Dielectric {
                   Ray{
                       origin: rec.p,
                       dir: vec3::reflect(&unit_direction, &rec.norm),
+                      time: ray_in.time,
                   }
             ))
         } else {
@@ -93,6 +100,7 @@ impl Material for Dielectric {
                   Ray{
                       origin: rec.p,
                       dir: vec3::refract(&unit_direction, &rec.norm, refraction_ratio),
+                      time: ray_in.time,
                   }
             ))
         }

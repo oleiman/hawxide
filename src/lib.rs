@@ -6,6 +6,7 @@ pub mod sphere;
 pub mod hittable_list;
 pub mod camera;
 pub mod material;
+pub mod moving_sphere;
 
 // TODO(oren): janky, lazy
 
@@ -15,6 +16,7 @@ pub use vec3::write_color;
 pub use vec3::Point3;
 pub use ray::Ray;
 pub use sphere::Sphere;
+pub use moving_sphere::MovingSphere;
 pub use hittable_list::HittableList;
 pub use hit::Hittable;
 pub use camera::Camera;
