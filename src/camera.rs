@@ -81,7 +81,7 @@ impl Camera {
                 (s * self.horizontal) +
                 (t * self.vertical) -
                 self.origin - offset,
-            time: random::double_in_range(self.time0, self.time1),
+            time: random::double_range(self.time0, self.time1),
         }
     }
 }

@@ -5,7 +5,7 @@ use std::fmt;
 use std::assert;
 use std::io::Write;
 use crate::util::{
-    random::{double, double_in_range},
+    random::{double, double_range},
     clamp
 };
 
@@ -51,24 +51,24 @@ impl Vec3 {
         Vec3(double(), double(), double())
     }
 
-    pub fn random_in_range(min : f64, max : f64) -> Self {
+    pub fn random_range(min : f64, max : f64) -> Self {
         Vec3(
-            double_in_range(min, max),
-            double_in_range(min, max),
-            double_in_range(min, max)
+            double_range(min, max),
+            double_range(min, max),
+            double_range(min, max)
         )
     }
 
     pub fn random_in_unit_disk() -> Vec3 {
         let mut p = Vec3(
-            double_in_range(-1.0, 1.0),
-            double_in_range(-1.0, 1.0),
+            double_range(-1.0, 1.0),
+            double_range(-1.0, 1.0),
             0.0
         );
         while p.len_squared() >= 1.0 {
             p = Vec3(
-                double_in_range(-1.0, 1.0),
-                double_in_range(-1.0, 1.0),
+                double_range(-1.0, 1.0),
+                double_range(-1.0, 1.0),
                 0.0
             );
         }
@@ -76,9 +76,9 @@ impl Vec3 {
     }
 
     pub fn random_in_unit_sphere() -> Vec3 {
-        let mut p = Self::random_in_range(-1., 1.);
+        let mut p = Self::random_range(-1., 1.);
         while p.len_squared() >= 1.0 {
-            p = Self::random_in_range(-1., 1.);
+            p = Self::random_range(-1., 1.);
         }
         p
     }

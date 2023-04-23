@@ -1,5 +1,7 @@
 use crate::vec3::{Point3,Color};
 
+use crate::perlin::Perlin;
+
 use std::rc::Rc;
 
 pub trait Texture {
@@ -47,5 +49,29 @@ impl Texture for CheckerTexture {
         } else {
             self.even.value(u, v, p)
         }
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+    scale: f64,
+}
+
+impl NoiseTexture {
+    pub fn new(scale : f64) -> NoiseTexture {
+        NoiseTexture {
+            noise: Perlin::new(),
+            scale,
+        }
+    }
+}
+
+impl Texture for NoiseTexture {
+    // perlin interpolation can return negative numbers, so we add 1 and divide by 2
+    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
+        Color(1.0, 1.0, 1.0) *
+            0.5 * (1. +
+                   f64::sin(self.scale * p.z() +
+                            10. * self.noise.turb(&p, None)))
     }
 }

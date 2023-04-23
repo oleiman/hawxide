@@ -75,7 +75,7 @@ fn random_scene() -> HittableList {
                     i if i < 0.8 => {
                         Rc::new(MovingSphere::new(
                             &center,
-                            &(center + Vec3(0.0, random::double_in_range(0.0, 0.5), 0.0)),
+                            &(center + Vec3(0.0, random::double_range(0.0, 0.5), 0.0)),
                             0.0, 1.0, // times
                             0.2,      // radius
                             &(Rc::new(
@@ -87,8 +87,8 @@ fn random_scene() -> HittableList {
                         Rc::new(Sphere::new(
                             &center, 0.2,
                             &(Rc::new(Metal{
-                                albedo: Color::random_in_range(0.5, 1.),
-                                fuzz: random::double_in_range(0., 0.5),
+                                albedo: Color::random_range(0.5, 1.),
+                                fuzz: random::double_range(0., 0.5),
                             }) as Rc<dyn Material>)
                         ))
                     },
@@ -137,26 +137,6 @@ fn two_spheres() -> HittableList {
         &Color(0.9, 0.9, 0.9),
     ));
 
-    // let mut objects = HittableList::new();
-
-    // objects.add(Rc::new(Sphere::new(
-    //     &Point3(0.0, -10.0, 0.0),
-    //     10.0,
-    //     &(Rc::new(Lambertian {
-    //         albedo: checker.clone()
-    //     }) as Rc<dyn Material>),
-    // )));
-
-    // objects.add(Rc::new(Sphere::new(
-    //     &Point3(0.0, 10.0, 0.0),
-    //     10.0,
-    //     &(Rc::new(Lambertian {
-    //         albedo: checker.clone()
-    //     }) as Rc<dyn Material>),
-    // )));
-
-    // objects
-
     HittableList {
         objects: vec![
             Rc::new(Sphere::new(
@@ -177,6 +157,31 @@ fn two_spheres() -> HittableList {
     }
 }
 
+fn two_perlin_spheres() -> HittableList {
+    let pertext = Rc::new(NoiseTexture::new(4.));
+
+    HittableList {
+        objects: vec![
+            Rc::new(Sphere::new(
+                &Point3(0.0, -1000.0, 0.0),
+                1000.0,
+                &(Rc::new(Lambertian {
+                    albedo: pertext.clone(),
+                }) as Rc<dyn Material>),
+            )),
+            Rc::new(Sphere::new(
+                &Point3(0.0, 2.0, 0.0),
+                2.0,
+                &(Rc::new(Lambertian {
+                    albedo: pertext.clone(),
+                }) as Rc<dyn Material>),
+            )),
+        ]
+    }
+}
+
+
+
 fn main() {
 
     // Image
@@ -184,7 +189,7 @@ fn main() {
     const ASPECT_RATIO : f64 = 16.0 / 9.0;
     const IMAGE_WIDTH : i32 = 400;
     const IMAGE_HEIGHT : i32 = ((IMAGE_WIDTH as f64) / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIX : i32 = 100;
+    const SAMPLES_PER_PIX : i32 = 400;
     const MAX_DEPTH : i32 = 50;
 
     // Camera
@@ -197,7 +202,7 @@ fn main() {
     let mut vfov = 20.0_f64;
     let mut aperture = 0.1_f64;
 
-    let scene_select : usize = 1;
+    let scene_select : usize = 0;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -207,11 +212,17 @@ fn main() {
             aperture = 0.1;
             random_scene()
         },
-        _ => {
+        2 => {
             lookfrom = Point3(13.0, 2.0, 3.0);
             lookat = Point3(0.0, 0.0, 0.0);
             vfov = 20.0;
             two_spheres()
+        },
+        _ => {
+            lookfrom = Point3(13.0, 2.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            two_perlin_spheres()
         }
     }, 0.0, 1.0);
 

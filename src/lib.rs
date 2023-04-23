@@ -10,6 +10,7 @@ pub mod moving_sphere;
 pub mod aabb;
 pub mod bvh;
 pub mod texture;
+pub mod perlin;
 
 // TODO(oren): janky, lazy
 
@@ -27,6 +28,6 @@ pub use util::INFINITY;
 pub use util::random;
 pub use material::{Material, Lambertian, Metal, Dielectric};
 pub use bvh::BVHNode;
-pub use texture::{SolidColor,CheckerTexture};
+pub use texture::{SolidColor, CheckerTexture, NoiseTexture};
 
 

@@ -33,11 +33,16 @@ pub mod random {
     }
 
     // TODO(oren): could generate better randoms
-    pub fn double_in_range(min: f64, max: f64) -> f64 {
-        min + (max - min) * double()
+    pub fn double_range(min: f64, max: f64) -> f64 {
+        return unsafe {rng().gen_range(min..=max)}
+        // min + (max - min) * double()
     }
 
     pub fn int(min: i32, max: i32) -> i32 {
-        (double_in_range(f64::from(min), f64::from(max + 1))) as i32
+        (double_range(f64::from(min), f64::from(max + 1))) as i32
+    }
+
+    pub fn uint(min: usize, max: usize) -> usize {
+        (double_range(min as f64, (max + 1) as f64)) as usize
     }
 }
