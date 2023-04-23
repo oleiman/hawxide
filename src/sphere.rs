@@ -3,6 +3,7 @@ use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
 use crate::aabb::AABB;
+use crate::util::PI;
 
 use std::rc::Rc;
 
@@ -19,6 +20,21 @@ impl Sphere {
             radius,
             mat: mat.clone(),
         }
+    }
+
+    fn get_sphere_uv(&self, p: &Point3) -> (f64, f64) {
+        // p: given a point on the unit sphere centered at the origin
+        // return (u,v) s.t.
+        //   u in [0,1]: angle around the Y axis from X=-1 (as a fraction of 2*pi)
+        //   v in [0,1]: angle from Y=-1 to Y=+1 (as fraction of pi)
+
+        let theta = f64::acos(-p.y());
+        let phi = f64::atan2(-p.z(), p.x()) + PI;
+
+        (
+            phi / (2.0 * PI),
+            theta / PI,
+        )
     }
 }
 
@@ -50,11 +66,13 @@ impl Hittable for Sphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r1, &self.mat))
+            let (u,v) = self.get_sphere_uv(&p);
+            Some(HitRecord::new(r, &p, &outward_norm, r1, u, v, &self.mat))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r2, &self.mat))
+            let (u,v) = self.get_sphere_uv(&p);
+            Some(HitRecord::new(r, &p, &outward_norm, r2, u, v, &self.mat))
         } else {
             None
         }

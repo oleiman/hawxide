@@ -3,6 +3,9 @@ use crate::hit::HitRecord;
 use crate::vec3::{Color, Vec3};
 use crate::vec3;
 use crate::util::random;
+use crate::texture::{Texture,SolidColor};
+
+use std::rc::Rc;
 
 
 pub trait Material {
@@ -10,7 +13,15 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    pub albedo: Color,
+    pub albedo: Rc<dyn Texture>,
+}
+
+impl Lambertian {
+    pub fn new(c: &Color) -> Lambertian {
+        Lambertian {
+            albedo: Rc::new(SolidColor::new(c.r(), c.g(), c.b())),
+        }
+    }
 }
 
 impl Material for Lambertian {
@@ -21,15 +32,16 @@ impl Material for Lambertian {
         if scatter_direction.near_zero() {
             scatter_direction = rec.norm;
         }
-        Some((self.albedo,
+        Some((self.albedo.value(rec.u, rec.v, &rec.p),
               Ray{
                   origin: rec.p,
                   dir: scatter_direction,
-                  time: ray_in.time,}
-        ))
+                  time: ray_in.time,
+              }))
     }
 }
 
+// TODO(oren): add texture support to Metals
 pub struct Metal {
     pub albedo: Color,
     pub fuzz: f64,

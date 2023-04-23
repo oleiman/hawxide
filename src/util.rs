@@ -1,5 +1,6 @@
 
 pub const INFINITY : f64 = f64::INFINITY;
+pub static PI : f64 = std::f64::consts::PI;
 
 pub fn degrees_to_radians(deg : f64) -> f64 {
     deg * std::f64::consts::PI / 180.0

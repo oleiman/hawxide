@@ -64,11 +64,11 @@ impl Hittable for MovingSphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r1, &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r1, 0.0, 0.0, &self.mat))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r2, &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r2, 0., 0., &self.mat))
         } else {
             None
         }

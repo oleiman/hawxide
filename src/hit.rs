@@ -10,12 +10,14 @@ pub struct HitRecord {
     pub norm: Vec3,
     pub mat: Rc<dyn Material>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
-    pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3, t: f64, mat: &Rc<dyn Material>)
-               -> HitRecord {
+    pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3,
+               t: f64, u: f64, v: f64, mat: &Rc<dyn Material>) -> HitRecord {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
         // ray, thereby telling us whether the ray is inside or outside
@@ -33,7 +35,7 @@ impl HitRecord {
                 -out_norm
             },
             mat: Rc::clone(mat),
-            t,
+            t, u, v,
             front_face,
         }
     }

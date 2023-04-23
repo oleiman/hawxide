@@ -50,8 +50,11 @@ fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
 fn random_scene() -> HittableList {
     let mut world = HittableList::new();
 
+    let checker  = Rc::new(
+        CheckerTexture::new(&Color(0.2, 0.3, 0.1), &Color(0.9, 0.9, 0.9)));
+
     let ground_material: Rc<dyn Material> =
-        Rc::new(Lambertian{albedo: Color(0.5, 0.5, 0.5)});
+        Rc::new(Lambertian{albedo: checker.clone()});
     world.add(Rc::new(Sphere::new(
         &Point3(0., -1000., 0.),
         1000.,
@@ -75,9 +78,9 @@ fn random_scene() -> HittableList {
                             &(center + Vec3(0.0, random::double_in_range(0.0, 0.5), 0.0)),
                             0.0, 1.0, // times
                             0.2,      // radius
-                            &(Rc::new(Lambertian{
-                                albedo: Color::random() * Color::random(),
-                            }) as Rc<dyn Material>)
+                            &(Rc::new(
+                                Lambertian::new(&(Color::random() * Color::random())),
+                            ) as Rc<dyn Material>)
                         ))
                     },
                     j if j < 0.95 => {
@@ -112,9 +115,9 @@ fn random_scene() -> HittableList {
 
     world.add(Rc::new(Sphere::new(
         &Point3(-4., 1., 0.), 1.0,
-        &(Rc::new(Lambertian{
-            albedo: Color(0.4, 0.2, 0.1),
-        }) as Rc<dyn Material>)
+        &(Rc::new(
+            Lambertian::new(&Color(0.4, 0.2, 0.1))
+        ) as Rc<dyn Material>)
     )));
 
     world.add(Rc::new(Sphere::new(
@@ -126,6 +129,52 @@ fn random_scene() -> HittableList {
     )));
 
     world
+}
+
+fn two_spheres() -> HittableList {
+    let checker = Rc::new(CheckerTexture::new(
+        &Color(0.2, 0.3, 0.1),
+        &Color(0.9, 0.9, 0.9),
+    ));
+
+    // let mut objects = HittableList::new();
+
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(0.0, -10.0, 0.0),
+    //     10.0,
+    //     &(Rc::new(Lambertian {
+    //         albedo: checker.clone()
+    //     }) as Rc<dyn Material>),
+    // )));
+
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(0.0, 10.0, 0.0),
+    //     10.0,
+    //     &(Rc::new(Lambertian {
+    //         albedo: checker.clone()
+    //     }) as Rc<dyn Material>),
+    // )));
+
+    // objects
+
+    HittableList {
+        objects: vec![
+            Rc::new(Sphere::new(
+                &Point3(0.0, -10.0, 0.0),
+                10.0,
+                &(Rc::new(Lambertian {
+                    albedo: checker.clone()
+                }) as Rc<dyn Material>),
+            )),
+            Rc::new(Sphere::new(
+                &Point3(0.0, 10.0, 0.0),
+                10.0,
+                &(Rc::new(Lambertian {
+                    albedo: checker.clone()
+                }) as Rc<dyn Material>),
+            )),
+        ],
+    }
 }
 
 fn main() {
@@ -143,21 +192,65 @@ fn main() {
     const VIEWPORT_HEIGHT : f64 = 2.0;
     const FOCAL_LENGTH : f64 = 1.0;
 
-    let lookfrom = Point3(13., 2., 3.);
-    let lookat = Point3(0., 0., -0.);
-    let vup = Vec3(0., 1., 0.);
-    let fov = 20.0_f64;
-    let dist_to_focus = 10.0;
-    let aperture = 0.1_f64;
+    let mut lookfrom = Point3(13., 2., 3.);
+    let mut lookat = Point3(0., 0., -0.);
+    let mut vfov = 20.0_f64;
+    let mut aperture = 0.1_f64;
 
+    let scene_select : usize = 0;
+
+    let world = BVHNode::new( &match scene_select {
+        1 => {
+            lookfrom = Point3(13.0, 2.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.1;
+            random_scene()
+        },
+        _ => {
+            lookfrom = Point3(13.0, 2.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            two_spheres()
+        }
+    }, 0.0, 1.0);
+
+    let vup = Vec3(0., 1., 0.);
+    let dist_to_focus = 10.0;
     let cam =
-        Camera::new(&lookfrom, &lookat, &vup, fov,
+        Camera::new(&lookfrom, &lookat, &vup, vfov,
                     ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
 
     let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
+
+    writeln!(stdout, "P3");
+    writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
+    writeln!(stdout, "255");
+
+    for j in (0..IMAGE_HEIGHT).rev() {
+        write!(stderr, "\rScanlines remaining: {} ", j);
+        stderr.flush();
+        for i in 0..IMAGE_WIDTH {
+            let mut pixel_color = Color(0., 0., 0.);
+            for s in 0..SAMPLES_PER_PIX {
+                let u : f64 =
+                    (f64::from(i) + random::double()) / f64::from(IMAGE_WIDTH - 1);
+                let v : f64 =
+                    (f64::from(j) + random::double()) / f64::from(IMAGE_HEIGHT - 1);
+                let r = cam.get_ray(u, v);
+                pixel_color += ray_color(&r, &world, MAX_DEPTH);
+            }
+            write_color(&mut stdout, &pixel_color, SAMPLES_PER_PIX);
+        }
+    }
+
+    write!(stderr, "\nDone\n");
+
+}
+
 
     // let material_ground: Rc<dyn Material> =
     //     Rc::new(Lambertian{
@@ -211,30 +304,3 @@ fn main() {
     //     0.5,
     //     &material_right,
     // )));
-
-    let world = BVHNode::new(&random_scene(), 0.0, 1.0);
-
-    writeln!(stdout, "P3");
-    writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
-    writeln!(stdout, "255");
-
-    for j in (0..IMAGE_HEIGHT).rev() {
-        write!(stderr, "\rScanlines remaining: {} ", j);
-        stderr.flush();
-        for i in 0..IMAGE_WIDTH {
-            let mut pixel_color = Color(0., 0., 0.);
-            for s in 0..SAMPLES_PER_PIX {
-                let u : f64 =
-                    (f64::from(i) + random::double()) / f64::from(IMAGE_WIDTH - 1);
-                let v : f64 =
-                    (f64::from(j) + random::double()) / f64::from(IMAGE_HEIGHT - 1);
-                let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world, MAX_DEPTH);
-            }
-            write_color(&mut stdout, &pixel_color, SAMPLES_PER_PIX);
-        }
-    }
-
-    write!(stderr, "\nDone\n");
-
-}
