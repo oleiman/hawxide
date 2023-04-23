@@ -45,7 +45,7 @@ impl BVHNode {
         let box_left = left.bounding_box(time0, time1);
         let box_right = right.bounding_box(time0, time1);
 
-        assert!(!box_left.is_none() && !box_right.is_none(),
+        assert!(box_left.is_some() && box_right.is_some(),
                 "No bounding box in BVHNode constructor");
 
         BVHNode {
@@ -60,7 +60,7 @@ fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: usize) -> Order
     let box_a = a.bounding_box(0.0, 0.0);
     let box_b = b.bounding_box(0.0, 0.0);
 
-    assert!(!box_a.is_none() && !box_b.is_none(),
+    assert!(box_a.is_some() && box_b.is_some(),
             "No bounding box in BVHNode constructor");
 
     box_a.unwrap().min[axis].partial_cmp(&box_b.unwrap().min[axis]).unwrap()
@@ -74,9 +74,9 @@ impl Hittable for BVHNode {
 
         if let Some(hr_l) = self.left.hit(r, t_min, t_max) {
             if let Some(hr_r) = self.right.hit(r, t_min, hr_l.t) {
-                return Some(hr_r);
+                Some(hr_r)
             } else {
-                return Some(hr_l);
+                Some(hr_l)
             }
         } else {
             self.right.hit(r, t_min, t_max)

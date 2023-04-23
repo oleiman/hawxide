@@ -25,7 +25,11 @@ impl HittableList {
     }
 
     pub fn len(&self) -> usize {
-        return self.objects.len();
+        self.objects.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.objects.is_empty()
     }
 }
 
@@ -51,11 +55,7 @@ impl Hittable for HittableList {
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
-        // if self.objects.is_empty() {
-        //     return None
-        // }
         let mut output_box : Option<AABB> = None;
-
         for obj in &self.objects {
             if let Some(tmp_box) = obj.bounding_box(time0, time1) {
                 output_box = Some(
@@ -69,7 +69,7 @@ impl Hittable for HittableList {
                 return None;
             }
         }
-        return output_box;
+        output_box
     }
 }
 

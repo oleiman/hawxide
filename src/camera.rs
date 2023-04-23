@@ -20,6 +20,8 @@ pub struct Camera {
     time1 : f64,
 }
 
+
+// TODO(oren): too many args here
 impl Camera {
     pub fn new(lookfrom: &Point3,
                lookat: &Point3,

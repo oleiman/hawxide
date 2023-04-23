@@ -46,7 +46,7 @@ impl AABB {
                 return false;
             }
         }
-        return true;
+        true
     }
 
     // calculate a box that includes both box0 and box1

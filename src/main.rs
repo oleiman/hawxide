@@ -197,7 +197,7 @@ fn main() {
     let mut vfov = 20.0_f64;
     let mut aperture = 0.1_f64;
 
-    let scene_select : usize = 0;
+    let scene_select : usize = 1;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
