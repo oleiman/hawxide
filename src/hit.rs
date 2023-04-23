@@ -1,6 +1,7 @@
 use crate::vec3::{Vec3, Point3, dot};
 use crate::ray::Ray;
 use crate::material::Material;
+use crate::aabb::AABB;
 
 use std::rc::Rc;
 
@@ -49,5 +50,9 @@ impl HitRecord {
 }
 
 pub trait Hittable {
+    // Does the ray hit the Hittable? Return a record of the hit.
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+
+    // Give the smallest reasonable AABB for the Hittable
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
 }

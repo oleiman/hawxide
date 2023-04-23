@@ -2,6 +2,7 @@ use crate::vec3::{Vec3, Point3, dot};
 use crate::ray::Ray;
 use crate::hit::{HitRecord, Hittable};
 use crate::material::Material;
+use crate::aabb::AABB;
 
 use std::rc::Rc;
 
@@ -71,6 +72,20 @@ impl Hittable for MovingSphere {
         } else {
             None
         }
+    }
 
+    // Take the box for the sphere's initial position and the box for the sphere's
+    // final position, and compute a bounding box around those. The MovingSphere is
+    // then guaranteed to reside in that BB at any given time.
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        let box0 = AABB {
+            min: self.center(time0) - Vec3(self.radius, self.radius, self.radius),
+            max: self.center(time0) + Vec3(self.radius, self.radius, self.radius),
+        };
+        let box1 = AABB {
+            min: self.center(time1) - Vec3(self.radius, self.radius, self.radius),
+            max: self.center(time1) + Vec3(self.radius, self.radius, self.radius),
+        };
+        Some(AABB::surrounding_box(box0, box1))
     }
 }

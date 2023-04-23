@@ -7,6 +7,8 @@ pub mod hittable_list;
 pub mod camera;
 pub mod material;
 pub mod moving_sphere;
+pub mod aabb;
+pub mod bvh;
 
 // TODO(oren): janky, lazy
 
@@ -23,5 +25,6 @@ pub use camera::Camera;
 pub use util::INFINITY;
 pub use util::random;
 pub use material::{Material, Lambertian, Metal, Dielectric};
+pub use bvh::BVHNode;
 
 

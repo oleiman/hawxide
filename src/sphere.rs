@@ -2,6 +2,7 @@ use crate::vec3::{Vec3,Point3,dot};
 use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
+use crate::aabb::AABB;
 
 use std::rc::Rc;
 
@@ -57,5 +58,12 @@ impl Hittable for Sphere {
         } else {
             None
         }
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
+        Some(AABB {
+            min: self.center - Vec3(self.radius, self.radius, self.radius),
+            max: self.center + Vec3(self.radius, self.radius, self.radius),
+        })
     }
 }

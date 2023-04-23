@@ -4,7 +4,6 @@ use std::io;
 use hawxide::*;
 
 use std::io::{Write, BufWriter};
-use std::boxed::Box;
 use std::rc::Rc;
 
 fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
@@ -53,7 +52,7 @@ fn random_scene() -> HittableList {
 
     let ground_material: Rc<dyn Material> =
         Rc::new(Lambertian{albedo: Color(0.5, 0.5, 0.5)});
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         &Point3(0., -1000., 0.),
         1000.,
         &ground_material
@@ -71,7 +70,7 @@ fn random_scene() -> HittableList {
             if ((center - Point3(4., 0.2, 0.)).len() > 0.9) {
                 world.add(match choose_mat {
                     i if i < 0.8 => {
-                        Box::new(MovingSphere::new(
+                        Rc::new(MovingSphere::new(
                             &center,
                             &(center + Vec3(0.0, random::double_in_range(0.0, 0.5), 0.0)),
                             0.0, 1.0, // times
@@ -82,7 +81,7 @@ fn random_scene() -> HittableList {
                         ))
                     },
                     j if j < 0.95 => {
-                        Box::new(Sphere::new(
+                        Rc::new(Sphere::new(
                             &center, 0.2,
                             &(Rc::new(Metal{
                                 albedo: Color::random_in_range(0.5, 1.),
@@ -91,7 +90,7 @@ fn random_scene() -> HittableList {
                         ))
                     },
                     _ => {
-                        Box::new(Sphere::new(
+                        Rc::new(Sphere::new(
                             &center, 0.2,
                             &(Rc::new(Dielectric{
                                 ir: 1.5,
@@ -104,21 +103,21 @@ fn random_scene() -> HittableList {
         }
     }
 
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         &Point3(0., 1., 0.), 1.0,
         &(Rc::new(Dielectric{
             ir: 1.5,
         }) as Rc<dyn Material>)
     )));
 
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         &Point3(-4., 1., 0.), 1.0,
         &(Rc::new(Lambertian{
             albedo: Color(0.4, 0.2, 0.1),
         }) as Rc<dyn Material>)
     )));
 
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         &Point3(4., 1., 0.), 1.0,
         &(Rc::new(Metal{
             albedo: Color(0.7, 0.6, 0.5),
@@ -160,60 +159,60 @@ fn main() {
     let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
 
-    let material_ground: Rc<dyn Material> =
-        Rc::new(Lambertian{
-            albedo: Color(0.8, 0.8, 0.0),
-        });
-    let material_center: Rc<dyn Material> =
-        Rc::new(Lambertian{
-            albedo: Color(0.1, 0.2, 0.5),
-        });
-    let material_left: Rc<dyn Material> =
-        Rc::new(Dielectric{
-            ir: 1.5,
-        });
-    let material_right: Rc<dyn Material> =
-        Rc::new(Metal{
-            albedo: Color(0.8, 0.6, 0.2),
-            fuzz: 0.0,
-        });
+    // let material_ground: Rc<dyn Material> =
+    //     Rc::new(Lambertian{
+    //         albedo: Color(0.8, 0.8, 0.0),
+    //     });
+    // let material_center: Rc<dyn Material> =
+    //     Rc::new(Lambertian{
+    //         albedo: Color(0.1, 0.2, 0.5),
+    //     });
+    // let material_left: Rc<dyn Material> =
+    //     Rc::new(Dielectric{
+    //         ir: 1.5,
+    //     });
+    // let material_right: Rc<dyn Material> =
+    //     Rc::new(Metal{
+    //         albedo: Color(0.8, 0.6, 0.2),
+    //         fuzz: 0.0,
+    //     });
 
-    let mut world = HittableList::new();
+    // let mut objects = HittableList::new();
 
-    world.add(Box::new(Sphere::new(
-        &Point3(0., -100.5, -1.),
-        100.,
-        &material_ground,
-    )));
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(0., -100.5, -1.),
+    //     100.,
+    //     &material_ground,
+    // )));
 
-    world.add(Box::new(Sphere::new(
-        &Point3(0., 0., -1.),
-        0.5,
-        &material_center,
-    )));
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(0., 0., -1.),
+    //     0.5,
+    //     &material_center,
+    // )));
 
-    world.add(Box::new(Sphere::new(
-        &Point3(-1., 0., -1.),
-        0.5,
-        &material_left,
-    )));
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(-1., 0., -1.),
+    //     0.5,
+    //     &material_left,
+    // )));
 
-    // Negative radius keeps same geometry but the surface normal is flipped.
-    // this results in a sort of glass bubble thing
+    // // Negative radius keeps same geometry but the surface normal is flipped.
+    // // this results in a sort of glass bubble thing
 
-    world.add(Box::new(Sphere::new(
-        &Point3(-1., 0., -1.),
-        0.5,
-        &material_left,
-    )));
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(-1., 0., -1.),
+    //     0.5,
+    //     &material_left,
+    // )));
 
-    world.add(Box::new(Sphere::new(
-        &Point3(1., 0., -1.),
-        0.5,
-        &material_right,
-    )));
+    // objects.add(Rc::new(Sphere::new(
+    //     &Point3(1., 0., -1.),
+    //     0.5,
+    //     &material_right,
+    // )));
 
-    world = random_scene();
+    let world = BVHNode::new(&random_scene(), 0.0, 1.0);
 
     writeln!(stdout, "P3");
     writeln!(stdout, "{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);

@@ -1,11 +1,12 @@
 use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
+use crate::aabb::AABB;
 
 use std::vec::Vec;
-use std::boxed::Box;
+use std::rc::Rc;
 
 pub struct HittableList {
-    objects : Vec<Box<dyn Hittable>>,
+    pub objects : Vec<Rc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -14,10 +15,12 @@ impl HittableList {
             objects: Vec::new(),
         }
     }
+
     pub fn clear(&mut self) {
         self.objects.clear();
     }
-    pub fn add(&mut self, obj: Box<dyn Hittable>) {
+
+    pub fn add(&mut self, obj: Rc<dyn Hittable>) {
         self.objects.push(obj);
     }
 
@@ -45,6 +48,28 @@ impl Hittable for HittableList {
         }
 
         opt_rec
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        // if self.objects.is_empty() {
+        //     return None
+        // }
+        let mut output_box : Option<AABB> = None;
+
+        for obj in &self.objects {
+            if let Some(tmp_box) = obj.bounding_box(time0, time1) {
+                output_box = Some(
+                    if let Some(ob) = output_box {
+                        AABB::surrounding_box(ob, tmp_box)
+                    } else {
+                        tmp_box
+                    }
+                );
+            } else {
+                return None;
+            }
+        }
+        return output_box;
     }
 }
 

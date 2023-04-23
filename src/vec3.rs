@@ -9,7 +9,6 @@ use crate::util::{
     clamp
 };
 
-
 #[derive(Copy, Clone)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
@@ -122,6 +121,32 @@ pub fn refract(uv : &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
     let r_out_perp = etai_over_etat * (uv + &(cos_theta * n));
     let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
     r_out_perp + r_out_parallel
+}
+
+impl ops::Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        assert!(idx <= 3, "Index {} out of range for Vec3", idx);
+        match idx {
+            0 => &self.0,
+            1 => &self.1,
+            2 => &self.2,
+            _ => &self.0, // bogus value to satisfy return type
+        }
+    }
+}
+
+impl ops::IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        assert!(idx <= 3, "Index {} out of range for Vec3", idx);
+        match idx {
+            0 => &mut self.0,
+            1 => &mut self.1,
+            _ => &mut self.2,
+        }
+    }
+
 }
 
 // TODO(oren): would be nice if these could take references
