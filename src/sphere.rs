@@ -66,12 +66,12 @@ impl Hittable for Sphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = self.get_sphere_uv(&p);
+            let (u,v) = self.get_sphere_uv(&outward_norm);
             Some(HitRecord::new(r, &p, &outward_norm, r1, u, v, &self.mat))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = self.get_sphere_uv(&p);
+            let (u,v) = self.get_sphere_uv(&outward_norm);
             Some(HitRecord::new(r, &p, &outward_norm, r2, u, v, &self.mat))
         } else {
             None

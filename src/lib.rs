@@ -28,6 +28,6 @@ pub use util::INFINITY;
 pub use util::random;
 pub use material::{Material, Lambertian, Metal, Dielectric};
 pub use bvh::BVHNode;
-pub use texture::{SolidColor, CheckerTexture, NoiseTexture};
+pub use texture::{SolidColor, CheckerTexture, NoiseTexture,ImageTexture};
 
 

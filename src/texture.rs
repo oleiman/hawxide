@@ -3,6 +3,8 @@ use crate::vec3::{Point3,Color};
 use crate::perlin::Perlin;
 
 use std::rc::Rc;
+use image;
+use image::{GenericImageView,DynamicImage};
 
 pub trait Texture {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -73,5 +75,49 @@ impl Texture for NoiseTexture {
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
                             10. * self.noise.turb(&p, None)))
+    }
+}
+
+pub struct ImageTexture {
+    img: DynamicImage,
+    width: u32,
+    height: u32,
+}
+
+
+impl ImageTexture {
+    const COLOR_SCALE: f64 = 1.0 / 255.0;
+    pub fn new(fname: &str) -> Self {
+        let img = image::open(fname).expect("File not found!");
+        eprintln!("{} - dimensions: {:?}; color: {:?}",
+                  fname, img.dimensions(), img.color());
+        let (width, height) = img.dimensions();
+
+        ImageTexture {
+            img, width, height,
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+        // Clamp input texture coords to [0,1] x [1,0]
+        let u = u.clamp(0.0, 1.0);
+        let v = 1.0 - v.clamp(0.0, 1.0); // flip V to image coords
+
+        let mut i = (u * self.width as f64) as u32;
+        let mut j = (v * self.height as f64) as u32;
+
+        i = i.clamp(0, self.width - 1);
+        j = j.clamp(0, self.height - 1);
+
+        let pixel = self.img.get_pixel(i, j);
+
+        Color(
+            ImageTexture::COLOR_SCALE * pixel[0] as f64,
+            ImageTexture::COLOR_SCALE * pixel[1] as f64,
+            ImageTexture::COLOR_SCALE * pixel[2] as f64
+        )
+
     }
 }

@@ -25,26 +25,6 @@ fn ray_color<H: Hittable>(r : &Ray, world: &H, depth: i32) -> Color {
         let t : f64 = 0.5 * (unit_dir.y() + 1.0);
         (1.0 - t) * Color(1., 1., 1.) + t * Color(0.5, 0.7, 1.0)
     }
-
-    // match world.hit(r, 0.001, INFINITY) {
-    //     Some(hr) => {
-    //         // let target = hr.p + hr.norm + Vec3::random_unit_vector();
-    //         // // let target = hr.p + Vec3::random_in_hemisphere(&hr.norm);
-    //         // 0.5 * ray_color(&Ray{origin: hr.p, dir: target - hr.p}, world, depth - 1)
-    //         match hr.mat.scatter(r, &hr) {
-    //             Some((attenuation, scattered)) => {
-    //                 attenuation * ray_color(&scattered, world, depth-1)
-    //             }
-    //             _ => Color(0., 0., 0.)
-    //         }
-
-    //     },
-    //     _ => {
-    //         let unit_dir : Vec3 = r.dir.unit_vector();
-    //         let t : f64 = 0.5 * (unit_dir.y() + 1.0);
-    //         (1.0 - t) * Color(1., 1., 1.) + t * Color(0.5, 0.7, 1.0)
-    //     },
-    // }
 }
 
 fn random_scene() -> HittableList {
@@ -180,6 +160,23 @@ fn two_perlin_spheres() -> HittableList {
     }
 }
 
+fn earth() -> HittableList {
+
+    let earth_texture = Rc::new(ImageTexture::new("earthmap.jpg"));
+
+    HittableList {
+        objects: vec![
+            Rc::new(Sphere::new(
+                &Point3(0.0, 0.0, 0.0),
+                2.0,
+                &(Rc::new(Lambertian {
+                    albedo: earth_texture.clone(),
+                }) as Rc<dyn Material>)
+            )),
+        ],
+    }
+}
+
 
 
 fn main() {
@@ -218,11 +215,17 @@ fn main() {
             vfov = 20.0;
             two_spheres()
         },
-        _ => {
+        3 => {
             lookfrom = Point3(13.0, 2.0, 3.0);
             lookat = Point3(0.0, 0.0, 0.0);
             vfov = 20.0;
             two_perlin_spheres()
+        },
+        _ => {
+            lookfrom = Point3(13.0, 2.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            earth()
         }
     }, 0.0, 1.0);
 
