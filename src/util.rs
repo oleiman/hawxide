@@ -16,7 +16,6 @@ pub fn clamp(x : f64, min: f64, max: f64) -> f64 {
 
 pub mod random {
     use rand::prelude::*;
-    // use rand::{Rng, thread_rng, rngs::ThreadRng};
 
     static mut RNG : Option<ThreadRng> = None;
 
@@ -29,20 +28,22 @@ pub mod random {
     }
 
     pub fn double() -> f64 {
-        return unsafe {rng().gen::<f64>()};
+        return unsafe {rng().gen_range(0.0..1.0)};
     }
 
     // TODO(oren): could generate better randoms
     pub fn double_range(min: f64, max: f64) -> f64 {
-        return unsafe {rng().gen_range(min..=max)}
+        return unsafe {rng().gen_range(min..max)}
         // min + (max - min) * double()
     }
 
     pub fn int(min: i32, max: i32) -> i32 {
-        (double_range(f64::from(min), f64::from(max + 1))) as i32
+        return unsafe {rng().gen_range(min..=max)};
+        // (double_range(f64::from(min), f64::from(max + 1))) as i32
     }
 
     pub fn uint(min: usize, max: usize) -> usize {
-        (double_range(min as f64, (max + 1) as f64)) as usize
+        return unsafe {rng().gen_range(min..=max)};
+        // (double_range(min as f64, (max + 1) as f64)) as usize
     }
 }

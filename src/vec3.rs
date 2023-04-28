@@ -23,6 +23,10 @@ pub const fn Color(r: f64, g: f64, b: f64) -> Point3 {
     Vec3(r, g, b)
 }
 
+pub enum Dimension {
+    X, Y, Z,
+}
+
 impl Vec3 {
     pub fn x(&self) -> f64 { self.0 }
     pub fn y(&self) -> f64 { self.1 }
@@ -31,6 +35,14 @@ impl Vec3 {
     pub fn r(&self) -> f64 { self.0 }
     pub fn g(&self) -> f64 { self.1 }
     pub fn b(&self) -> f64 { self.2 }
+
+    pub fn dim(&self, d: &Dimension) -> f64 {
+        match (d) {
+            Dimension::X => self.x(),
+            Dimension::Y => self.y(),
+            Dimension::Z => self.z(),
+        }
+    }
 
     pub fn len(&self) -> f64 { self.len_squared().sqrt() }
     pub fn len_squared(&self) -> f64 {
@@ -342,15 +354,18 @@ impl fmt::Display for Vec3 {
 #[allow(clippy::cast_possible_truncation)]
 pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i32) {
     // Divide the color by the number of samples
+    let scale = 1.0 / samples_per_pixel as f64;
 
-    let r = (col.r() / f64::from(samples_per_pixel)).sqrt();
-    let g = (col.g() / f64::from(samples_per_pixel)).sqrt();
-    let b = (col.b() / f64::from(samples_per_pixel)).sqrt();
+    assert!(col.r() >= 0. && col.g() >= 0. && col.b() >= 0.);
+
+    let r = (scale * col.r()).sqrt();
+    let g = (scale * col.g()).sqrt();
+    let b = (scale * col.b()).sqrt();
 
     writeln!(writer, "{} {} {}",
-        (255.999 * r.clamp(0., 0.999)) as i32,
-        (255.999 * g.clamp(0., 0.999)) as i32,
-        (255.999 * b.clamp(0., 0.999)) as i32
+        (256. * r.clamp(0., 0.999)) as u8,
+        (256. * g.clamp(0., 0.999)) as u8,
+        (256. * b.clamp(0., 0.999)) as u8,
     );
 }
 

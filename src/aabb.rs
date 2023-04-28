@@ -13,28 +13,28 @@ impl AABB {
     // NOTE: unoptimized version. kept around for reference.
     // Though the optimized version is not much different, just precomputes
     // the inverse direction and aboids some min/max calls.
-    // pub fn hit(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
-    //     for a in 0..3 {
-    //         let t0 = f64::min(
-    //             (self.min[a] - ray.origin[a]) / ray.dir[a],
-    //             (self.max[a] - ray.origin[a]) / ray.dir[a]
-    //         );
-    //         let t1 = f64::max(
-    //             (self.min[a] - ray.origin[a]) / ray.dir[a],
-    //             (self.max[a] - ray.origin[a]) / ray.dir[a]
-    //         );
-    //         t_min = f64::max(t0, t_min);
-    //         t_max = f64::min(t1, t_max);
-    //         if t_max < t_min {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
+    pub fn hit_slow(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
+        for a in 0..3 {
+            let t0 = f64::min(
+                (self.min[a] - ray.origin[a]) / ray.dir[a],
+                (self.max[a] - ray.origin[a]) / ray.dir[a]
+            );
+            let t1 = f64::max(
+                (self.min[a] - ray.origin[a]) / ray.dir[a],
+                (self.max[a] - ray.origin[a]) / ray.dir[a]
+            );
+            t_min = f64::max(t0, t_min);
+            t_max = f64::min(t1, t_max);
+            if t_max < t_min {
+                return false;
+            }
+        }
+        true
+    }
 
     pub fn hit(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
         for a in 0..3 {
-            let inv_dir = 1.0 / ray.dir[a];
+            let inv_dir : f64 = 1.0 / ray.dir[a];
             let mut t0 = (self.min[a] - ray.origin[a]) * inv_dir;
             let mut t1 = (self.max[a] - ray.origin[a]) * inv_dir;
             if inv_dir < 0.0 {

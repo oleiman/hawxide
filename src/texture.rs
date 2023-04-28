@@ -74,7 +74,7 @@ impl Texture for NoiseTexture {
         Color(1.0, 1.0, 1.0) *
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
-                            10. * self.noise.turb(&p, None)))
+                            10. * self.noise.turb(p, None)))
     }
 }
 
