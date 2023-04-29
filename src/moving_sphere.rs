@@ -18,7 +18,7 @@ pub struct MovingSphere {
 impl MovingSphere {
     pub fn new(center0: &Point3, center1: &Point3,
                time0: f64, time1: f64,
-               radius: f64, mat: &Rc<dyn Material>) -> MovingSphere {
+               radius: f64, mat: Rc<dyn Material>) -> MovingSphere {
         // Moving sphere has two centers. One where it starts (at time0) and another
         // where it ends up (at time1).
         MovingSphere {
@@ -27,7 +27,7 @@ impl MovingSphere {
             time0,
             time1,
             radius,
-            mat: mat.clone(),
+            mat,
         }
     }
 
@@ -64,11 +64,11 @@ impl Hittable for MovingSphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r1, 0.0, 0.0, &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r1, 0.0, 0.0, self.mat.clone()))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r2, 0., 0., &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r2, 0., 0., self.mat.clone()))
         } else {
             None
         }

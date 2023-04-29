@@ -33,7 +33,7 @@ fn random_scene() -> HittableList {
     world.add(Rc::new(Sphere::new(
         &Point3(0., -1000., 0.),
         1000.,
-        &ground_material
+        ground_material.clone()
     )));
 
     for a in -11..11 {
@@ -53,26 +53,26 @@ fn random_scene() -> HittableList {
                             &(center + Vec3(0.0, random::double_range(0.0, 0.5), 0.0)),
                             0.0, 1.0, // times
                             0.2,      // radius
-                            &(Rc::new(
+                            Rc::new(
                                 Lambertian::new(&(Color::random() * Color::random())),
-                            ) as Rc<dyn Material>)
+                            ),
                         ))
                     },
                     j if j < 0.95 => {
                         Rc::new(Sphere::new(
                             &center, 0.2,
-                            &(Rc::new(Metal{
+                            Rc::new(Metal{
                                 albedo: Color::random_range(0.5, 1.),
                                 fuzz: random::double_range(0., 0.5),
-                            }) as Rc<dyn Material>)
+                            })
                         ))
                     },
                     _ => {
                         Rc::new(Sphere::new(
                             &center, 0.2,
-                            &(Rc::new(Dielectric{
+                            Rc::new(Dielectric{
                                 ir: 1.5,
-                            }) as Rc<dyn Material>)
+                            })
                         ))
                     }
                 }
@@ -83,24 +83,24 @@ fn random_scene() -> HittableList {
 
     world.add(Rc::new(Sphere::new(
         &Point3(0., 1., 0.), 1.0,
-        &(Rc::new(Dielectric{
+        Rc::new(Dielectric{
             ir: 1.5,
-        }) as Rc<dyn Material>)
+        })
     )));
 
     world.add(Rc::new(Sphere::new(
         &Point3(-4., 1., 0.), 1.0,
-        &(Rc::new(
+        Rc::new(
             Lambertian::new(&Color(0.4, 0.2, 0.1))
-        ) as Rc<dyn Material>)
+        )
     )));
 
     world.add(Rc::new(Sphere::new(
         &Point3(4., 1., 0.), 1.0,
-        &(Rc::new(Metal{
+        Rc::new(Metal{
             albedo: Color(0.7, 0.6, 0.5),
             fuzz: 0.0,
-        }) as Rc<dyn Material>)
+        })
     )));
 
     world
@@ -117,16 +117,16 @@ fn two_spheres() -> HittableList {
             Rc::new(Sphere::new(
                 &Point3(0.0, -10.0, 0.0),
                 10.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: checker.clone()
-                }) as Rc<dyn Material>),
+                }),
             )),
             Rc::new(Sphere::new(
                 &Point3(0.0, 10.0, 0.0),
                 10.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: checker.clone()
-                }) as Rc<dyn Material>),
+                }),
             )),
         ],
     }
@@ -140,16 +140,16 @@ fn two_perlin_spheres() -> HittableList {
             Rc::new(Sphere::new(
                 &Point3(0.0, -1000.0, 0.0),
                 1000.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: pertext.clone(),
-                }) as Rc<dyn Material>),
+                }),
             )),
             Rc::new(Sphere::new(
                 &Point3(0.0, 2.0, 0.0),
                 2.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: pertext.clone(),
-                }) as Rc<dyn Material>),
+                }),
             )),
         ]
     }
@@ -164,9 +164,9 @@ fn earth() -> HittableList {
             Rc::new(Sphere::new(
                 &Point3(0.0, 0.0, 0.0),
                 2.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: earth_texture.clone(),
-                }) as Rc<dyn Material>)
+                })
             )),
         ],
     }
@@ -182,20 +182,20 @@ fn simple_light() -> HittableList {
             Rc::new(Sphere::new(
                 &Point3(0.0, -1000.0, 0.0),
                 1000.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: pertext.clone(),
-                }) as Rc<dyn Material>),
+                }),
             )),
             Rc::new(Sphere::new(
                 &Point3(0.0, 2.0, 0.0),
                 2.0,
-                &(Rc::new(Lambertian {
+                Rc::new(Lambertian {
                     albedo: pertext.clone(),
-                }) as Rc<dyn Material>),
+                }),
             )),
             Rc::new(AARect::xy_rect(
                 3.0, 5.0, 1.0, 3.0, -2.0,
-                &(difflight.clone() as Rc<dyn Material>),
+                difflight.clone(),
             )),
         ]
     }
@@ -211,46 +211,46 @@ fn cornell_box() -> HittableList {
     let mut box1 : Rc<dyn Hittable> = Rc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
         &Point3(165.0, 330.0, 165.0),
-        &(white.clone() as Rc<dyn Material>),
+        white.clone(),
     ));
 
-    box1 = Rc::new(Rotate::rotate_y(&box1, 15.0));
-    box1 = Rc::new(Translate::new(&box1, &Vec3(265.0, 0.0, 295.0)));
+    box1 = Rc::new(Rotate::rotate_y(box1, 15.0));
+    box1 = Rc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
 
     let mut box2 : Rc<dyn Hittable> = Rc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
         &Point3(165.0, 165.0, 165.0),
-        &(white.clone() as Rc<dyn Material>),
+        white.clone(),
     ));
 
-    box2 = Rc::new(Rotate::rotate_y(&box2, -18.0));
+    box2 = Rc::new(Rotate::rotate_y(box2, -18.0));
     // box2 = Rc::new(Rotate::rotate_x(&box2, 15.0));
     // box2 = Rc::new(Rotate::rotate_z(&box2, 15.0));
 
-    box2 = Rc::new(Translate::new(&box2, &Vec3(130.0, 0.0, 65.0)));
+    box2 = Rc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
 
     HittableList {
         objects: vec![
             Rc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(green.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, green.clone()
             )),
             Rc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, &(red.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
             )),
             Rc::new(AARect::xz_rect(
-                213.0, 343.0, 227.0, 332.0, 554.0, &(light.clone() as Rc<dyn Material>)
+                213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
             )),
             // Rc::new(AARect::xz_rect(
             //     113.0, 443.0, 127.0, 432.0, 554.0, &(light.clone() as Rc<dyn Material>)
             // )),
             Rc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
             )),
             Rc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
             )),
             Rc::new(AARect::xy_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
             )),
             box1,
             box2,
@@ -267,48 +267,151 @@ fn cornell_smoke() -> HittableList {
     let mut box1 : Rc<dyn Hittable> = Rc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
         &Point3(165.0, 330.0, 165.0),
-        &(white.clone() as Rc<dyn Material>),
+        white.clone(),
     ));
 
-    box1 = Rc::new(Rotate::rotate_y(&box1, 15.0));
-    box1 = Rc::new(Translate::new(&box1, &Vec3(265.0, 0.0, 295.0)));
+    box1 = Rc::new(Rotate::rotate_y(box1, 15.0));
+    box1 = Rc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
 
     let mut box2 : Rc<dyn Hittable> = Rc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
         &Point3(165.0, 165.0, 165.0),
-        &(white.clone() as Rc<dyn Material>),
+        white.clone(),
     ));
 
-    box2 = Rc::new(Rotate::rotate_y(&box2, -18.0));
+    box2 = Rc::new(Rotate::rotate_y(box2, -18.0));
     // box2 = Rc::new(Rotate::rotate_x(&box2, 18.0));
     // box2 = Rc::new(Rotate::rotate_z(&box2, 18.0));
 
-    box2 = Rc::new(Translate::new(&box2, &Vec3(130.0, 0.0, 65.0)));
+    box2 = Rc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
 
     HittableList {
         objects: vec![
             Rc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(green.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, green.clone()
             )),
             Rc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, &(red.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
             )),
             Rc::new(AARect::xz_rect(
-                113.0, 443.0, 127.0, 432.0, 554.0, &(light.clone() as Rc<dyn Material>)
+                113.0, 443.0, 127.0, 432.0, 554.0, light.clone()
             )),
             Rc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
             )),
             Rc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
             )),
             Rc::new(AARect::xy_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
             )),
-            Rc::new(ConstantMedium::new(&box1, 0.01, &Color::new())),
-            Rc::new(ConstantMedium::new(&box2, 0.01, &Color(1.0, 1.0, 1.0))),
+            Rc::new(ConstantMedium::new(box1, 0.01, &Color::new())),
+            Rc::new(ConstantMedium::new(box2, 0.01, &Color(1.0, 1.0, 1.0))),
         ]
     }
+}
+
+fn final_scene() -> HittableList {
+    let mut boxes1 = HittableList::new();
+    let ground = Rc::new(Lambertian::new(&Color(0.48, 0.83, 0.53)));
+
+    const BOXES_PER_SIDE : i32 = 20;
+
+    for i in 0..BOXES_PER_SIDE {
+        for j in 0..BOXES_PER_SIDE {
+            let w = 100.0;
+            let p0 = Point3(
+                -1000.0 + f64::from(i) * w,
+                0.0,
+                -1000.0 + f64::from(j) * w,
+            );
+            let p1 = Point3(
+                p0.x() + w,
+                random::double_range(1.0, 101.0),
+                p0.z() + w,
+            );
+
+            boxes1.add(
+                Rc::new(Boxx::new(&p0, &p1, ground.clone())),
+            );
+        }
+    };
+
+    let mut objects = HittableList::new();
+
+    objects.add(Rc::new(BVHNode::new(&boxes1, 0.0, 1.0)));
+
+    let light = Rc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
+    objects.add(Rc::new(
+        AARect::xz_rect(
+            123.0, 423.0, 147.0, 412.0, 554.0, light.clone()
+        )
+    ));
+
+    let center1 = Point3(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3(30.0, 0.0, 0.0);
+    let moving_sphere_mat = Rc::new(Lambertian::new(&Color(0.7, 0.3, 0.1)));
+    objects.add(Rc::new(MovingSphere::new(
+        &center1, &center2, 0.0, 1.0, 50.0, moving_sphere_mat.clone()
+    )));
+
+
+    objects.add(Rc::new(Sphere::new(
+        &Point3(260.0, 150.0, 45.0), 50.0,
+        Rc::new(Dielectric {ir: 1.5}),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        &Point3(0.0, 150.0, 145.0), 50.0,
+        Rc::new(Metal { albedo: Color(0.8, 0.8, 0.9), fuzz: 1.0 })
+    )));
+
+    let boundary = Rc::new(Sphere::new(
+        &Point3(360.0, 150.0, 145.0), 70.0,
+        Rc::new(Dielectric {ir: 1.5}),
+    ));
+    objects.add(boundary.clone());
+    objects.add(Rc::new(ConstantMedium::new(
+        boundary.clone(), 0.2, &Color(0.2, 0.4, 0.9),
+    )));
+    let boundary = Rc::new(Sphere::new(
+        &Point3::new(), 5000.0,
+        Rc::new(Dielectric {ir: 1.5}),
+    ));
+    objects.add(Rc::new(ConstantMedium::new(
+        boundary.clone(), 0.0001, &Color(1.0, 1.0, 1.0),
+    )));
+
+    let emat = Rc::new(Lambertian {
+        albedo: Rc::new(ImageTexture::new("earthmap.jpg"))}
+    );
+    objects.add(Rc::new(Sphere::new(
+        &Point3(400.0, 200.0, 400.0), 100.0, emat.clone(),
+    )));
+
+    let pertext = Rc::new(NoiseTexture::new(0.1));
+    objects.add(Rc::new(Sphere::new(
+        &Point3(220.0, 280.0, 300.0), 80.0,
+        Rc::new(Lambertian { albedo: pertext.clone() }),
+    )));
+
+    let mut boxes2 = HittableList::new();
+    let white = Rc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+    let ns = 1000;
+    for j in 0..ns {
+        boxes2.add(Rc::new(Sphere::new(
+            &Point3::random_range(0.0, 165.0), 10.0, white.clone(),
+        )));
+    }
+
+    objects.add(Rc::new(Translate::new(
+        Rc::new(Rotate::rotate_y(
+            Rc::new(BVHNode::new(&boxes2, 0.0, 1.0)), 15.0
+        )),
+        &Vec3(-100.0, 270.0, 395.0),
+        ))
+    );
+
+    objects
 }
 
 
@@ -366,6 +469,7 @@ fn main() {
         },
         5 => {
             background = Color(0.0, 0.0, 0.0);
+            samples_per_pixel = 3000;
             lookfrom = Point3(26.0, 3.0, 6.0);
             lookat = Point3(0.0, 2.0, 0.0);
             vfov = 20.0;
@@ -381,7 +485,7 @@ fn main() {
             vfov = 40.0;
             cornell_box()
         },
-        _ => {
+        7 => {
             aspect_ratio = 1.0;
             image_width = 600;
             samples_per_pixel = 200;
@@ -390,6 +494,16 @@ fn main() {
             lookat = Point3(278.0, 278.0, 0.0);
             vfov = 40.0;
             cornell_smoke()
+        },
+        _ => {
+            aspect_ratio = 1.0;
+            image_width = 800;
+            samples_per_pixel = 1000;
+            background = Color::new();
+            lookfrom = Point3(478.0, 278.0, -600.0);
+            lookat = Point3(278.0, 278.0, 0.0);
+            vfov = 40.0;
+            final_scene()
         }
     }, 0.0, 1.0);
 

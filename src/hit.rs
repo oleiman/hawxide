@@ -18,7 +18,7 @@ pub struct HitRecord {
 
 impl HitRecord {
     pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3,
-               t: f64, u: f64, v: f64, mat: &Rc<dyn Material>) -> HitRecord {
+               t: f64, u: f64, v: f64, mat: Rc<dyn Material>) -> HitRecord {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
         // ray, thereby telling us whether the ray is inside or outside
@@ -35,7 +35,7 @@ impl HitRecord {
             } else {
                 -out_norm
             },
-            mat: Rc::clone(mat),
+            mat: mat,
             t, u, v,
             front_face,
         }
@@ -66,9 +66,9 @@ pub struct Translate {
 }
 
 impl Translate {
-    pub fn new(obj: &Rc<dyn Hittable>, offset: &Vec3) -> Translate {
+    pub fn new(obj: Rc<dyn Hittable>, offset: &Vec3) -> Translate {
         Translate {
-            obj: obj.clone(),
+            obj: obj,
             offset: *offset,
         }
     }
@@ -83,7 +83,8 @@ impl Hittable for Translate {
         };
         if let Some(hr) = self.obj.hit(&moved_r, t_min, t_max) {
             Some(HitRecord::new(
-                &moved_r, &(hr.p + self.offset), &hr.norm, hr.t, hr.u, hr.v, &hr.mat
+                &moved_r, &(hr.p + self.offset), &hr.norm,
+                hr.t, hr.u, hr.v, hr.mat.clone()
             ))
         } else {
             None
@@ -111,19 +112,19 @@ pub struct Rotate {
 }
 
 impl Rotate {
-    pub fn rotate_x(obj: &Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_x(obj: Rc<dyn Hittable>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::X)
     }
 
-    pub fn rotate_y(obj: &Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_y(obj: Rc<dyn Hittable>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::Y)
     }
 
-    pub fn rotate_z(obj: &Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_z(obj: Rc<dyn Hittable>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::Z)
     }
 
-    fn new(obj: &Rc<dyn Hittable>, angle: f64, axis: Axis) -> Self {
+    fn new(obj: Rc<dyn Hittable>, angle: f64, axis: Axis) -> Self {
         let radians = util::degrees_to_radians(angle);
         // eprintln!("degrees: {}, radians: {}", angle, radians);
         let sin_theta = f64::sin(radians);
@@ -165,7 +166,7 @@ impl Rotate {
         }
 
         Rotate {
-            obj: obj.clone(),
+            obj: obj,
             axis, sin_theta, cos_theta,
             bbox: if hasbox { Some(AABB {min, max}) } else { None },
         }
@@ -242,7 +243,7 @@ impl Hittable for Rotate {
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
         Some(HitRecord::new(
-            &rotated_r, &p, &normal, hr.t, hr.u, hr.v, &hr.mat
+            &rotated_r, &p, &normal, hr.t, hr.u, hr.v, hr.mat.clone()
         ))
 
     }

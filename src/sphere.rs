@@ -14,11 +14,11 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: &Point3, radius: f64, mat: &Rc<dyn Material>) -> Sphere {
+    pub fn new(center: &Point3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
         Sphere {
             center: *center,
             radius,
-            mat: mat.clone(),
+            mat: mat,
         }
     }
 
@@ -67,12 +67,12 @@ impl Hittable for Sphere {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
             let (u,v) = self.get_sphere_uv(&outward_norm);
-            Some(HitRecord::new(r, &p, &outward_norm, r1, u, v, &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r1, u, v, self.mat.clone()))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
             let (u,v) = self.get_sphere_uv(&outward_norm);
-            Some(HitRecord::new(r, &p, &outward_norm, r2, u, v, &self.mat))
+            Some(HitRecord::new(r, &p, &outward_norm, r2, u, v, self.mat.clone()))
         } else {
             None
         }

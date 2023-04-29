@@ -15,20 +15,20 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: &Rc<dyn Hittable>, d: f64, c: &Color) -> Self {
+    pub fn new(boundary: Rc<dyn Hittable>, d: f64, c: &Color) -> Self {
         Self {
-            boundary: boundary.clone(),
+            boundary: boundary,
             neg_inv_density: -1.0 / d,
             phase_fn: Rc::new(Isotropic::new(c)),
 
         }
     }
 
-    pub fn new_texture(boundary: &Rc<dyn Hittable>, d: f64, a: &Rc<dyn Texture>) -> Self {
+    pub fn new_texture(boundary: Rc<dyn Hittable>, d: f64, a: Rc<dyn Texture>) -> Self {
         Self {
-            boundary: boundary.clone(),
+            boundary: boundary,
             neg_inv_density: -1.0 / d,
-            phase_fn: Rc::new(Isotropic { albedo: a.clone() }),
+            phase_fn: Rc::new(Isotropic { albedo: a }),
         }
     }
 }
