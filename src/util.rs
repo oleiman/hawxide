@@ -1,5 +1,6 @@
 
 pub const INFINITY : f64 = f64::INFINITY;
+pub const NEG_INFINITY : f64 = f64::NEG_INFINITY;
 pub static PI : f64 = std::f64::consts::PI;
 
 pub fn degrees_to_radians(deg : f64) -> f64 {

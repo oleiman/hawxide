@@ -23,7 +23,8 @@ pub const fn Color(r: f64, g: f64, b: f64) -> Point3 {
     Vec3(r, g, b)
 }
 
-pub enum Dimension {
+#[derive(Copy, Clone)]
+pub enum Axis {
     X, Y, Z,
 }
 
@@ -36,11 +37,11 @@ impl Vec3 {
     pub fn g(&self) -> f64 { self.1 }
     pub fn b(&self) -> f64 { self.2 }
 
-    pub fn dim(&self, d: &Dimension) -> f64 {
+    pub fn axis(&self, d: Axis) -> f64 {
         match (d) {
-            Dimension::X => self.x(),
-            Dimension::Y => self.y(),
-            Dimension::Z => self.z(),
+            Axis::X => self.x(),
+            Axis::Y => self.y(),
+            Axis::Z => self.z(),
         }
     }
 

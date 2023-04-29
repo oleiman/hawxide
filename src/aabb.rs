@@ -3,12 +3,20 @@ use crate::ray::Ray;
 
 use std::mem::swap;
 
+#[derive(Copy, Clone)]
 pub struct AABB {
     pub min: Point3,
     pub max: Point3,
 }
 
 impl AABB {
+
+    pub fn new() -> Self {
+        AABB {
+            min: Point3(0.0, 0.0, 0.0),
+            max: Point3(0.0, 0.0, 0.0),
+        }
+    }
 
     // NOTE: unoptimized version. kept around for reference.
     // Though the optimized version is not much different, just precomputes

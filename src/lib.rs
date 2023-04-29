@@ -12,24 +12,26 @@ pub mod bvh;
 pub mod texture;
 pub mod perlin;
 pub mod aarect;
+pub mod boxx;
 
 // TODO(oren): janky, lazy
 
 pub use vec3::Vec3;
 pub use vec3::Color;
 pub use vec3::write_color;
-pub use vec3::{Point3, Dimension};
+pub use vec3::{Point3, Axis};
 pub use ray::Ray;
 pub use sphere::Sphere;
 pub use moving_sphere::MovingSphere;
 pub use hittable_list::HittableList;
-pub use hit::Hittable;
+pub use hit::{Hittable, Translate, Rotate};
 pub use camera::Camera;
-pub use util::INFINITY;
+pub use util::{INFINITY,NEG_INFINITY};
 pub use util::random;
 pub use material::{Material, Lambertian, Metal, Dielectric, DiffuseLight};
 pub use bvh::BVHNode;
 pub use texture::{SolidColor, CheckerTexture, NoiseTexture, ImageTexture};
-pub use aarect::{AARect, XYRect};
+pub use aarect::{AARect};
+pub use boxx::Boxx;
 
 

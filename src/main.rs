@@ -206,6 +206,28 @@ fn cornell_box() -> HittableList {
     let white = Rc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
     let green = Rc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
     let light = Rc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
+    // let light = Rc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
+
+    let mut box1 : Rc<dyn Hittable> = Rc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 330.0, 165.0),
+        &(white.clone() as Rc<dyn Material>),
+    ));
+
+    box1 = Rc::new(Rotate::rotate_y(&box1, 15.0));
+    box1 = Rc::new(Translate::new(&box1, &Vec3(265.0, 0.0, 295.0)));
+
+    let mut box2 : Rc<dyn Hittable> = Rc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 165.0, 165.0),
+        &(white.clone() as Rc<dyn Material>),
+    ));
+
+    box2 = Rc::new(Rotate::rotate_y(&box2, -18.0));
+    // box2 = Rc::new(Rotate::rotate_x(&box2, 15.0));
+    // box2 = Rc::new(Rotate::rotate_z(&box2, 15.0));
+
+    box2 = Rc::new(Translate::new(&box2, &Vec3(130.0, 0.0, 65.0)));
 
     HittableList {
         objects: vec![
@@ -218,6 +240,9 @@ fn cornell_box() -> HittableList {
             Rc::new(AARect::xz_rect(
                 213.0, 343.0, 227.0, 332.0, 554.0, &(light.clone() as Rc<dyn Material>)
             )),
+            // Rc::new(AARect::xz_rect(
+            //     113.0, 443.0, 127.0, 432.0, 554.0, &(light.clone() as Rc<dyn Material>)
+            // )),
             Rc::new(AARect::xz_rect(
                 0.0, 555.0, 0.0, 555.0, 0.0, &(white.clone() as Rc<dyn Material>)
             )),
@@ -227,6 +252,8 @@ fn cornell_box() -> HittableList {
             Rc::new(AARect::xy_rect(
                 0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
             )),
+            box1,
+            box2,
         ]
     }
 }
@@ -249,14 +276,12 @@ fn main() {
     let mut lookfrom = Point3(13., 2., 3.);
     let mut lookat = Point3(0., 0., -0.);
     let mut vfov = 20.0_f64;
-    let mut aperture = 0.1_f64;
+    let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
     let scene_select : usize = 0;
 
     let world = BVHNode::new( &match scene_select {
-
-    // let world = match scene_select {
         1 => {
             background = Color(0.7, 0.8, 1.0);
             lookfrom = Point3(13.0, 2.0, 3.0);
@@ -303,7 +328,6 @@ fn main() {
             vfov = 40.0;
             cornell_box()
         }
-    // };
     }, 0.0, 1.0);
 
     let image_height : i32 = ((image_width as f64) / aspect_ratio) as i32;
