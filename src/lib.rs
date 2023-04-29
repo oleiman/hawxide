@@ -13,6 +13,7 @@ pub mod texture;
 pub mod perlin;
 pub mod aarect;
 pub mod boxx;
+pub mod constant_medium;
 
 // TODO(oren): janky, lazy
 
@@ -28,10 +29,13 @@ pub use hit::{Hittable, Translate, Rotate};
 pub use camera::Camera;
 pub use util::{INFINITY,NEG_INFINITY};
 pub use util::random;
-pub use material::{Material, Lambertian, Metal, Dielectric, DiffuseLight};
+pub use material::{
+    Material, Lambertian, Metal, Dielectric, DiffuseLight, Isotropic
+};
 pub use bvh::BVHNode;
 pub use texture::{SolidColor, CheckerTexture, NoiseTexture, ImageTexture};
 pub use aarect::{AARect};
 pub use boxx::Boxx;
+pub use constant_medium::ConstantMedium;
 
 

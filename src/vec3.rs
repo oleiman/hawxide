@@ -29,6 +29,7 @@ pub enum Axis {
 }
 
 impl Vec3 {
+    pub fn new() -> Vec3 { Vec3(0.0, 0.0, 0.0) }
     pub fn x(&self) -> f64 { self.0 }
     pub fn y(&self) -> f64 { self.1 }
     pub fn z(&self) -> f64 { self.2 }

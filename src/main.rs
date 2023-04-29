@@ -258,6 +258,59 @@ fn cornell_box() -> HittableList {
     }
 }
 
+fn cornell_smoke() -> HittableList {
+    let red = Rc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
+
+    let mut box1 : Rc<dyn Hittable> = Rc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 330.0, 165.0),
+        &(white.clone() as Rc<dyn Material>),
+    ));
+
+    box1 = Rc::new(Rotate::rotate_y(&box1, 15.0));
+    box1 = Rc::new(Translate::new(&box1, &Vec3(265.0, 0.0, 295.0)));
+
+    let mut box2 : Rc<dyn Hittable> = Rc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 165.0, 165.0),
+        &(white.clone() as Rc<dyn Material>),
+    ));
+
+    box2 = Rc::new(Rotate::rotate_y(&box2, -18.0));
+    // box2 = Rc::new(Rotate::rotate_x(&box2, 18.0));
+    // box2 = Rc::new(Rotate::rotate_z(&box2, 18.0));
+
+    box2 = Rc::new(Translate::new(&box2, &Vec3(130.0, 0.0, 65.0)));
+
+    HittableList {
+        objects: vec![
+            Rc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, &(green.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, &(red.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(AARect::xz_rect(
+                113.0, 443.0, 127.0, 432.0, 554.0, &(light.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, &(white.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(AARect::xy_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, &(white.clone() as Rc<dyn Material>)
+            )),
+            Rc::new(ConstantMedium::new(&box1, 0.01, &Color::new())),
+            Rc::new(ConstantMedium::new(&box2, 0.01, &Color(1.0, 1.0, 1.0))),
+        ]
+    }
+}
+
 
 fn main() {
 
@@ -318,7 +371,7 @@ fn main() {
             vfov = 20.0;
             simple_light()
         },
-        _ => {
+        6 => {
             aspect_ratio = 1.0;
             image_width = 600;
             samples_per_pixel = 200;
@@ -327,6 +380,16 @@ fn main() {
             lookat = Point3(278.0, 278.0, 0.0);
             vfov = 40.0;
             cornell_box()
+        },
+        _ => {
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
+            background = Color(0.0, 0.0, 0.0);
+            lookfrom = Point3(278.0, 278.0, -800.0);
+            lookat = Point3(278.0, 278.0, 0.0);
+            vfov = 40.0;
+            cornell_smoke()
         }
     }, 0.0, 1.0);
 
