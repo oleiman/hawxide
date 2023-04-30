@@ -423,7 +423,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
-    let scene_select : usize = 6;
+    let scene_select : usize = 0;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -486,7 +486,7 @@ fn main() {
         _ => {
             aspect_ratio = 1.0;
             image_width = 800;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 3000;
             background = Color::new();
             lookfrom = Point3(478.0, 278.0, -600.0);
             lookat = Point3(278.0, 278.0, 0.0);
@@ -514,24 +514,21 @@ fn main() {
     for j in (0..image_height).rev() {
         write!(stderr, "\rScanlines remaining: {} ", j);
         stderr.flush();
-        for i in 0..image_width {
-            // let mut pixel_color = Color(0., 0., 0.);
-            // let mut pixel_color = Color(0., 0., 0.);
-            let samples : Vec<Color> = (0..samples_per_pixel).into_par_iter().map(|s| {
+        let colors : Vec<Color> = (0..image_width).into_par_iter().map(|i| {
+            let mut pixel_color = Color(0., 0., 0.);
+            for s in (0..samples_per_pixel) {
                 let u : f64 =
                     (f64::from(i) + random::double()) / f64::from(image_width - 1);
                 let v : f64 =
                     (f64::from(j) + random::double()) / f64::from(image_height - 1);
 
                 let r = cam.get_ray(u, v);
-                ray_color(&r, &background, &world, MAX_DEPTH)
-            }).collect();
-            let pixel_color : Color = samples.iter().fold(
-                Color(0.0, 0.0, 0.0),
-                |a, b| a + *b
-            );
-
-            write_color(&mut stdout, &pixel_color, samples_per_pixel);
+                pixel_color += ray_color(&r, &background, &world, MAX_DEPTH)
+            };
+            pixel_color
+        }).collect();
+        for pc in &colors {
+            write_color(&mut stdout, &pc, samples_per_pixel);
         }
     }
     write!(stderr, "\nDone\n");
