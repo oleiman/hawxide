@@ -48,8 +48,17 @@ impl Material for Lambertian {
 
 // TODO(oren): add texture support to Metals
 pub struct Metal {
-    pub albedo: Color,
+    pub albedo: Arc<dyn Texture + Sync + Send>,
     pub fuzz: f64,
+}
+
+impl Metal {
+    pub fn new(c: &Color, fuzz: f64) -> Self {
+        Self {
+            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
+            fuzz,
+        }
+    }
 }
 
 impl Material for Metal {
@@ -69,7 +78,7 @@ impl Material for Metal {
             return None;
         }
 
-        Some((self.albedo, scattered))
+        Some((self.albedo.value(rec.u, rec.v, &rec.p), scattered))
     }
 }
 
