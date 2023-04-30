@@ -63,10 +63,10 @@ fn random_scene() -> HittableList {
                     j if j < 0.95 => {
                         Arc::new(Sphere::new(
                             &center, 0.2,
-                            Arc::new(Metal{
-                                albedo: Color::random_range(0.5, 1.),
-                                fuzz: random::double_range(0., 0.5),
-                            })
+                            Arc::new(Metal::new(
+                                &Color::random_range(0.5, 1.),
+                                random::double_range(0., 0.5),
+                            ))
                         ))
                     },
                     _ => {
@@ -99,10 +99,7 @@ fn random_scene() -> HittableList {
 
     world.add(Arc::new(Sphere::new(
         &Point3(4., 1., 0.), 1.0,
-        Arc::new(Metal{
-            albedo: Color(0.7, 0.6, 0.5),
-            fuzz: 0.0,
-        })
+        Arc::new(Metal::new(&Color(0.7, 0.6, 0.5), 0.0))
     )));
 
     world
@@ -155,6 +152,55 @@ fn two_perlin_spheres() -> HittableList {
             )),
         ]
     }
+}
+
+fn subsurface_perlin_spheres() -> HittableList {
+    let pertext = Arc::new(NoiseTexture::new(4.));
+    let turq_light = Arc::new(DiffuseLight::new(&Color(0.0, 12., 10.)));
+    let red_light = Arc::new(DiffuseLight::new(&Color(12.0, 0.0, 5.0)));
+
+    let mut objects = HittableList::new();
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(0.0, -1000.0, 0.0),
+        999.5,
+        Arc::new(Lambertian {
+            albedo: pertext.clone(),
+        }),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Dielectric {ir: 1.5}),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Dielectric { ir: 1.5}),
+    )));
+    objects.add(Arc::new(Sphere::new(
+        &Point3(0.0, 2.0, 0.0),
+        1.5,
+        Arc::new(Lambertian {
+            albedo: pertext.clone(),
+        }),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(6.0, 4.0, -4.0),
+        2.0,
+        turq_light.clone(),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(-3.0, 3.0, 4.0),
+        1.0,
+        red_light.clone(),
+    )));
+
+    objects
 }
 
 fn earth() -> HittableList {
@@ -350,7 +396,7 @@ fn final_scene() -> HittableList {
     )));
     objects.add(Arc::new(Sphere::new(
         &Point3(0.0, 150.0, 145.0), 50.0,
-        Arc::new(Metal { albedo: Color(0.8, 0.8, 0.9), fuzz: 1.0 })
+        Arc::new(Metal::new(&Color(0.8, 0.8, 0.9), 1.0))
     )));
 
     let boundary = Arc::new(Sphere::new(
@@ -483,10 +529,18 @@ fn main() {
             vfov = 40.0;
             cornell_smoke()
         },
+        8 => {
+            background = Color(0.0, 0.0, 0.0);
+            lookfrom = Point3(13.0, 5.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 40.0;
+            samples_per_pixel = 400;
+            subsurface_perlin_spheres()
+        },
         _ => {
             aspect_ratio = 1.0;
             image_width = 800;
-            samples_per_pixel = 3000;
+            samples_per_pixel = 4000;
             background = Color::new();
             lookfrom = Point3(478.0, 278.0, -600.0);
             lookat = Point3(278.0, 278.0, 0.0);
