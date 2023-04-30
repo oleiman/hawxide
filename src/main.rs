@@ -132,7 +132,7 @@ fn two_spheres() -> HittableList {
 }
 
 fn two_perlin_spheres() -> HittableList {
-    let pertext = Arc::new(NoiseTexture::new(4.));
+    let pertext = Arc::new(MarbleTexture::new(4.));
 
     HittableList {
         objects: vec![
@@ -155,7 +155,7 @@ fn two_perlin_spheres() -> HittableList {
 }
 
 fn subsurface_perlin_spheres() -> HittableList {
-    let pertext = Arc::new(NoiseTexture::new(4.));
+    let pertext = Arc::new(MarbleTexture::new(4.));
     let turq_light = Arc::new(DiffuseLight::new(&Color(0.0, 12., 10.)));
     let red_light = Arc::new(DiffuseLight::new(&Color(12.0, 0.0, 5.0)));
 
@@ -221,7 +221,7 @@ fn earth() -> HittableList {
 }
 
 fn simple_light() -> HittableList {
-    let pertext = Arc::new(NoiseTexture::new(4.));
+    let pertext = Arc::new(MarbleTexture::new(4.));
     // let difflight = Arc::new(DiffuseLight::new(&Color(4., 4., 4.)));
     let difflight = Arc::new(DiffuseLight::new(&Color(7., 7., 7.)));
 
@@ -422,7 +422,7 @@ fn final_scene() -> HittableList {
         &Point3(400.0, 200.0, 400.0), 100.0, emat.clone(),
     )));
 
-    let pertext = Arc::new(NoiseTexture::new(0.1));
+    let pertext = Arc::new(MarbleTexture::new(0.1));
     objects.add(Arc::new(Sphere::new(
         &Point3(220.0, 280.0, 300.0), 80.0,
         Arc::new(Lambertian { albedo: pertext.clone() }),

@@ -54,21 +54,21 @@ impl Texture for CheckerTexture {
     }
 }
 
-pub struct NoiseTexture {
+pub struct MarbleTexture {
     noise: Perlin,
     scale: f64,
 }
 
-impl NoiseTexture {
-    pub fn new(scale : f64) -> NoiseTexture {
-        NoiseTexture {
+impl MarbleTexture {
+    pub fn new(scale : f64) -> MarbleTexture {
+        MarbleTexture {
             noise: Perlin::new(),
             scale,
         }
     }
 }
 
-impl Texture for NoiseTexture {
+impl Texture for MarbleTexture {
     // perlin interpolation can return negative numbers, so we add 1 and divide by 2
     fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
         Color(1.0, 1.0, 1.0) *
