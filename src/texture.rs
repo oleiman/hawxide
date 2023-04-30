@@ -2,7 +2,7 @@ use crate::vec3::{Point3,Color};
 
 use crate::perlin::Perlin;
 
-use std::rc::Rc;
+use std::sync::Arc;
 use image;
 use image::{GenericImageView,DynamicImage};
 
@@ -29,15 +29,15 @@ impl Texture for SolidColor {
 }
 
 pub struct CheckerTexture {
-    even: Rc<dyn Texture>,
-    odd: Rc<dyn Texture>,
+    even: Arc<dyn Texture + Sync + Send>,
+    odd: Arc<dyn Texture + Sync + Send>,
 }
 
 impl CheckerTexture {
     pub fn new(c1: &Color, c2: &Color) -> CheckerTexture {
         CheckerTexture {
-            even: Rc::new(SolidColor { color_val: *c1}),
-            odd: Rc::new(SolidColor {color_val: *c2}),
+            even: Arc::new(SolidColor { color_val: *c1}),
+            odd: Arc::new(SolidColor {color_val: *c2}),
         }
     }
 }

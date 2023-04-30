@@ -5,16 +5,16 @@ use crate::material::Material;
 use crate::aabb::AABB;
 use crate::util::PI;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material + Sync + Send>,
 }
 
 impl Sphere {
-    pub fn new(center: &Point3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
+    pub fn new(center: &Point3, radius: f64, mat: Arc<dyn Material + Sync + Send>) -> Sphere {
         Sphere {
             center: *center,
             radius,

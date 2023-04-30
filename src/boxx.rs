@@ -6,7 +6,7 @@ use crate::material::Material;
 use crate::aabb::AABB;
 use crate::aarect::AARect;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Boxx {
     box_min: Point3,
@@ -15,26 +15,26 @@ pub struct Boxx {
 }
 
 impl Boxx {
-    pub fn new(p0: &Point3, p1: &Point3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(p0: &Point3, p1: &Point3, mat: Arc<dyn Material + Sync + Send>) -> Self {
         let mut sides = HittableList::new();
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p1.z(), mat.clone())
         ));
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p0.z(), mat.clone())
         ));
 
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p1.y(), mat.clone())
         ));
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p0.y(), mat.clone())
         ));
 
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p1.x(), mat.clone())
         ));
-        sides.add(Rc::new(
+        sides.add(Arc::new(
             AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p0.x(), mat.clone())
         ));
 

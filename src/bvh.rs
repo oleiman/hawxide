@@ -4,12 +4,12 @@ use crate::hittable_list::HittableList;
 use crate::aabb::AABB;
 use crate::util::random;
 
-use std::rc::Rc;
+use std::sync::Arc;
 use std::cmp::Ordering;
 
 pub struct BVHNode {
-    left: Rc<dyn Hittable>,
-    right: Rc<dyn Hittable>,
+    left: Arc<dyn Hittable + Sync + Send>,
+    right: Arc<dyn Hittable + Sync + Send>,
     bbox: AABB,
 }
 
@@ -18,17 +18,17 @@ impl BVHNode {
         Self::new_slice(&list.objects, time0, time1)
     }
 
-    pub fn new_slice(src_objects: &[Rc<dyn Hittable>], time0: f64, time1: f64) -> Self {
-        let mut objects = Vec::<Rc<dyn Hittable>>::new();
+    pub fn new_slice(src_objects: &[Arc<dyn Hittable + Sync + Send>], time0: f64, time1: f64) -> Self {
+        let mut objects = Vec::<Arc<dyn Hittable + Sync + Send>>::new();
         for o in src_objects {
             objects.push(o.clone());
         }
 
-        let comparator = |a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>| -> Ordering {
+        let comparator = |a: &Arc<dyn Hittable + Sync + Send>, b: &Arc<dyn Hittable + Sync + Send>| -> Ordering {
             box_compare(a, b, random::int(0, 2) as usize)
         };
 
-        let (left, right) : (Rc<dyn Hittable>, Rc<dyn Hittable>) = match objects.len() {
+        let (left, right) : (Arc<dyn Hittable + Sync + Send>, Arc<dyn Hittable + Sync + Send>) = match objects.len() {
             1 => (objects[0].clone(), objects[0].clone()),
             2 =>  {
                 objects.sort_by(comparator);
@@ -37,8 +37,8 @@ impl BVHNode {
             _ => {
                 objects.sort_by(comparator);
                 let mid = objects.len() / 2;
-                (Rc::new(BVHNode::new_slice(&objects[0..mid], time0, time1)),
-                 Rc::new(BVHNode::new_slice(&objects[mid..], time0, time1)))
+                (Arc::new(BVHNode::new_slice(&objects[0..mid], time0, time1)),
+                 Arc::new(BVHNode::new_slice(&objects[mid..], time0, time1)))
             }
         };
 
@@ -56,7 +56,7 @@ impl BVHNode {
     }
 }
 
-fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: usize) -> Ordering {
+fn box_compare(a: &Arc<dyn Hittable + Sync + Send>, b: &Arc<dyn Hittable + Sync + Send>, axis: usize) -> Ordering {
     let box_a = a.bounding_box(0.0, 0.0);
     let box_b = b.bounding_box(0.0, 0.0);
 

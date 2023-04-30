@@ -4,7 +4,7 @@ use crate::hit::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::aabb::AABB;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct MovingSphere {
     pub center0: Point3,
@@ -12,13 +12,13 @@ pub struct MovingSphere {
     pub time0: f64,
     pub time1: f64,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material + Sync + Send>,
 }
 
 impl MovingSphere {
     pub fn new(center0: &Point3, center1: &Point3,
                time0: f64, time1: f64,
-               radius: f64, mat: Rc<dyn Material>) -> MovingSphere {
+               radius: f64, mat: Arc<dyn Material + Sync + Send>) -> MovingSphere {
         // Moving sphere has two centers. One where it starts (at time0) and another
         // where it ends up (at time1).
         MovingSphere {

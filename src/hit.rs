@@ -4,12 +4,12 @@ use crate::material::Material;
 use crate::aabb::AABB;
 use crate::util;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct HitRecord {
     pub p: Point3,
     pub norm: Vec3,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material + Sync + Send>,
     pub t: f64,
     pub u: f64,
     pub v: f64,
@@ -18,7 +18,7 @@ pub struct HitRecord {
 
 impl HitRecord {
     pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3,
-               t: f64, u: f64, v: f64, mat: Rc<dyn Material>) -> HitRecord {
+               t: f64, u: f64, v: f64, mat: Arc<dyn Material + Sync + Send>) -> HitRecord {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
         // ray, thereby telling us whether the ray is inside or outside
@@ -61,12 +61,12 @@ pub trait Hittable {
 }
 
 pub struct Translate {
-    obj: Rc<dyn Hittable>,
+    obj: Arc<dyn Hittable + Sync + Send>,
     offset: Vec3,
 }
 
 impl Translate {
-    pub fn new(obj: Rc<dyn Hittable>, offset: &Vec3) -> Translate {
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: &Vec3) -> Translate {
         Translate {
             obj: obj,
             offset: *offset,
@@ -104,7 +104,7 @@ impl Hittable for Translate {
 }
 
 pub struct Rotate {
-    obj: Rc<dyn Hittable>,
+    obj: Arc<dyn Hittable + Sync + Send>,
     axis: Axis,
     sin_theta: f64,
     cos_theta: f64,
@@ -112,19 +112,19 @@ pub struct Rotate {
 }
 
 impl Rotate {
-    pub fn rotate_x(obj: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_x(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::X)
     }
 
-    pub fn rotate_y(obj: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_y(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::Y)
     }
 
-    pub fn rotate_z(obj: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn rotate_z(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
         Self::new(obj, angle, Axis::Z)
     }
 
-    fn new(obj: Rc<dyn Hittable>, angle: f64, axis: Axis) -> Self {
+    fn new(obj: Arc<dyn Hittable + Sync + Send>, angle: f64, axis: Axis) -> Self {
         let radians = util::degrees_to_radians(angle);
         // eprintln!("degrees: {}, radians: {}", angle, radians);
         let sin_theta = f64::sin(radians);

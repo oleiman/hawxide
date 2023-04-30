@@ -3,10 +3,10 @@ use crate::hit::{HitRecord,Hittable};
 use crate::aabb::AABB;
 
 use std::vec::Vec;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct HittableList {
-    pub objects : Vec<Rc<dyn Hittable>>,
+    pub objects : Vec<Arc<dyn Hittable + Sync + Send>>,
 }
 
 impl HittableList {
@@ -20,7 +20,7 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, obj: Rc<dyn Hittable>) {
+    pub fn add(&mut self, obj: Arc<dyn Hittable + Sync + Send>) {
         self.objects.push(obj);
     }
 

@@ -5,7 +5,7 @@ use crate::vec3;
 use crate::util::random;
 use crate::texture::{Texture,SolidColor};
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 
 pub trait Material {
@@ -18,13 +18,13 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    pub albedo: Rc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Sync + Send>,
 }
 
 impl Lambertian {
     pub fn new(c: &Color) -> Lambertian {
         Lambertian {
-            albedo: Rc::new(SolidColor::new(c.r(), c.g(), c.b())),
+            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
     }
 }
@@ -125,13 +125,13 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    pub emit: Rc<dyn Texture>,
+    pub emit: Arc<dyn Texture + Sync + Send>,
 }
 
 impl DiffuseLight {
     pub fn new(c: &Color) -> DiffuseLight {
         DiffuseLight {
-            emit: Rc::new(SolidColor::new(c.r(), c.g(), c.b())),
+            emit: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
     }
 }
@@ -143,13 +143,13 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    pub albedo: Rc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Sync + Send>,
 }
 
 impl Isotropic {
     pub fn new(c: &Color) -> Self {
         Self {
-            albedo: Rc::new(SolidColor::new(c.r(), c.g(), c.b())),
+            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
     }
 }

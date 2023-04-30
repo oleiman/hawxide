@@ -6,29 +6,29 @@ use crate::material::{Material,Isotropic};
 use crate::aabb::AABB;
 use crate::util::{random, INFINITY, NEG_INFINITY};
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct ConstantMedium {
-    boundary: Rc<dyn Hittable>,
+    boundary: Arc<dyn Hittable + Sync + Send>,
     neg_inv_density: f64,
-    phase_fn: Rc<dyn Material>,
+    phase_fn: Arc<dyn Material + Sync + Send>,
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: Rc<dyn Hittable>, d: f64, c: &Color) -> Self {
+    pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: &Color) -> Self {
         Self {
             boundary: boundary,
             neg_inv_density: -1.0 / d,
-            phase_fn: Rc::new(Isotropic::new(c)),
+            phase_fn: Arc::new(Isotropic::new(c)),
 
         }
     }
 
-    pub fn new_texture(boundary: Rc<dyn Hittable>, d: f64, a: Rc<dyn Texture>) -> Self {
+    pub fn new_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>) -> Self {
         Self {
             boundary: boundary,
             neg_inv_density: -1.0 / d,
-            phase_fn: Rc::new(Isotropic { albedo: a }),
+            phase_fn: Arc::new(Isotropic { albedo: a }),
         }
     }
 }

@@ -4,17 +4,17 @@ use crate::material::Material;
 use crate::aabb::AABB;
 use crate::ray::Ray;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct AARect {
     p0: Point3, p1: Point3,
     norm: Vec3,
     k_axis: Axis,
-    mat: Rc<dyn Material>,
+    mat: Arc<dyn Material + Sync + Send>,
 }
 
 impl AARect {
-    pub fn new(p0: &Point3, p1: &Point3, k_axis: Axis, mat: Rc<dyn Material>) -> Self {
+    pub fn new(p0: &Point3, p1: &Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>) -> Self {
         assert!(p0.axis(k_axis) == p1.axis(k_axis));
         AARect {
             p0: *p0, p1: *p1,
@@ -28,7 +28,7 @@ impl AARect {
         }
     }
 
-    pub fn xy_rect(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn xy_rect(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
             &Point3(x0, y0, k),
             &Point3(x1, y1, k),
@@ -36,7 +36,7 @@ impl AARect {
             mat,
         )
     }
-    pub fn xz_rect(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn xz_rect(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
             &Point3(x0, k, z0),
             &Point3(x1, k, z1),
@@ -44,7 +44,7 @@ impl AARect {
             mat,
         )
     }
-    pub fn yz_rect(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn yz_rect(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
             &Point3(k, y0, z0),
             &Point3(k, y1, z1),
