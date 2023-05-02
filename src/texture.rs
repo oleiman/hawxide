@@ -1,4 +1,4 @@
-use crate::vec3::{Point3,Color};
+use crate::vec3::{Point3,Color,Vec3};
 
 use crate::perlin::Perlin;
 
@@ -75,6 +75,35 @@ impl Texture for MarbleTexture {
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
                             10. * self.noise.turb(p, None)))
+    }
+}
+
+pub struct WoodTexture {
+    noise: Perlin,
+    scale: Vec3,
+    color: Color,
+}
+
+impl WoodTexture {
+    pub fn new(scale: Vec3, color: Color) -> Self {
+        Self {
+            noise: Perlin::new(),
+            scale, color,
+        }
+    }
+}
+
+impl Texture for WoodTexture {
+    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
+        let ns = self.noise.turb(&(self.scale * *p), None);
+        let c1 = self.color * 0.5 * (1.0 + f64::sin(self.scale.y() + 5.0 * ns));
+        let c2 = c1 * 0.5 *
+            (1.0 + f64::cos(
+                self.scale.x() + 3.0 *
+                    self.noise.turb(&(c1 * self.scale.z()), None)
+            ));
+        let c3 = self.color * self.noise.smooth_noise(&(c1 * 50.0));
+        (c1 + c2 + c3) / 3.0
     }
 }
 

@@ -33,7 +33,9 @@ pub use material::{
     Material, Lambertian, Metal, Dielectric, DiffuseLight, Isotropic
 };
 pub use bvh::BVHNode;
-pub use texture::{SolidColor, CheckerTexture, MarbleTexture, ImageTexture};
+pub use texture::{
+    SolidColor, CheckerTexture, MarbleTexture, ImageTexture, WoodTexture
+};
 pub use aarect::{AARect};
 pub use boxx::Boxx;
 pub use constant_medium::ConstantMedium;
