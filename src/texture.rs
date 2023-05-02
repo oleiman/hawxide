@@ -1,5 +1,5 @@
 use crate::vec3::{Point3,Color,Vec3};
-
+use crate::util::random;
 use crate::perlin::Perlin;
 
 use std::sync::Arc;
@@ -105,6 +105,81 @@ impl Texture for WoodTexture {
         let c3 = self.color * self.noise.smooth_noise(&(c1 * 50.0));
         (c1 + c2 + c3) / 3.0
     }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+    color: Arc<dyn Texture + Sync + Send>,
+}
+
+impl NoiseTexture {
+    pub fn new(c: &Color) -> Self {
+        Self {
+            noise: Perlin::new(),
+            color: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
+        }
+    }
+
+    pub fn from_texture(tex: Arc<dyn Texture + Sync + Send>) -> Self {
+        Self {
+            noise: Perlin::new(),
+            color: tex.clone(),
+        }
+    }
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.color.value(u, v, p) * (
+            1.0 +
+                f64::sin(
+                    (u + self.noise.smooth_noise(&(Point3(u, v, 0.0) * 5.0)) * 0.5)
+                        * 50.0
+                )
+        ) * 0.5
+    }
+}
+
+pub struct VoronoiTexture {
+    noise: Perlin,
+    color: Color,
+    vn_points: Vec<(Point3, Color)>,
+}
+
+impl VoronoiTexture {
+    pub fn new(c: &Color, n: u32) -> Self {
+        let mut vn_points: Vec<(Point3, Color)> = vec![];
+        for _ in 0..n {
+            vn_points.push((
+                Point3(random::double(), random::double(), 0.0),
+                Color::random_range(0.0, 0.8),
+            ));
+        }
+        Self {
+            noise: Perlin::new(),
+            color: *c,
+            vn_points,
+        }
+    }
+}
+
+impl Texture for VoronoiTexture {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+        let pt = Point3(u, v, 0.0);
+        let mp = self.vn_points.iter().min_by(|p1, p2| {
+            (
+                &(
+                    ((*p1).0 - pt).len()
+                )
+            ).partial_cmp(
+                &(
+                    ((*p2).0 - pt).len()
+                )
+            ).unwrap()
+        }).unwrap();
+
+        return mp.1 // * (mp.0 - pt).len()
+     }
 }
 
 pub struct ImageTexture {
