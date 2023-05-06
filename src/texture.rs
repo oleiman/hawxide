@@ -56,22 +56,30 @@ impl Texture for CheckerTexture {
 
 pub struct MarbleTexture {
     noise: Perlin,
+    albedo: Arc<dyn Texture + Sync + Send>,
     scale: f64,
 }
 
 impl MarbleTexture {
-    pub fn new(scale : f64) -> MarbleTexture {
+    pub fn new(scale : f64) -> Self {
         MarbleTexture {
             noise: Perlin::new(),
+            albedo: Arc::new(SolidColor::new(1.0, 1.0, 1.0)),
             scale,
+        }
+    }
+    pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>) -> Self {
+        Self {
+            noise: Perlin::new(),
+            albedo, scale,
         }
     }
 }
 
 impl Texture for MarbleTexture {
     // perlin interpolation can return negative numbers, so we add 1 and divide by 2
-    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
-        Color(1.0, 1.0, 1.0) *
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.albedo.value(u, v, p) *
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
                             10. * self.noise.turb(p, None)))
@@ -95,7 +103,8 @@ impl WoodTexture {
 
 impl Texture for WoodTexture {
     fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
-        let ns = self.noise.turb(&(self.scale * *p), None);
+        // let ns = self.noise.turb(&(self.scale * *p), None);
+        let ns = self.noise.turb(&(self.scale * Point3(_u, _v, 0.0)), None);
         let c1 = self.color * 0.5 * (1.0 + f64::sin(self.scale.y() + 5.0 * ns));
         let c2 = c1 * 0.5 *
             (1.0 + f64::cos(
@@ -133,7 +142,8 @@ impl Texture for NoiseTexture {
         self.color.value(u, v, p) * (
             1.0 +
                 f64::sin(
-                    (u + self.noise.smooth_noise(&(Point3(u, v, 0.0) * 5.0)) * 0.5)
+                    (u + self.noise.smooth_noise(
+                        &(Point3(u, v, 0.0) * 5.0)) * 0.5)
                         * 50.0
                 )
         ) * 0.5

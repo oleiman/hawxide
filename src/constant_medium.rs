@@ -24,7 +24,7 @@ impl ConstantMedium {
         }
     }
 
-    pub fn new_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>) -> Self {
+    pub fn from_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>) -> Self {
         Self {
             boundary: boundary,
             neg_inv_density: -1.0 / d,

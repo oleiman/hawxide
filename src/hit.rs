@@ -126,9 +126,7 @@ impl Rotate {
 
     fn new(obj: Arc<dyn Hittable + Sync + Send>, angle: f64, axis: Axis) -> Self {
         let radians = util::degrees_to_radians(angle);
-        // eprintln!("degrees: {}, radians: {}", angle, radians);
         let sin_theta = f64::sin(radians);
-        // eprintln!("sin: {}", sin_theta);
         let cos_theta = f64::cos(radians);
         let (hasbox, bbox) = if let Some(bb) = obj.bounding_box(0.0, 1.0) {
             (true, bb)
@@ -204,19 +202,22 @@ impl Hittable for Rotate {
         let mut origin = r.origin;
         let mut dir = r.dir;
 
+        let sin_neg_theta = -self.sin_theta;
+        let cos_neg_theta = self.cos_theta;
+
         // Basically rotate the input Ray opposite the specified rotation
         let (a_axis, b_axis) = Self::off_axes(self.axis);
         let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&r.origin, self.axis);
         origin[a_axis] =
-            self.cos_theta * a_coeff.0 - self.sin_theta * a_coeff.1;
+            cos_neg_theta * a_coeff.0 + sin_neg_theta * a_coeff.1;
         origin[b_axis] =
-            -self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
+            sin_neg_theta * b_coeff.0 + cos_neg_theta * b_coeff.1;
 
         let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&r.dir, self.axis);
         dir[a_axis] =
-            self.cos_theta * a_coeff.0 - self.sin_theta * a_coeff.1;
+            cos_neg_theta * a_coeff.0 + sin_neg_theta * a_coeff.1;
         dir[b_axis] =
-            -self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
+            sin_neg_theta * b_coeff.0 + cos_neg_theta * b_coeff.1;
 
         let rotated_r = Ray { origin, dir, time: r.time };
 
@@ -236,7 +237,7 @@ impl Hittable for Rotate {
         p[b_axis] =
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
-        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&hr.norm, self.axis);
+        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&normal, self.axis);
         normal[a_axis] =
             self.cos_theta * a_coeff.0 + self.sin_theta * a_coeff.1;
         normal[b_axis] =
@@ -250,14 +251,5 @@ impl Hittable for Rotate {
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         self.bbox
-        // if self.bbox.is_none() {
-        //     None
-        // } else {
-        //     self.bbox
-        //     // Some(AABB{
-        //     //     min: self.bbox.as_ref().unwrap().min,
-        //     //     max: self.bbox.as_ref().unwrap().max,
-        //     // })
-        // }
     }
 }

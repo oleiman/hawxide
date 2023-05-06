@@ -141,7 +141,7 @@ impl ops::Index<usize> for Vec3 {
     type Output = f64;
 
     fn index(&self, idx: usize) -> &Self::Output {
-        assert!(idx <= 3, "Index {} out of range for Vec3", idx);
+        assert!(idx < 3, "Index {} out of range for Vec3", idx);
         match idx {
             0 => &self.0,
             1 => &self.1,
@@ -153,11 +153,12 @@ impl ops::Index<usize> for Vec3 {
 
 impl ops::IndexMut<usize> for Vec3 {
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
-        assert!(idx <= 3, "Index {} out of range for Vec3", idx);
+        assert!(idx < 3, "Index {} out of range for Vec3", idx);
         match idx {
             0 => &mut self.0,
             1 => &mut self.1,
-            _ => &mut self.2,
+            2 => &mut self.2,
+            _ => &mut self.0,
         }
     }
 
