@@ -14,7 +14,7 @@ pub struct AARect {
 }
 
 impl AARect {
-    pub fn new(p0: &Point3, p1: &Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>) -> Self {
+    fn new(p0: &Point3, p1: &Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>) -> Self {
         assert!(p0.axis(k_axis) == p1.axis(k_axis));
         AARect {
             p0: *p0, p1: *p1,

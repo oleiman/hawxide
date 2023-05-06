@@ -4,7 +4,13 @@ pub const NEG_INFINITY : f64 = f64::NEG_INFINITY;
 pub static PI : f64 = std::f64::consts::PI;
 
 pub fn degrees_to_radians(deg : f64) -> f64 {
-    deg * std::f64::consts::PI / 180.0
+    let d = if deg < 0.0 {
+        deg + 360.0
+    } else {
+        deg
+    };
+
+    d * std::f64::consts::PI / 180.0
 }
 
 pub fn clamp(x : f64, min: f64, max: f64) -> f64 {

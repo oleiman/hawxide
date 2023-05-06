@@ -249,6 +249,93 @@ fn simple_light() -> HittableList {
     }
 }
 
+fn wacky_cornell_box() -> HittableList {
+    let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
+    // let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
+    let light = Arc::new(DiffuseLight::new(&Color(5.0, 5.0, 5.0)));
+    let mirror_back = Arc::new(Metal::new(&Color(0.73, 0.73, 0.73), 0.0));
+    let mirror_front = Arc::new(Dielectric{ir: 1.5});
+    let earth = Arc::new(
+        Lambertian{albedo: Arc::new(ImageTexture::new("earthmap.jpg"))}
+    );
+    let wood = Arc::new(
+        Lambertian{
+            albedo: Arc::new(
+                WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1))
+            )
+        });
+
+    let voronoi = Arc::new(
+        Lambertian{
+            albedo: Arc::new(VoronoiTexture::new(&Color(1.0, 1.0, 1.0), 200))
+        });
+    let fun_noise = Arc::new(
+        Lambertian{
+            albedo: Arc::new(NoiseTexture::from_texture(voronoi.albedo.clone()))
+        });
+    // let mirror = Arc::new(Metal::new(&Color(1.0, 1.0, 1.0), 0.0));
+
+    let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 330.0, 165.0),
+        white.clone(),
+    ));
+    box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
+    box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+
+    let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 165.0, 165.0),
+        fun_noise.clone(),
+    ));
+    box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
+    box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
+
+    let mut mirror: Arc<dyn Hittable + Sync + Send> = Arc::new(HittableList{
+        objects: vec![
+            Arc::new(AARect::xy_rect(
+                113.0, 443.0, 127.0, 432.0, 554.0, mirror_back.clone()
+            )),
+            // Arc::new(AARect::xy_rect(
+            //     113.0, 443.0, 127.0, 432.0, 553.99, mirror_front.clone()
+            // )),
+        ]
+    });
+
+    mirror = Arc::new(Translate::new(mirror, &Vec3(-100.0, 0.0, 0.0)));
+
+    HittableList {
+        objects: vec![
+            Arc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, green.clone()
+            )),
+            Arc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
+            )),
+            mirror,
+            // Arc::new(AARect::xz_rect(
+            //     213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
+            // )),
+            Arc::new(AARect::xz_rect(
+                013.0, 543.0, 027.0, 532.0, 554.0, light.clone()
+            )),
+            Arc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, wood.clone()
+            )),
+            Arc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
+            )),
+            Arc::new(AARect::xy_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
+            )),
+            box1,
+            box2,
+        ]
+    }
+}
+
 fn cornell_box() -> HittableList {
     let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
     let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
@@ -345,6 +432,168 @@ fn cornell_smoke() -> HittableList {
     }
 }
 
+fn solids() -> HittableList {
+
+    let wood = Arc::new(WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)));
+    let light = Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
+    let sunlight = Arc::new(DiffuseLight::new(&Color(20.0, 15.5, 11.0)));
+    let white = Arc::new(Metal::new(&Color(0.73, 0.73, 0.73), 0.95));
+
+    let mut objects = HittableList{
+        objects: vec![
+            Arc::new(AARect::yz_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, white.clone(),
+            )),
+            Arc::new(AARect::yz_rect(
+                -10.0, 10.0, -10.0, 10.0, 10.0, white.clone(),
+            )),
+            Arc::new(AARect::xz_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, white.clone(),
+            )),
+            Arc::new(AARect::xz_rect(
+                -10.0, 10.0, -10.0, 10.0, 10.0, white.clone(),
+            )),
+            Arc::new(AARect::xy_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, white.clone(),
+            )),
+        ]
+    };
+
+    let mut panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        AARect::xz_rect(-3.0, 3.0, -2.0, 2.0, -3.0, light.clone())
+    );
+    let mut right_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        Rotate::rotate_z(panel.clone(), 45.0)
+    );
+    right_panel = Arc::new(Translate::new(right_panel.clone(), &Point3(2.0, 0.0, 0.0)));
+    objects.add(right_panel);
+
+    let mut left_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        Rotate::rotate_z(panel.clone(), -45.0)
+    );
+    left_panel = Arc::new(Translate::new(left_panel.clone(), &Point3(-2.0, 0.0, 0.0)));
+    objects.add(left_panel);
+
+    let mut front_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        Rotate::rotate_x(panel.clone(), -45.0)
+    );
+    front_panel = Arc::new(Translate::new(front_panel.clone(), &Point3(1.0, 1.0, 4.0)));
+    objects.add(front_panel);
+
+    objects.add(Arc::new(Sphere::new(
+        &Point3(0.0, 3.5, 0.0), 1.0,
+        sunlight.clone()
+    )));
+
+    let sphere: Arc<dyn Hittable + Sync + Send> = Arc::new(Sphere::new(
+        &Point3(0.0, 0.0, 0.0), 2.0,
+        Arc::new(Lambertian{albedo: wood.clone()}),
+    ));
+
+    objects.add(sphere);
+
+    let boundary = Arc::new(Sphere::new(
+        &Point3(3.0, 3.0, 0.0), 1.0,
+        Arc::new(Dielectric {ir: 1.5})
+    ));
+    objects.add(boundary.clone());
+    objects.add(Arc::new(ConstantMedium::new(
+        boundary.clone(), 1.0, &Color(0.2, 0.4, 0.9),
+    )));
+
+    // let mut block: Arc<dyn Hittable + Sync + Send>= Arc::new(Boxx::new(
+    //     &Point3(-2.0, -2.0, -2.0), &Point3(2.0, 2.0, 2.0),
+    //     Arc::new(Lambertian{albedo: wood.clone()}),
+    // ));
+
+    // block = Arc::new(Rotate::rotate_y(block, 18.0));
+    // block = Arc::new(Rotate::rotate_z(block, 10.0));
+
+
+
+    objects
+}
+
+fn noise_experiments() -> HittableList {
+
+    let wood = Arc::new(Lambertian{
+        albedo: Arc::new(
+            WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1))
+        )
+    });
+    let marble = Arc::new(Lambertian{
+        albedo: Arc::new(
+            MarbleTexture::new(4.)
+        )
+    });
+    let voronoi = Arc::new(VoronoiTexture::new(&Color(1.0, 1.0, 1.0), 200));
+    let fun_noise = Arc::new(
+        NoiseTexture::from_texture(voronoi.clone())
+    );
+    let noise = Arc::new(Lambertian{albedo: fun_noise.clone()});
+    let light = Arc::new(DiffuseLight::new(&Color(10.0, 10.0, 10.0)));
+    let sunlight = Arc::new(DiffuseLight::new(&Color(20.0, 15.5, 11.0)));
+    let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
+
+    let fun = Arc::new(Lambertian{
+        albedo: voronoi.clone(),
+    });
+
+    let mut objects = HittableList{
+        objects: vec![
+            Arc::new(AARect::yz_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, green.clone(),
+            )),
+            Arc::new(AARect::yz_rect(
+                -10.0, 10.0, -10.0, 10.0, 10.0, green.clone(),
+            )),
+            Arc::new(AARect::xz_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, fun.clone(),
+            )),
+            Arc::new(AARect::xz_rect(
+                -10.0, 10.0, -10.0, 10.0, 10.0, white.clone(),
+            )),
+            Arc::new(AARect::xy_rect(
+                -10.0, 10.0, -10.0, 10.0, -10.0, white.clone(),
+            )),
+        ]
+    };
+
+    let mut panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        AARect::xz_rect(-5.0, 5.0, -5.0, 5.0, 9.99, light.clone())
+    );
+    objects.add(panel);
+
+    // panel = Arc::new(
+    //     AARect::xz_rect(-5.0, 5.0, -5.0, 5.0, -9.99, light.clone())
+    // );
+    panel = Arc::new(
+        AARect::yz_rect(-2.0, 2.0, -2.0, 2.0, 2.1, light.clone())
+    );
+    panel = Arc::new(Rotate::rotate_y(panel, -45.0));
+    panel = Arc::new(Translate::new(panel, &Point3(2.0, 0.0, 2.0)));
+    objects.add(panel);
+
+    let mut block: Arc<dyn Hittable + Sync + Send> = Arc::new(
+        Boxx::new(
+            &Point3(-2.0, -2.0, -2.0),
+            &Point3(2.0, 2.0, 2.0),
+            marble.clone(),
+        )
+    );
+
+    // block = Arc::new(Rotate::rotate_z(block, -45.0));
+    // block = Arc::new(Rotate::rotate_x(block, -90.0));
+    block = Arc::new(Rotate::rotate_y(block, 45.0));
+
+    // block = Arc::new(Translate::new(block, &Point3(4.0, -2.0, -8.0)));
+    // block = Arc::new(Translate::new(block, &Point3(-4.0, 0.0, 0.0)));
+
+    objects.add(block);
+
+    objects
+}
 fn final_scene() -> HittableList {
     let mut boxes1 = HittableList::new();
     let ground = Arc::new(Lambertian::new(&Color(0.48, 0.83, 0.53)));
@@ -469,7 +718,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
-    let scene_select : usize = 0;
+    let scene_select: usize = 11;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -536,6 +785,34 @@ fn main() {
             vfov = 40.0;
             samples_per_pixel = 400;
             subsurface_perlin_spheres()
+        },
+        9 => {
+            background = Color(0.0, 0.0, 0.0);
+            lookfrom = Point3(-4.0, 4.0, 15.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 40.0;
+            samples_per_pixel = 500;
+            solids()
+        },
+        10 => {
+            background = Color(0.0, 0.0, 0.0);
+            // background = Color(1.0, 1.0, 1.0);
+            lookfrom = Point3(0.0, 0.0, 18.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 60.0;
+            samples_per_pixel = 200;
+            noise_experiments()
+        },
+        11 => {
+            aspect_ratio = 1.0;
+            // image_width = 600;
+            image_width = 300;
+            samples_per_pixel = 1000;
+            background = Color(0.0, 0.0, 0.0);
+            lookfrom = Point3(278.0, 278.0, -800.0);
+            lookat = Point3(278.0, 278.0, 0.0);
+            vfov = 40.0;
+            wacky_cornell_box()
         },
         _ => {
             aspect_ratio = 1.0;
