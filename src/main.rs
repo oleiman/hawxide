@@ -105,6 +105,93 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn fancy_random_scene() -> HittableList {
+    let mut world = HittableList::new();
+
+    let checker  = Arc::new(
+        CheckerTexture::new(&Color(0.2, 0.3, 0.1), &Color(0.9, 0.9, 0.9)));
+
+    let ground_material =
+        Arc::new(Lambertian{albedo: checker.clone()});
+    world.add(Arc::new(Sphere::new(
+        &Point3(0., -1000., 0.),
+        1000.,
+        ground_material.clone()
+    )));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random::double();
+            let center = Point3(
+                f64::from(a) + 0.9 * random::double(),
+                0.2,
+                f64::from(b) + 0.9 * random::double(),
+            );
+
+            if ((center - Point3(4., 0.2, 0.)).len() > 0.9) {
+                world.add(match choose_mat {
+                    i if i < 0.75 => {
+                        let rand_off = random::double_range(-0.05, 0.05);
+                        Arc::new(Sphere::new(
+                            &(center + Vec3(0.0, rand_off, 0.0)),
+                            0.2 + rand_off,      // radius
+                            Arc::new(
+                                Lambertian::new(&(Color::random() * Color::random())),
+                            ),
+                        ))
+                    },
+                    j if j < 0.95 => {
+                        Arc::new(Sphere::new(
+                            &center, 0.2,
+                            Arc::new(Metal::new(
+                                &Color::random_range(0.5, 1.),
+                                random::double_range(0., 0.5),
+                            ))
+                        ))
+                    },
+                    _ => {
+                        Arc::new(Sphere::new(
+                            &center, 0.2,
+                            Arc::new(Dielectric{
+                                ir: 1.5,
+                            })
+                        ))
+                    }
+                }
+                );
+            }
+        }
+    }
+
+    world.add(Arc::new(Sphere::new(
+        &Point3(0., 1., 0.), 1.0,
+        Arc::new(Dielectric{
+            ir: 1.5,
+        })
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        &Point3(-4., 1., 0.), 1.0,
+        Arc::new(
+            Lambertian::new(&Color(0.4, 0.2, 0.1))
+        )
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        &Point3(4., 1., 0.), 1.0,
+        Arc::new(Metal::new(&Color(0.7, 0.6, 0.5), 0.0))
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        &Point3(3.0, 2.0, 2.0), 0.6,
+        Arc::new(
+            DiffuseLight::new(&Color(30.0, 30.0, 30.0))
+        )
+    )));
+
+    world
+}
+
 fn two_spheres() -> HittableList {
     let checker = Arc::new(CheckerTexture::new(
         &Color(0.2, 0.3, 0.1),
@@ -718,7 +805,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
-    let scene_select: usize = 11;
+    let scene_select: usize = 12;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -813,6 +900,16 @@ fn main() {
             lookat = Point3(278.0, 278.0, 0.0);
             vfov = 40.0;
             wacky_cornell_box()
+        },
+        12 => {
+            // background = Color(0.7, 0.8, 1.0);
+            background = Color(0.0, 0.0, 0.0);
+            lookfrom = Point3(13.0, 2.0, 3.0);
+            lookat = Point3(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.05;
+            samples_per_pixel = 4000;
+            fancy_random_scene()
         },
         _ => {
             aspect_ratio = 1.0;
