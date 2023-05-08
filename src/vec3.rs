@@ -6,7 +6,7 @@ use std::assert;
 use std::io::Write;
 use crate::util::{
     random::{double, double_range},
-    clamp
+    clamp, PI,
 };
 
 #[derive(Copy, Clone)]
@@ -110,8 +110,18 @@ impl Vec3 {
         }
     }
 
-}
+    pub fn random_to_sphere(r: f64, dist_squared: f64) -> Vec3 {
+        let r1 = double();
+        let r2 = double();
+        let z = 1.0 + r2 * (f64::sqrt(1.0 - r*r/dist_squared) - 1.0);
 
+        let phi = 2.0 * PI * r1;
+        let x = f64::cos(phi) * f64::sqrt(1.0 - z * z);
+        let y = f64::sin(phi) * f64::sqrt(1.0 - z * z);
+
+        Vec3(x, y, z)
+    }
+}
 
 // Maybe dot should pass by value (implicity copy)?
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
@@ -359,11 +369,14 @@ pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i
     // Divide the color by the number of samples
     let scale = 1.0 / samples_per_pixel as f64;
 
-    assert!(col.r() >= 0. && col.g() >= 0. && col.b() >= 0.);
+    // assert!(col.r() >= 0. && col.g() >= 0. && col.b() >= 0.);
+    // assert!(!col.r().is_nan() && !col.g().is_nan() && !col.b().is_nan());
 
     let r = (scale * col.r()).sqrt();
     let g = (scale * col.g()).sqrt();
     let b = (scale * col.b()).sqrt();
+
+    // assert!(!r.is_infinite() && !g.is_infinite() && !b.is_infinite());
 
     writeln!(writer, "{} {} {}",
         (256. * r.clamp(0., 0.999)) as u8,

@@ -8,14 +8,33 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use rayon::prelude::*;
 
-fn ray_color<H: Hittable>(r : &Ray, background: &Color, world: &H, depth: i32) -> Color {
+fn ray_color<H: Hittable>(r : &Ray,
+                          background: &Color,
+                          world: &H,
+                          lights: Arc<dyn Hittable + Sync + Send>,
+                          depth: i32) -> Color {
     if depth <= 0 {
         return Color(0., 0., 0.);
     }
     if let Some(hr) = world.hit(r, 0.001, INFINITY) {
-        let emitted = hr.mat.emitted(hr.u, hr.v, &hr.p);
-        if let Some((attenuation, scattered)) =  hr.mat.scatter(r, &hr) {
-            emitted + attenuation * ray_color(&scattered, background, world, depth-1)
+        let emitted = hr.mat.emitted(r, &hr, hr.u, hr.v, &hr.p);
+        if let Some(sr) =  hr.mat.scatter(r, &hr) {
+            if let Some(spec_r) = sr.specular_ray {
+                return sr.attenuation
+                    * ray_color(&spec_r, background, world, lights.clone(), depth - 1);
+            }
+            let light_pdf = Arc::new(HittablePDF::new(lights.clone(), &hr.p));
+            let mix_pdf = MixturePDF::new(light_pdf.clone(), sr.pdf.clone());
+            let scattered = Ray::new(&hr.p, &mix_pdf.generate(), r.time);
+            let pdf_val = mix_pdf.value(&scattered.dir);
+
+            assert!(pdf_val > 0.0, "PDF val {:12} < 0", pdf_val);
+
+            emitted +
+                sr.attenuation *
+                  hr.mat.scattering_pdf(r, &hr, &scattered) *
+                  ray_color(&scattered, background, world, lights.clone(), depth-1) /
+                pdf_val
         } else {
             emitted
         }
@@ -428,6 +447,62 @@ fn cornell_box() -> HittableList {
     let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
     let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
+    let aluminum = Arc::new(Metal::new(&Color(0.8, 0.85, 0.88), 0.0));
+
+    let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 330.0, 165.0),
+        // aluminum.clone(),
+        white.clone(),
+    ));
+    box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
+    box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+
+    let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
+        &Point3(0.0, 0.0, 0.0),
+        &Point3(165.0, 165.0, 165.0),
+        white.clone(),
+    ));
+    box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
+    box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
+
+    let sphere = Arc::new(Sphere::new(
+        &Point3(190.0, 90.0, 190.0), 90.0,
+        Arc::new(Dielectric{ir: 1.5}),
+    ));
+
+    HittableList {
+        objects: vec![
+            Arc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, green.clone()
+            )),
+            Arc::new(AARect::yz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
+            )),
+            Arc::new(FlipFace::new(Arc::new(AARect::xz_rect(
+                213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
+            )))),
+            Arc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
+            )),
+            Arc::new(AARect::xz_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
+            )),
+            Arc::new(AARect::xy_rect(
+                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
+            )),
+            box1,
+            sphere,
+            // box2,
+        ]
+    }
+}
+
+fn cornell_smoke() -> HittableList {
+    let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
+    let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
 
     let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
@@ -455,54 +530,6 @@ fn cornell_box() -> HittableList {
             )),
             Arc::new(AARect::xz_rect(
                 213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
-            )),
-            Arc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
-            )),
-            Arc::new(AARect::xz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
-            )),
-            Arc::new(AARect::xy_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, white.clone()
-            )),
-            box1,
-            box2,
-        ]
-    }
-}
-
-fn cornell_smoke() -> HittableList {
-    let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
-    let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
-    let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
-    let light = Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
-
-    let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-        &Point3(0.0, 0.0, 0.0),
-        &Point3(165.0, 330.0, 165.0),
-        white.clone(),
-    ));
-    box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
-    box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
-
-    let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-        &Point3(0.0, 0.0, 0.0),
-        &Point3(165.0, 165.0, 165.0),
-        white.clone(),
-    ));
-    box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
-    box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
-
-    HittableList {
-        objects: vec![
-            Arc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 555.0, green.clone()
-            )),
-            Arc::new(AARect::yz_rect(
-                0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
-            )),
-            Arc::new(AARect::xz_rect(
-                113.0, 443.0, 127.0, 432.0, 554.0, light.clone()
             )),
             Arc::new(AARect::xz_rect(
                 0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
@@ -784,9 +811,52 @@ fn final_scene() -> HittableList {
     objects
 }
 
+fn estimate_pi() {
+    let mut inside_circle = 0u32;
+    let mut inside_circle_stratified = 0u32;
+    let mut runs = 0;
+    let sqrt_n = 10000;
+    for i in 0..sqrt_n {
+        for j in 0..sqrt_n {
+            runs += 1;
+            let mut x = random::double_range(-1.0, 1.0);
+            let mut y = random::double_range(-1.0, 1.0);
+            if x * x + y * y < 1.0 {
+                inside_circle += 1
+            }
+            x = 2.0 * ((f64::from(i) + random::double()) / f64::from(sqrt_n)) - 1.0;
+            y = 2.0 * ((f64::from(j) + random::double()) / f64::from(sqrt_n)) - 1.0;
+            if x * x + y * y < 1.0 {
+                inside_circle_stratified += 1;
+            }
+        }
+    }
+    let n = f64::from(sqrt_n * sqrt_n);
+    eprintln!("Regular Estimate of pi = : {:12}",
+              4.0 * f64::from(inside_circle) / n);
+    eprintln!("Stratified Estimate of pi = : {:12}",
+              4.0 * f64::from(inside_circle_stratified) / n);
+}
+
+fn pdf(_x: &Vec3) -> f64 {
+    return  1.0 / (4. * PI);
+}
+
+fn estimate_integral() {
+    let n = 1000000;
+    let mut sum = 0.0;
+    for i in 0..n {
+        let v = random::cosine_direction();
+        sum += v.z() * v.z() * v.z() / (v.z()/PI);
+    }
+    eprintln!("PI / 2      = {:12}", PI / 2.0);
+    eprintln!("Estimate    = {:12}", sum / f64::from(n));
+}
 
 fn main() {
 
+    // estimate_integral();
+    // return;
     // Image
 
     const MAX_DEPTH : i32 = 50;
@@ -805,7 +875,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
-    let scene_select: usize = 12;
+    let scene_select: usize = 6;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -858,7 +928,7 @@ fn main() {
         7 => {
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 200;
+            samples_per_pixel = 50;
             background = Color(0.0, 0.0, 0.0);
             lookfrom = Point3(278.0, 278.0, -800.0);
             lookat = Point3(278.0, 278.0, 0.0);
@@ -923,6 +993,22 @@ fn main() {
         }
     }, 0.0, 1.0);
 
+    let panel = Arc::new(AARect::xz_rect(
+        213.0, 343.0, 227.0, 332.0, 554.0,
+        Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)))
+    ));
+
+    let sphere = Arc::new(Sphere::new(
+        &Point3(190.0, 90.0, 190.0), 90.0,
+        Arc::new(Dielectric{ir: 1.5}),
+    ));
+
+    let lights = Arc::new(HittableList {
+        objects: vec![
+            panel, sphere,
+        ]
+    });
+
     let image_height : i32 = ((image_width as f64) / aspect_ratio) as i32;
     let vup = Vec3(0., 1., 0.);
     let dist_to_focus = 10.0;
@@ -951,7 +1037,8 @@ fn main() {
                     (f64::from(j) + random::double()) / f64::from(image_height - 1);
 
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &background, &world, MAX_DEPTH)
+                pixel_color +=
+                    ray_color(&r, &background, &world, lights.clone(), MAX_DEPTH)
             };
             pixel_color
         }).collect();

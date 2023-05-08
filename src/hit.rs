@@ -58,6 +58,14 @@ pub trait Hittable {
 
     // Give the smallest reasonable AABB for the Hittable
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
+
+    fn pdf_value(&self, _origin: &Point3, _v: &Vec3) -> f64 {
+        0.0
+    }
+
+    fn random(&self, _origin: &Vec3) -> Vec3 {
+        Vec3(1.0, 0.0, 0.0)
+    }
 }
 
 pub struct Translate {
@@ -251,5 +259,32 @@ impl Hittable for Rotate {
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         self.bbox
+    }
+}
+
+pub struct FlipFace {
+    obj: Arc<dyn Hittable + Sync + Send>,
+}
+
+impl FlipFace {
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>) -> Self {
+        FlipFace {obj}
+    }
+}
+
+impl Hittable for FlipFace {
+
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if let Some(mut hr) = self.obj.hit(r, t_min, t_max) {
+            hr.front_face = !hr.front_face;
+            Some(hr)
+        } else {
+            None
+        }
+    }
+
+    // Give the smallest reasonable AABB for the Hittable
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        self.obj.bounding_box(time0, time1)
     }
 }

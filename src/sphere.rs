@@ -3,7 +3,8 @@ use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
 use crate::aabb::AABB;
-use crate::util::PI;
+use crate::util::{PI,INFINITY,random};
+use crate::onb::OrthoNormalBasis;
 
 use std::sync::Arc;
 
@@ -83,5 +84,24 @@ impl Hittable for Sphere {
             min: self.center - Vec3(self.radius, self.radius, self.radius),
             max: self.center + Vec3(self.radius, self.radius, self.radius),
         })
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        if self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY).is_none() {
+            return 0.0;
+        }
+        let cos_theta_max = f64::sqrt(
+            1.0 - self.radius * self.radius / (self.center - *origin).len_squared()
+        );
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+        1.0 / solid_angle
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        let direction = self.center - *origin;
+        let dist_squared = direction.len_squared();
+        let mut uvw = OrthoNormalBasis::new();
+        uvw.build_from_w(&direction);
+        uvw.local_v(&Vec3::random_to_sphere(self.radius, dist_squared))
     }
 }

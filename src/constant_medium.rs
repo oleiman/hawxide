@@ -87,11 +87,16 @@ impl Hittable for ConstantMedium {
             front_face: true // arbitrary
         })
 
-
-
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
         self.boundary.bounding_box(time0, time1)
     }
+
+    // fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+
+    // }
+
+    // fn random(&self, origin: &Vec3) -> Vec3 {
+    // }
 }

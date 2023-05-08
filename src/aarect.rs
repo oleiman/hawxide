@@ -1,8 +1,9 @@
-use crate::vec3::{Point3, Axis, Vec3};
+use crate::vec3::{Point3, Axis, Vec3, dot};
 use crate::hit::{Hittable, HitRecord};
 use crate::material::Material;
 use crate::aabb::AABB;
 use crate::ray::Ray;
+use crate::util::{random, INFINITY};
 
 use std::sync::Arc;
 
@@ -53,6 +54,14 @@ impl AARect {
         )
     }
 
+    fn area(&self) -> f64 {
+        match self.k_axis {
+            Axis::X => (self.p1.y() - self.p0.y()) * (self.p1.z() - self.p0.z()),
+            Axis::Y => (self.p1.x() - self.p0.x()) * (self.p1.z() - self.p0.z()),
+            Axis::Z => (self.p1.x() - self.p0.x()) * (self.p1.y() - self.p0.y()),
+        }
+    }
+
 }
 
 impl Hittable for AARect {
@@ -101,5 +110,38 @@ impl Hittable for AARect {
             min: self.p0 - self.norm / 10000.,
             max: self.p1 + self.norm / 10000.,
         })
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        if let Some(hr) = self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY) {
+            let area = self.area();
+            let distance_squared = hr.t * hr.t * v.len_squared();
+            let cosine = f64::abs(dot(v, &hr.norm) / v.len());
+            let v = distance_squared / (cosine * area);
+            v
+        } else {
+            0.0
+        }
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        let random_point = match self.k_axis {
+            Axis::X => Point3(
+                self.p0.x(),
+                random::double_range(self.p0.y(), self.p1.y()),
+                random::double_range(self.p0.z(), self.p1.z()),
+            ),
+            Axis::Y => Point3(
+                random::double_range(self.p0.x(), self.p1.x()),
+                self.p0.y(),
+                random::double_range(self.p0.z(), self.p1.z()),
+            ),
+            Axis::Z => Point3(
+                random::double_range(self.p0.x(), self.p1.x()),
+                random::double_range(self.p0.y(), self.p1.y()),
+                self.p1.z(),
+            ),
+        };
+        random_point - *origin
     }
 }

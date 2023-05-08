@@ -102,7 +102,7 @@ impl WoodTexture {
 }
 
 impl Texture for WoodTexture {
-    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         // let ns = self.noise.turb(&(self.scale * *p), None);
         let ns = self.noise.turb(&(self.scale * Point3(_u, _v, 0.0)), None);
         let c1 = self.color * 0.5 * (1.0 + f64::sin(self.scale.y() + 5.0 * ns));
@@ -151,13 +151,11 @@ impl Texture for NoiseTexture {
 }
 
 pub struct VoronoiTexture {
-    noise: Perlin,
-    color: Color,
     vn_points: Vec<(Point3, Color)>,
 }
 
 impl VoronoiTexture {
-    pub fn new(c: &Color, n: u32) -> Self {
+    pub fn new(_c: &Color, n: u32) -> Self {
         let mut vn_points: Vec<(Point3, Color)> = vec![];
         for _ in 0..n {
             vn_points.push((
@@ -166,15 +164,13 @@ impl VoronoiTexture {
             ));
         }
         Self {
-            noise: Perlin::new(),
-            color: *c,
             vn_points,
         }
     }
 }
 
 impl Texture for VoronoiTexture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
         let pt = Point3(u, v, 0.0);
         let mp = self.vn_points.iter().min_by(|p1, p2| {
             (

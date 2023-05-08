@@ -14,6 +14,8 @@ pub mod perlin;
 pub mod aarect;
 pub mod boxx;
 pub mod constant_medium;
+pub mod onb;
+pub mod pdf;
 
 // TODO(oren): janky, lazy
 
@@ -25,11 +27,12 @@ pub use ray::Ray;
 pub use sphere::Sphere;
 pub use moving_sphere::MovingSphere;
 pub use hittable_list::HittableList;
-pub use hit::{Hittable, Translate, Rotate};
+pub use hit::{Hittable, Translate, Rotate, FlipFace};
 pub use camera::Camera;
-pub use util::{INFINITY,NEG_INFINITY};
+pub use util::{INFINITY,NEG_INFINITY,PI};
 pub use util::random;
 pub use material::{
+    ScatterRecord,
     Material,
     Lambertian,
     Metal,
@@ -50,5 +53,6 @@ pub use texture::{
 pub use aarect::{AARect};
 pub use boxx::Boxx;
 pub use constant_medium::ConstantMedium;
+pub use pdf::{PDensityFn, CosPDF, HittablePDF, MixturePDF};
 
 
