@@ -5,7 +5,7 @@ use crate::vec3;
 use crate::util::random;
 use crate::texture::{Texture,SolidColor};
 use crate::util::PI;
-use crate::pdf::{PDensityFn,CosPDF,HittablePDF,NullPDF};
+use crate::pdf::{PDensityFn,CosPDF,NullPDF};
 
 use std::sync::Arc;
 

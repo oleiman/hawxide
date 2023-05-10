@@ -19,7 +19,7 @@ impl NullPDF {
 }
 
 impl PDensityFn for NullPDF {
-    fn value(&self, dir: &Vec3) -> f64 { 0.0 }
+    fn value(&self, _dir: &Vec3) -> f64 { 0.0 }
     fn generate(&self) -> Vec3 { Vec3::new() }
 }
 

@@ -502,7 +502,7 @@ fn cornell_smoke() -> HittableList {
     let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
     let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
     let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
-    let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
+    let light = Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
 
     let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
         &Point3(0.0, 0.0, 0.0),
@@ -528,9 +528,12 @@ fn cornell_smoke() -> HittableList {
             Arc::new(AARect::yz_rect(
                 0.0, 555.0, 0.0, 555.0, 0.0, red.clone()
             )),
-            Arc::new(AARect::xz_rect(
-                213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
-            )),
+            Arc::new(FlipFace::new(Arc::new(AARect::xz_rect(
+                113.0, 443.0, 127.0, 432.0, 554.0, light.clone()
+            )))),
+            // Arc::new(AARect::xz_rect(
+            //     213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
+            // )),
             Arc::new(AARect::xz_rect(
                 0.0, 555.0, 0.0, 555.0, 0.0, white.clone()
             )),
@@ -875,7 +878,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color(0.0, 0.0, 0.0);
 
-    let scene_select: usize = 6;
+    let scene_select: usize = 7;
 
     let world = BVHNode::new( &match scene_select {
         1 => {
@@ -928,7 +931,7 @@ fn main() {
         7 => {
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 50;
+            samples_per_pixel = 100;
             background = Color(0.0, 0.0, 0.0);
             lookfrom = Point3(278.0, 278.0, -800.0);
             lookat = Point3(278.0, 278.0, 0.0);
@@ -996,6 +999,11 @@ fn main() {
     let panel = Arc::new(AARect::xz_rect(
         213.0, 343.0, 227.0, 332.0, 554.0,
         Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)))
+    ));
+
+    let panel = Arc::new(AARect::xz_rect(
+        113.0, 443.0, 127.0, 432.0, 554.0,
+        Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)))
     ));
 
     let sphere = Arc::new(Sphere::new(

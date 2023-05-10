@@ -377,6 +377,7 @@ pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i
     let b = (scale * col.b()).sqrt();
 
     // assert!(!r.is_infinite() && !g.is_infinite() && !b.is_infinite());
+    // assert!(!r.is_nan() && !g.is_nan() && !b.is_nan());
 
     writeln!(writer, "{} {} {}",
         (256. * r.clamp(0., 0.999)) as u8,

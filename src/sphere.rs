@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
 use crate::aabb::AABB;
-use crate::util::{PI,INFINITY,random};
+use crate::util::{PI,INFINITY};
 use crate::onb::OrthoNormalBasis;
 
 use std::sync::Arc;
