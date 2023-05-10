@@ -5,6 +5,7 @@ use crate::vec3;
 use crate::ray::Ray;
 use crate::util;
 use crate::util::random;
+use crate::scene::Scene;
 
 
 pub struct Camera {
@@ -23,16 +24,17 @@ pub struct Camera {
 
 // TODO(oren): too many args here
 impl Camera {
-    pub fn new(lookfrom: &Point3,
-               lookat: &Point3,
+    pub fn new(scene: &Scene,
                vup: &Vec3,
-               vfov: f64,
                aspect_ratio: f64,
                aperture: f64,
                focus_dist: f64,
                time0: f64,
                time1: f64,
     ) -> Camera {
+        let lookfrom = scene.lookfrom;
+        let lookat = scene.lookat;
+        let vfov = scene.vfov;
         let theta = util::degrees_to_radians(vfov);
         let h = (theta / 2.).tan();
 
@@ -53,7 +55,7 @@ impl Camera {
         eprintln!("Camera: u: {}, v: {}, w: {}", u, v, w);
 
         // Origin is now the center of the lens
-        let origin = *lookfrom;
+        let origin = lookfrom;
 
         // Actual dimensions of the focus plane
         let horizontal = focus_dist * view_width * u;
@@ -82,7 +84,6 @@ impl Camera {
                 (t * self.vertical) -
                 self.origin - offset,
             time: random::double_range(self.time0, self.time1),
-            // time: random::double(),
         }
     }
 }

@@ -87,5 +87,9 @@ impl Hittable for HittableList {
         let size = self.objects.len() as i32;
         self.objects[random::int(0, size - 1) as usize].random(origin)
     }
+
+    fn empty(&self) -> bool {
+        return self.objects.len() == 0;
+    }
 }
 

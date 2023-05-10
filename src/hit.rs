@@ -66,6 +66,10 @@ pub trait Hittable {
     fn random(&self, _origin: &Vec3) -> Vec3 {
         Vec3(1.0, 0.0, 0.0)
     }
+
+    fn empty(&self) -> bool {
+        return false;
+    }
 }
 
 pub struct Translate {
@@ -108,6 +112,14 @@ impl Hittable for Translate {
         } else {
             None
         }
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        self.obj.pdf_value(origin, v)
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        self.obj.random(origin)
     }
 }
 
@@ -260,6 +272,14 @@ impl Hittable for Rotate {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         self.bbox
     }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        self.obj.pdf_value(origin, v)
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        self.obj.random(origin)
+    }
 }
 
 pub struct FlipFace {
@@ -286,5 +306,14 @@ impl Hittable for FlipFace {
     // Give the smallest reasonable AABB for the Hittable
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
         self.obj.bounding_box(time0, time1)
+    }
+
+    // TODO(oren): Not sure this is quite right
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        self.obj.pdf_value(origin, v)
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        self.obj.random(origin)
     }
 }

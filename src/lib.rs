@@ -16,6 +16,7 @@ pub mod boxx;
 pub mod constant_medium;
 pub mod onb;
 pub mod pdf;
+pub mod scene;
 
 // TODO(oren): janky, lazy
 
@@ -54,5 +55,6 @@ pub use aarect::{AARect};
 pub use boxx::Boxx;
 pub use constant_medium::ConstantMedium;
 pub use pdf::{PDensityFn, CosPDF, HittablePDF, MixturePDF};
+pub use scene::{Scene};
 
 
