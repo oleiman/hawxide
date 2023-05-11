@@ -74,7 +74,7 @@ impl Hittable for HittableList {
         output_box
     }
 
-    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
         let weight = 1.0 / self.objects.len() as f64;
 
         self.objects.iter().fold(
@@ -83,7 +83,7 @@ impl Hittable for HittableList {
         )
     }
 
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, origin: Vec3) -> Vec3 {
         let size = self.objects.len() as i32;
         self.objects[random::int(0, size - 1) as usize].random(origin)
     }

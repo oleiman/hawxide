@@ -53,7 +53,7 @@ impl Vec3 {
 
     #[must_use]
     pub fn unit_vector(&self) -> Vec3 {
-        self / self.len()
+        *self / self.len()
     }
 
     pub fn near_zero(&self) -> bool {
@@ -101,9 +101,9 @@ impl Vec3 {
         Self::random_in_unit_sphere().unit_vector()
     }
 
-    pub fn random_in_hemisphere(norm: &Vec3) -> Vec3 {
+    pub fn random_in_hemisphere(norm: Vec3) -> Vec3 {
         let in_unit_sphere = Self::random_in_unit_sphere();
-        if dot(&in_unit_sphere, norm) > 0.0 {
+        if dot(in_unit_sphere, norm) > 0.0 {
             in_unit_sphere
         } else {
             -in_unit_sphere
@@ -124,11 +124,11 @@ impl Vec3 {
 }
 
 // Maybe dot should pass by value (implicity copy)?
-pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
+pub fn dot(u: Vec3, v: Vec3) -> f64 {
     (u.0 * v.0) + (u.1 * v.1) + (u.2 * v.2)
 }
 
-pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
+pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
     Vec3(
         u.1 * v.2 - u.2 * v.1,
         u.2 * v.0 - u.0 * v.2,
@@ -136,13 +136,13 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    v - &(2. * dot(v, n) * n)
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - (2. * dot(v, n) * n)
 }
 
-pub fn refract(uv : &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = f64::min(dot(&-uv, n), 1.0);
-    let r_out_perp = etai_over_etat * (uv + &(cos_theta * n));
+pub fn refract(uv : Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = f64::min(dot(-uv, n), 1.0);
+    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
     let r_out_parallel = -(1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
     r_out_perp + r_out_parallel
 }
@@ -191,18 +191,9 @@ impl ops::MulAssign<f64> for Vec3 {
     }
 }
 
-// TODO(oren): implement in terms of operator*=
 impl ops::DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, t: f64) {
         *self *= (1. / t);
-    }
-}
-
-impl ops::Neg for &Vec3 {
-    type Output = Vec3;
-
-    fn neg(self) -> Self::Output {
-        Vec3(-self.0, -self.1, -self.2)
     }
 }
 
@@ -214,27 +205,11 @@ impl ops::Neg for Vec3 {
     }
 }
 
-impl ops::Add for &Vec3 {
-    type Output = Vec3;
-
-    fn add(self, other: Self) -> Self::Output {
-        Vec3(self.0 + other.0, self.1 + other.1, self.2 + other.2)
-    }
-}
-
 impl ops::Add for Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Self) -> Self::Output {
         Vec3(self.0 + other.0, self.1 + other.1, self.2 + other.2)
-    }
-}
-
-impl ops::Sub for &Vec3 {
-    type Output = Vec3;
-
-    fn sub(self, other: Self) -> Self::Output {
-        Vec3(self.0 - other.0, self.1 - other.1, self.2 - other.2)
     }
 }
 
@@ -246,27 +221,11 @@ impl ops::Sub for Vec3 {
     }
 }
 
-impl ops::Mul for &Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, other: Self) -> Self::Output {
-        Vec3(self.0 * other.0, self.1 * other.1, self.2 * other.2)
-    }
-}
-
 impl ops::Mul for Vec3 {
     type Output = Vec3;
 
     fn mul(self, other: Self) -> Self::Output {
         Vec3(self.0 * other.0, self.1 * other.1, self.2 * other.2)
-    }
-}
-
-impl ops::Mul<&Vec3> for f64 {
-    type Output = Vec3;
-
-    fn mul(self, vec: &Vec3) -> Self::Output {
-        Vec3(self * vec.0, self * vec.1, self * vec.2)
     }
 }
 
@@ -278,14 +237,6 @@ impl ops::Mul<Vec3> for f64 {
     }
 }
 
-impl ops::Mul<&Vec3> for i32 {
-    type Output = Vec3;
-
-    fn mul(self, vec: &Vec3) -> Self::Output {
-        f64::from(self) * vec
-    }
-}
-
 impl ops::Mul<Vec3> for i32 {
     type Output = Vec3;
 
@@ -294,26 +245,10 @@ impl ops::Mul<Vec3> for i32 {
     }
 }
 
-impl ops::Mul<f64> for &Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, rhs : f64) -> Vec3 {
-        rhs * self
-    }
-}
-
 impl ops::Mul<f64> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs : f64) -> Vec3 {
-        rhs * self
-    }
-}
-
-impl ops::Mul<i32> for &Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, rhs : i32) -> Self::Output {
         rhs * self
     }
 }
@@ -326,27 +261,11 @@ impl ops::Mul<i32> for Vec3 {
     }
 }
 
-impl ops::Div<f64> for &Vec3 {
-    type Output = Vec3;
-
-    fn div(self, rhs: f64) -> Vec3 {
-        (1. / rhs) * self
-    }
-}
-
 impl ops::Div<f64> for Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: f64) -> Vec3 {
         (1. / rhs) * self
-    }
-}
-
-impl ops::Div<i32> for &Vec3 {
-    type Output = Vec3;
-
-    fn div(self, rhs: i32) -> Vec3 {
-        (1. / f64::from(rhs)) * self
     }
 }
 
@@ -365,7 +284,7 @@ impl fmt::Display for Vec3 {
 }
 
 #[allow(clippy::cast_possible_truncation)]
-pub fn write_color<W: Write>(writer: &mut W, col : &Color, samples_per_pixel : i32) {
+pub fn write_color<W: Write>(writer: &mut W, col : Color, samples_per_pixel : i32) {
     // Divide the color by the number of samples
     let scale = 1.0 / samples_per_pixel as f64;
 

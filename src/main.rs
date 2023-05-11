@@ -15,7 +15,7 @@ fn ray_color(r : &Ray,
         return Color(0., 0., 0.);
     }
     if let Some(hr) = scene.world.hit(r, 0.001, INFINITY) {
-        let emitted = hr.mat.emitted(r, &hr, hr.u, hr.v, &hr.p);
+        let emitted = hr.mat.emitted(r, &hr, hr.u, hr.v, hr.p);
         if let Some(sr) =  hr.mat.scatter(r, &hr) {
             if let Some(spec_r) = sr.specular_ray {
                 return sr.attenuation
@@ -24,11 +24,11 @@ fn ray_color(r : &Ray,
             let light_pdf = if scene.lights.empty() {
                 sr.pdf.clone()
             } else {
-                Arc::new(HittablePDF::new(scene.lights.clone(), &hr.p))
+                Arc::new(HittablePDF::new(scene.lights.clone(), hr.p))
             };
             let mix_pdf = MixturePDF::new(light_pdf.clone(), sr.pdf.clone());
-            let scattered = Ray::new(&hr.p, &mix_pdf.generate(), r.time);
-            let pdf_val = mix_pdf.value(&scattered.dir);
+            let scattered = Ray::new(hr.p, mix_pdf.generate(), r.time);
+            let pdf_val = mix_pdf.value(scattered.dir);
 
             assert!(pdf_val > 0.0, "PDF val {:12} < 0", pdf_val);
 
@@ -131,7 +131,7 @@ fn main() {
     let dist_to_focus = 10.0;
 
     let cam =
-        Camera::new(&scene, &vup, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+        Camera::new(&scene, vup, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
 
@@ -160,7 +160,7 @@ fn main() {
             pixel_color
         }).collect();
         for pc in &colors {
-            write_color(&mut stdout, &pc, samples_per_pixel);
+            write_color(&mut stdout, *pc, samples_per_pixel);
         }
     }
     write!(stderr, "\nDone\n");

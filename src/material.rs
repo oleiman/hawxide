@@ -23,7 +23,7 @@ pub trait Material {
         return 0.0;
     }
     fn emitted(&self, _ray_in: &Ray, _rec: &HitRecord,
-               _u: f64, _v: f64, _p: &Point3) -> Color {
+               _u: f64, _v: f64, _p: Point3) -> Color {
         Color(0.0, 0.0, 0.0)
     }
 }
@@ -33,7 +33,7 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(c: &Color) -> Lambertian {
+    pub fn new(c: Color) -> Lambertian {
         Lambertian {
             albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
@@ -46,13 +46,13 @@ impl Material for Lambertian {
                -> Option<ScatterRecord> {
         Some(ScatterRecord{
             specular_ray: None,
-            attenuation: self.albedo.value(rec.u, rec.v, &rec.p),
-            pdf: Arc::new(CosPDF::new(&rec.norm)),
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            pdf: Arc::new(CosPDF::new(rec.norm)),
         })
     }
 
     fn scattering_pdf(&self, _ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cosine = vec3::dot(&rec.norm, &scattered.dir.unit_vector());
+        let cosine = vec3::dot(rec.norm, scattered.dir.unit_vector());
         if cosine < 0.0 {
             0.0
         } else {
@@ -67,7 +67,7 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn new(c: &Color, fuzz: f64) -> Self {
+    pub fn new(c: Color, fuzz: f64) -> Self {
         Self {
             albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
             fuzz,
@@ -78,22 +78,22 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
                -> Option<ScatterRecord> {
-        let reflected = vec3::reflect(&ray_in.dir.unit_vector(), &rec.norm);
+        let reflected = vec3::reflect(ray_in.dir.unit_vector(), rec.norm);
         let f = match self.fuzz {
             f if f <= 1.0 => f,
             _ => 1.0,
         };
 
         let dir = reflected + f * Vec3::random_in_unit_sphere();
-        if vec3::dot(&dir, &rec.norm) <= 0.0 {
+        if vec3::dot(dir, rec.norm) <= 0.0 {
             return None;
         }
 
         Some(ScatterRecord{
             specular_ray: Some(Ray::new(
-                &rec.p, &(dir), ray_in.time)
+                rec.p, dir, ray_in.time)
             ),
-            attenuation: self.albedo.value(rec.u, rec.v, &rec.p),
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
             pdf: Arc::new(NullPDF::new()),
         })
     }
@@ -122,7 +122,7 @@ impl Material for Dielectric {
         };
 
         let unit_direction = ray_in.dir.unit_vector();
-        let cos_theta = vec3::dot(&-unit_direction, &rec.norm).min(1.0);
+        let cos_theta = vec3::dot(-unit_direction, rec.norm).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract: bool =
@@ -130,15 +130,15 @@ impl Material for Dielectric {
             Dielectric::reflectance(cos_theta, refraction_ratio) > random::double();
 
         let direction = if cannot_refract {
-            vec3::reflect(&unit_direction, &rec.norm)
+            vec3::reflect(unit_direction, rec.norm)
         } else {
-            vec3::refract(&unit_direction, &rec.norm, refraction_ratio)
+            vec3::refract(unit_direction, rec.norm, refraction_ratio)
         };
 
         Some(ScatterRecord {
             specular_ray: Some(Ray::new(
-                &rec.p,
-                &direction,
+                rec.p,
+                direction,
                 ray_in.time
             )),
             attenuation: Color(1.0, 1.0, 1.0),
@@ -152,7 +152,7 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
-    pub fn new(c: &Color) -> DiffuseLight {
+    pub fn new(c: Color) -> DiffuseLight {
         DiffuseLight {
             emit: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
@@ -161,7 +161,7 @@ impl DiffuseLight {
 
 impl Material for DiffuseLight {
     fn emitted(&self, _ray_in: &Ray, rec: &HitRecord,
-               u: f64, v: f64, p: &Point3) -> Color {
+               u: f64, v: f64, p: Point3) -> Color {
         if rec.front_face {
         self.emit.value(u, v, p)
         } else {
@@ -175,7 +175,7 @@ pub struct Isotropic {
 }
 
 impl Isotropic {
-    pub fn new(c: &Color) -> Self {
+    pub fn new(c: Color) -> Self {
         Self {
             albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
         }
@@ -186,9 +186,9 @@ impl Material for Isotropic {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         Some(ScatterRecord{
             specular_ray: Some(Ray::new(
-                &rec.p, &Vec3::random_in_unit_sphere(), ray_in.time,
+                rec.p, Vec3::random_in_unit_sphere(), ray_in.time,
             )),
-            attenuation: self.albedo.value(rec.u, rec.v, &rec.p),
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
             pdf: Arc::new(NullPDF::new()),
         })
     }

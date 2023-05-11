@@ -15,7 +15,7 @@ pub struct Boxx {
 }
 
 impl Boxx {
-    pub fn new(p0: &Point3, p1: &Point3, mat: Arc<dyn Material + Sync + Send>) -> Self {
+    pub fn new(p0: Point3, p1: Point3, mat: Arc<dyn Material + Sync + Send>) -> Self {
         let mut sides = HittableList::new();
         sides.add(Arc::new(
             AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p1.z(), mat.clone())
@@ -39,8 +39,8 @@ impl Boxx {
         ));
 
         Boxx {
-            box_min: *p0,
-            box_max: *p1,
+            box_min: p0,
+            box_max: p1,
             sides
         }
     }

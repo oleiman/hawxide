@@ -29,19 +29,19 @@ impl OrthoNormalBasis {
         a * self.u() + b * self.v() + c * self.w()
     }
 
-    pub fn local_v(&self, a: &Vec3) -> Vec3 {
+    pub fn local_v(&self, a: Vec3) -> Vec3 {
         self.local(a.x(), a.y(), a.z())
     }
 
-    pub fn build_from_w(&mut self, n: &Vec3) {
+    pub fn build_from_w(&mut self, n: Vec3) {
         self.axis[2] = n.unit_vector();
         let a = if f64::abs(self.w().x()) > 0.9 {
             Vec3(0.0, 1.0, 0.0)
         } else {
             Vec3(1.0, 0.0, 0.0)
         };
-        self.axis[1] = cross(&self.w(), &a);
-        self.axis[0] = cross(&self.w(), &self.v());
+        self.axis[1] = cross(self.w(), a);
+        self.axis[0] = cross(self.w(), self.v());
     }
 }
 

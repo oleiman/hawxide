@@ -28,14 +28,14 @@ impl Perlin {
         }
     }
 
-    pub fn turb(&self, p: &Point3, depth: Option<i32>) -> f64 {
+    pub fn turb(&self, p: Point3, depth: Option<i32>) -> f64 {
         static DEFAULT_DEPTH : i32 = 7;
         let mut accum = 0.0f64;
-        let mut tmp_p = *p;
+        let mut tmp_p = p;
         let mut weight = 1.0f64;
 
         for _ in 0..depth.unwrap_or(DEFAULT_DEPTH) {
-            accum += weight * self.smooth_noise(&tmp_p);
+            accum += weight * self.smooth_noise(tmp_p);
             weight *= 0.5;
             tmp_p *= 2.;
         }
@@ -43,7 +43,7 @@ impl Perlin {
         accum.abs()
     }
 
-    pub fn smooth_noise(&self, p: &Point3) -> f64 {
+    pub fn smooth_noise(&self, p: Point3) -> f64 {
         let u = p.x() - f64::floor(p.x());
         let v = p.y() - f64::floor(p.y());
         let w = p.z() - f64::floor(p.z());
@@ -86,7 +86,7 @@ impl Perlin {
                         (fv.0 * uu + f64::from(1-i)*(1.-uu)) *
                         (fv.1 * vv + f64::from(1-j)*(1.-vv)) *
                         (fv.2 * ww + f64::from(1-k)*(1.-ww)) *
-                        dot(&c[i as usize][j as usize][k as usize], &weight_v);
+                        dot(c[i as usize][j as usize][k as usize], weight_v);
                 }
             }
         }

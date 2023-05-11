@@ -16,14 +16,14 @@ pub struct MovingSphere {
 }
 
 impl MovingSphere {
-    pub fn new(center0: &Point3, center1: &Point3,
+    pub fn new(center0: Point3, center1: Point3,
                time0: f64, time1: f64,
                radius: f64, mat: Arc<dyn Material + Sync + Send>) -> MovingSphere {
         // Moving sphere has two centers. One where it starts (at time0) and another
         // where it ends up (at time1).
         MovingSphere {
-            center0: *center0,
-            center1: *center1,
+            center0: center0,
+            center1: center1,
             time0,
             time1,
             radius,
@@ -47,7 +47,7 @@ impl Hittable for MovingSphere {
         let oc : Vec3 = r.origin - self.center(r.time);
 
         let a : f64 = r.dir.len_squared();
-        let half_b : f64 = dot(&oc, &r.dir);
+        let half_b : f64 = dot(oc, r.dir);
         let c : f64 = oc.len_squared() - self.radius * self.radius;
 
         let discriminant : f64 = half_b * half_b - a * c;
@@ -64,11 +64,11 @@ impl Hittable for MovingSphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r1, 0.0, 0.0, self.mat.clone()))
+            Some(HitRecord::new(r, p, outward_norm, r1, 0.0, 0.0, self.mat.clone()))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center(r.time)) / self.radius;
-            Some(HitRecord::new(r, &p, &outward_norm, r2, 0., 0., self.mat.clone()))
+            Some(HitRecord::new(r, p, outward_norm, r2, 0., 0., self.mat.clone()))
         } else {
             None
         }

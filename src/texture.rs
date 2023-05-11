@@ -7,7 +7,7 @@ use image;
 use image::{GenericImageView,DynamicImage};
 
 pub trait Texture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
 
 pub struct SolidColor {
@@ -23,7 +23,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         self.color_val
     }
 }
@@ -34,16 +34,16 @@ pub struct CheckerTexture {
 }
 
 impl CheckerTexture {
-    pub fn new(c1: &Color, c2: &Color) -> CheckerTexture {
+    pub fn new(c1: Color, c2: Color) -> CheckerTexture {
         CheckerTexture {
-            even: Arc::new(SolidColor { color_val: *c1}),
-            odd: Arc::new(SolidColor {color_val: *c2}),
+            even: Arc::new(SolidColor { color_val: c1}),
+            odd: Arc::new(SolidColor {color_val: c2}),
         }
     }
 }
 
 impl Texture for CheckerTexture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines =
             f64::sin(10.0 * p.x()) * f64::sin(10.0 * p.y()) * f64::sin(10.0 * p.z());
         if sines < 0.0 {
@@ -78,7 +78,7 @@ impl MarbleTexture {
 
 impl Texture for MarbleTexture {
     // perlin interpolation can return negative numbers, so we add 1 and divide by 2
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         self.albedo.value(u, v, p) *
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
@@ -102,16 +102,16 @@ impl WoodTexture {
 }
 
 impl Texture for WoodTexture {
-    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         // let ns = self.noise.turb(&(self.scale * *p), None);
-        let ns = self.noise.turb(&(self.scale * Point3(_u, _v, 0.0)), None);
+        let ns = self.noise.turb(self.scale * Point3(_u, _v, 0.0), None);
         let c1 = self.color * 0.5 * (1.0 + f64::sin(self.scale.y() + 5.0 * ns));
         let c2 = c1 * 0.5 *
             (1.0 + f64::cos(
                 self.scale.x() + 3.0 *
-                    self.noise.turb(&(c1 * self.scale.z()), None)
+                    self.noise.turb(c1 * self.scale.z(), None)
             ));
-        let c3 = self.color * self.noise.smooth_noise(&(c1 * 50.0));
+        let c3 = self.color * self.noise.smooth_noise(c1 * 50.0);
         (c1 + c2 + c3) / 3.0
     }
 }
@@ -122,7 +122,7 @@ pub struct NoiseTexture {
 }
 
 impl NoiseTexture {
-    pub fn new(c: &Color) -> Self {
+    pub fn new(c: Color) -> Self {
         Self {
             noise: Perlin::new(),
             color: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
@@ -138,13 +138,12 @@ impl NoiseTexture {
 }
 
 impl Texture for NoiseTexture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         self.color.value(u, v, p) * (
             1.0 +
                 f64::sin(
-                    (u + self.noise.smooth_noise(
-                        &(Point3(u, v, 0.0) * 5.0)) * 0.5)
-                        * 50.0
+                    (u + self.noise.smooth_noise(Point3(u, v, 0.0) * 5.0) * 0.5) *
+                        50.0
                 )
         ) * 0.5
     }
@@ -155,7 +154,7 @@ pub struct VoronoiTexture {
 }
 
 impl VoronoiTexture {
-    pub fn new(_c: &Color, n: u32) -> Self {
+    pub fn new(_c: Color, n: u32) -> Self {
         let mut vn_points: Vec<(Point3, Color)> = vec![];
         for _ in 0..n {
             vn_points.push((
@@ -170,7 +169,7 @@ impl VoronoiTexture {
 }
 
 impl Texture for VoronoiTexture {
-    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         let pt = Point3(u, v, 0.0);
         let mp = self.vn_points.iter().min_by(|p1, p2| {
             (
@@ -210,7 +209,7 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+    fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         // Clamp input texture coords to [0,1] x [1,0]
         let u = u.clamp(0.0, 1.0);
         let v = 1.0 - v.clamp(0.0, 1.0); // flip V to image coords

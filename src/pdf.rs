@@ -6,7 +6,7 @@ use crate::hit::Hittable;
 use std::sync::Arc;
 
 pub trait PDensityFn {
-    fn value(&self, dir: &Vec3) -> f64;
+    fn value(&self, dir: Vec3) -> f64;
     fn generate(&self) -> Vec3;
 }
 
@@ -19,7 +19,7 @@ impl NullPDF {
 }
 
 impl PDensityFn for NullPDF {
-    fn value(&self, _dir: &Vec3) -> f64 { 0.0 }
+    fn value(&self, _dir: Vec3) -> f64 { 0.0 }
     fn generate(&self) -> Vec3 { Vec3::new() }
 }
 
@@ -28,7 +28,7 @@ pub struct CosPDF {
 }
 
 impl CosPDF {
-    pub fn new(w: &Vec3) -> Self {
+    pub fn new(w: Vec3) -> Self {
         let mut uvw = OrthoNormalBasis::new();
         uvw.build_from_w(w);
         Self {uvw}
@@ -36,8 +36,8 @@ impl CosPDF {
 }
 
 impl PDensityFn for CosPDF {
-    fn value(&self, dir: &Vec3) -> f64 {
-        let cosine = dot(&dir.unit_vector(), &self.uvw.w());
+    fn value(&self, dir: Vec3) -> f64 {
+        let cosine = dot(dir.unit_vector(), self.uvw.w());
         if cosine <= 0.0 {
             0.0
         } else {
@@ -45,7 +45,7 @@ impl PDensityFn for CosPDF {
         }
     }
     fn generate(&self) -> Vec3 {
-        self.uvw.local_v(&random::cosine_direction())
+        self.uvw.local_v(random::cosine_direction())
     }
 }
 
@@ -55,20 +55,20 @@ pub struct HittablePDF {
 }
 
 impl HittablePDF {
-    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, origin: &Point3) -> Self {
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, origin: Point3) -> Self {
         Self {
-            origin: *origin,
+            origin: origin,
             obj: obj.clone(),
         }
     }
 }
 
 impl PDensityFn for HittablePDF {
-    fn value(&self, dir: &Vec3) -> f64 {
-        self.obj.pdf_value(&self.origin, dir)
+    fn value(&self, dir: Vec3) -> f64 {
+        self.obj.pdf_value(self.origin, dir)
     }
     fn generate(&self) -> Vec3 {
-        self.obj.random(&self.origin)
+        self.obj.random(self.origin)
     }
 }
 
@@ -84,7 +84,7 @@ impl MixturePDF {
 }
 
 impl PDensityFn for MixturePDF {
-    fn value(&self, dir: &Vec3) -> f64 {
+    fn value(&self, dir: Vec3) -> f64 {
         0.5 * self.p[0].value(dir) + 0.5 * self.p[1].value(dir)
     }
 

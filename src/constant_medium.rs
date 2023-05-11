@@ -15,7 +15,7 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: &Color) -> Self {
+    pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: Color) -> Self {
         Self {
             boundary: boundary,
             neg_inv_density: -1.0 / d,

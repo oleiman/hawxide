@@ -25,7 +25,7 @@ pub struct Camera {
 // TODO(oren): too many args here
 impl Camera {
     pub fn new(scene: &Scene,
-               vup: &Vec3,
+               vup: Vec3,
                aspect_ratio: f64,
                aperture: f64,
                focus_dist: f64,
@@ -48,8 +48,8 @@ impl Camera {
         // (u,v,w) forms an orthonormal basis for the lens, viewport,
         // and focus plane, which are parallel
         let w = (lookfrom - lookat).unit_vector();
-        let u = (vec3::cross(vup, &w)).unit_vector();
-        let v = vec3::cross(&w, &u);
+        let u = (vec3::cross(vup, w)).unit_vector();
+        let v = vec3::cross(w, u);
 
         eprintln!("Camera: from: {}, at: {}", lookfrom, lookat);
         eprintln!("Camera: u: {}, v: {}, w: {}", u, v, w);

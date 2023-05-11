@@ -40,12 +40,12 @@ pub mod defs {
         let mut world = HittableList::new();
 
         let checker  = Arc::new(
-            CheckerTexture::new(&Color(0.2, 0.3, 0.1), &Color(0.9, 0.9, 0.9)));
+            CheckerTexture::new(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9)));
 
         let ground_material =
             Arc::new(Lambertian{albedo: checker.clone()});
         world.add(Arc::new(Sphere::new(
-            &Point3(0., -1000., 0.),
+            Point3(0., -1000., 0.),
             1000.,
             ground_material.clone()
         )));
@@ -63,27 +63,27 @@ pub mod defs {
                     world.add(match choose_mat {
                         i if i < 0.8 => {
                             Arc::new(MovingSphere::new(
-                                &center,
-                                &(center + Vec3(0.0, random::double_range(0.0, 0.5), 0.0)),
+                                center,
+                                center + Vec3(0.0, random::double_range(0.0, 0.5), 0.0),
                                 0.0, 1.0, // times
                                 0.2,      // radius
                                 Arc::new(
-                                    Lambertian::new(&(Color::random() * Color::random())),
+                                    Lambertian::new(Color::random() * Color::random()),
                                 ),
                             ))
                         },
                         j if j < 0.95 => {
                             Arc::new(Sphere::new(
-                                &center, 0.2,
+                                center, 0.2,
                                 Arc::new(Metal::new(
-                                    &Color::random_range(0.5, 1.),
+                                    Color::random_range(0.5, 1.),
                                     random::double_range(0., 0.5),
                                 ))
                             ))
                         },
                         _ => {
                             Arc::new(Sphere::new(
-                                &center, 0.2,
+                                center, 0.2,
                                 Arc::new(Dielectric{
                                     ir: 1.5,
                                 })
@@ -95,22 +95,22 @@ pub mod defs {
             }
         }
         world.add(Arc::new(Sphere::new(
-            &Point3(0., 1., 0.), 1.0,
+            Point3(0., 1., 0.), 1.0,
             Arc::new(Dielectric{
                 ir: 1.5,
             })
         )));
 
         world.add(Arc::new(Sphere::new(
-            &Point3(-4., 1., 0.), 1.0,
+            Point3(-4., 1., 0.), 1.0,
             Arc::new(
-                Lambertian::new(&Color(0.4, 0.2, 0.1))
+                Lambertian::new(Color(0.4, 0.2, 0.1))
             )
         )));
 
         world.add(Arc::new(Sphere::new(
-            &Point3(4., 1., 0.), 1.0,
-            Arc::new(Metal::new(&Color(0.7, 0.6, 0.5), 0.0))
+            Point3(4., 1., 0.), 1.0,
+            Arc::new(Metal::new(Color(0.7, 0.6, 0.5), 0.0))
         )));
 
         Scene {
@@ -127,21 +127,21 @@ pub mod defs {
         let vfov = 20.0;
 
         let checker = Arc::new(CheckerTexture::new(
-            &Color(0.2, 0.3, 0.1),
-            &Color(0.9, 0.9, 0.9),
+            Color(0.2, 0.3, 0.1),
+            Color(0.9, 0.9, 0.9),
         ));
 
         let world = HittableList {
             objects: vec![
                 Arc::new(Sphere::new(
-                    &Point3(0.0, -10.0, 0.0),
+                    Point3(0.0, -10.0, 0.0),
                     10.0,
                     Arc::new(Lambertian {
                         albedo: checker.clone()
                     }),
                 )),
                 Arc::new(Sphere::new(
-                    &Point3(0.0, 10.0, 0.0),
+                    Point3(0.0, 10.0, 0.0),
                     10.0,
                     Arc::new(Lambertian {
                         albedo: checker.clone()
@@ -162,10 +162,10 @@ pub mod defs {
         let lookat = Point3(278.0, 278.0, 0.0);
         let vfov = 40.0;
 
-        let red = Arc::new(Lambertian::new(&RED));
-        let white = Arc::new(Lambertian::new(&WHITE));
-        let green = Arc::new(Lambertian::new(&GREEN));
-        let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
+        let red = Arc::new(Lambertian::new(RED));
+        let white = Arc::new(Lambertian::new(WHITE));
+        let green = Arc::new(Lambertian::new(GREEN));
+        let light = Arc::new(DiffuseLight::new(Color(15.0, 15.0, 15.0)));
 
         let light_panel = Arc::new(AARect::xz_rect(
             213.0, 343.0, 227.0, 332.0, 554.0, light.clone()
@@ -205,24 +205,24 @@ pub mod defs {
     #[allow(unused)]
     pub fn cornell_box() -> Scene {
 
-        let aluminum = Arc::new(Metal::new(&Color(0.8, 0.85, 0.88), 0.0));
-        let white = Arc::new(Lambertian::new(&WHITE));
+        let aluminum = Arc::new(Metal::new(Color(0.8, 0.85, 0.88), 0.0));
+        let white = Arc::new(Lambertian::new(WHITE));
 
         let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 330.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 330.0, 165.0),
             white.clone(),
         ));
         box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
-        box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+        box1 = Arc::new(Translate::new(box1, Vec3(265.0, 0.0, 295.0)));
 
         let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 165.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 165.0, 165.0),
             white.clone(),
         ));
         box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
-        box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
+        box2 = Arc::new(Translate::new(box2, Vec3(130.0, 0.0, 65.0)));
 
         let cbox = empty_cornell_box();
 
@@ -250,18 +250,18 @@ pub mod defs {
     pub fn cornell_sphere() -> Scene {
         let cbox = empty_cornell_box();
 
-        let white = Arc::new(Lambertian::new(&WHITE));
+        let white = Arc::new(Lambertian::new(WHITE));
 
         let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 330.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 330.0, 165.0),
             white.clone(),
         ));
         box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
-        box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+        box1 = Arc::new(Translate::new(box1, Vec3(265.0, 0.0, 295.0)));
 
         let sphere = Arc::new(Sphere::new(
-            &Point3(190.0, 90.0, 190.0), 90.0,
+            Point3(190.0, 90.0, 190.0), 90.0,
             Arc::new(Dielectric{ir: 1.5}),
         ));
 
@@ -299,14 +299,14 @@ pub mod defs {
         let world = Arc::new(HittableList {
             objects: vec![
                 Arc::new(Sphere::new(
-                    &Point3(0.0, -1000.0, 0.0),
+                    Point3(0.0, -1000.0, 0.0),
                     1000.0,
                     Arc::new(Lambertian {
                         albedo: pertext.clone(),
                     }),
                 )),
                 Arc::new(Sphere::new(
-                    &Point3(0.0, 2.0, 0.0),
+                    Point3(0.0, 2.0, 0.0),
                     2.0,
                     Arc::new(Lambertian {
                         albedo: pertext.clone(),
@@ -333,7 +333,7 @@ pub mod defs {
         let world = Arc::new(HittableList {
             objects: vec![
                 Arc::new(Sphere::new(
-                    &Point3(0.0, 0.0, 0.0),
+                    Point3(0.0, 0.0, 0.0),
                     2.0,
                     Arc::new(Lambertian {
                         albedo: earth_texture.clone(),
@@ -356,8 +356,8 @@ pub mod defs {
         let vfov = 20.0;
 
         let pertext = Arc::new(MarbleTexture::new(4.));
-        // let difflight = Arc::new(DiffuseLight::new(&Color(4., 4., 4.)));
-        let difflight = Arc::new(DiffuseLight::new(&Color(7., 7., 7.)));
+        // let difflight = Arc::new(DiffuseLight::new(Color(4., 4., 4.)));
+        let difflight = Arc::new(DiffuseLight::new(Color(7., 7., 7.)));
 
         let light_panel = Arc::new(AARect::xy_rect(
             3.0, 5.0, 1.0, 3.0, -2.0,
@@ -367,14 +367,14 @@ pub mod defs {
         let world = Arc::new(HittableList {
             objects: vec![
                 Arc::new(Sphere::new(
-                    &Point3(0.0, -1000.0, 0.0),
+                    Point3(0.0, -1000.0, 0.0),
                     1000.0,
                     Arc::new(Lambertian {
                         albedo: pertext.clone(),
                     }),
                 )),
                 Arc::new(Sphere::new(
-                    &Point3(0.0, 2.0, 0.0),
+                    Point3(0.0, 2.0, 0.0),
                     2.0,
                     Arc::new(Lambertian {
                         albedo: pertext.clone(),
@@ -394,28 +394,28 @@ pub mod defs {
     }
 
     pub fn cornell_smoke() -> Scene {
-        let white = Arc::new(Lambertian::new(&WHITE));
+        let white = Arc::new(Lambertian::new(WHITE));
 
         let cbox = empty_cornell_box();
 
         let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 330.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 330.0, 165.0),
             white.clone(),
         ));
         box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
-        box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+        box1 = Arc::new(Translate::new(box1, Vec3(265.0, 0.0, 295.0)));
 
         let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 165.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 165.0, 165.0),
             white.clone(),
         ));
         box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
-        box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
+        box2 = Arc::new(Translate::new(box2, Vec3(130.0, 0.0, 65.0)));
 
-        box1 = Arc::new(ConstantMedium::new(box1, 0.01, &Color::new()));
-        box2 = Arc::new(ConstantMedium::new(box2, 0.01, &Color(1.0, 1.0, 1.0)));
+        box1 = Arc::new(ConstantMedium::new(box1, 0.01, Color::new()));
+        box2 = Arc::new(ConstantMedium::new(box2, 0.01, Color(1.0, 1.0, 1.0)));
 
         let world = HittableList {
             objects: vec![
@@ -443,13 +443,13 @@ pub mod defs {
         let mut world = HittableList::new();
 
         let checker  = Arc::new(
-            CheckerTexture::new(&Color(0.2, 0.3, 0.1), &Color(0.9, 0.9, 0.9)));
+            CheckerTexture::new(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9)));
 
         let ground_material =
             Arc::new(Lambertian{albedo: checker.clone()});
 
         world.add(Arc::new(Sphere::new(
-            &Point3(0., -1000., 0.),
+            Point3(0., -1000., 0.),
             1000.,
             ground_material.clone()
         )));
@@ -468,25 +468,25 @@ pub mod defs {
                         i if i < 0.75 => {
                             let rand_off = random::double_range(-0.05, 0.05);
                             Arc::new(Sphere::new(
-                                &(center + Vec3(0.0, rand_off, 0.0)),
+                                center + Vec3(0.0, rand_off, 0.0),
                                 0.2 + rand_off,      // radius
                                 Arc::new(
-                                    Lambertian::new(&(Color::random() * Color::random())),
+                                    Lambertian::new(Color::random() * Color::random()),
                                 ),
                             ))
                         },
                         j if j < 0.95 => {
                             Arc::new(Sphere::new(
-                                &center, 0.2,
+                                center, 0.2,
                                 Arc::new(Metal::new(
-                                    &Color::random_range(0.5, 1.),
+                                    Color::random_range(0.5, 1.),
                                     random::double_range(0., 0.5),
                                 ))
                             ))
                         },
                         _ => {
                             Arc::new(Sphere::new(
-                                &center, 0.2,
+                                center, 0.2,
                                 Arc::new(Dielectric{
                                     ir: 1.5,
                                 })
@@ -499,28 +499,28 @@ pub mod defs {
         }
 
         world.add(Arc::new(Sphere::new(
-            &Point3(0., 1., 0.), 1.0,
+            Point3(0., 1., 0.), 1.0,
             Arc::new(Dielectric{
                 ir: 1.5,
             })
         )));
 
         world.add(Arc::new(Sphere::new(
-            &Point3(-4., 1., 0.), 1.0,
+            Point3(-4., 1., 0.), 1.0,
             Arc::new(
-                Lambertian::new(&Color(0.4, 0.2, 0.1))
+                Lambertian::new(Color(0.4, 0.2, 0.1))
             )
         )));
 
         world.add(Arc::new(Sphere::new(
-            &Point3(4., 1., 0.), 1.0,
-            Arc::new(Metal::new(&Color(0.7, 0.6, 0.5), 0.0))
+            Point3(4., 1., 0.), 1.0,
+            Arc::new(Metal::new(Color(0.7, 0.6, 0.5), 0.0))
         )));
 
         let light_sphere = Arc::new(Sphere::new(
-            &Point3(3.0, 2.0, 2.0), 0.6,
+            Point3(3.0, 2.0, 2.0), 0.6,
             Arc::new(
-                DiffuseLight::new(&Color(30.0, 30.0, 30.0))
+                DiffuseLight::new(Color(30.0, 30.0, 30.0))
             )
         ));
 
@@ -542,7 +542,7 @@ pub mod defs {
         let vfov = 40.0;
 
         let mut boxes1 = HittableList::new();
-        let ground = Arc::new(Lambertian::new(&Color(0.48, 0.83, 0.53)));
+        let ground = Arc::new(Lambertian::new(Color(0.48, 0.83, 0.53)));
 
         const BOXES_PER_SIDE : i32 = 20;
 
@@ -561,7 +561,7 @@ pub mod defs {
                 );
 
                 boxes1.add(
-                    Arc::new(Boxx::new(&p0, &p1, ground.clone())),
+                    Arc::new(Boxx::new(p0, p1, ground.clone())),
                 );
             }
         };
@@ -570,7 +570,7 @@ pub mod defs {
 
         objects.add(Arc::new(BVHNode::new(&boxes1, 0.0, 1.0)));
 
-        let light = Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
+        let light = Arc::new(DiffuseLight::new(Color(7.0, 7.0, 7.0)));
         let light_panel = Arc::new(
             AARect::xz_rect(
                 123.0, 423.0, 147.0, 412.0, 554.0, light.clone()
@@ -580,56 +580,56 @@ pub mod defs {
 
         let center1 = Point3(400.0, 400.0, 200.0);
         let center2 = center1 + Vec3(30.0, 0.0, 0.0);
-        let moving_sphere_mat = Arc::new(Lambertian::new(&Color(0.7, 0.3, 0.1)));
+        let moving_sphere_mat = Arc::new(Lambertian::new(Color(0.7, 0.3, 0.1)));
         objects.add(Arc::new(MovingSphere::new(
-            &center1, &center2, 0.0, 1.0, 50.0, moving_sphere_mat.clone()
+            center1, center2, 0.0, 1.0, 50.0, moving_sphere_mat.clone()
         )));
 
 
         objects.add(Arc::new(Sphere::new(
-            &Point3(260.0, 150.0, 45.0), 50.0,
+            Point3(260.0, 150.0, 45.0), 50.0,
             Arc::new(Dielectric {ir: 1.5}),
         )));
         objects.add(Arc::new(Sphere::new(
-            &Point3(0.0, 150.0, 145.0), 50.0,
-            Arc::new(Metal::new(&Color(0.8, 0.8, 0.9), 1.0))
+            Point3(0.0, 150.0, 145.0), 50.0,
+            Arc::new(Metal::new(Color(0.8, 0.8, 0.9), 1.0))
         )));
 
         let boundary = Arc::new(Sphere::new(
-            &Point3(360.0, 150.0, 145.0), 70.0,
+            Point3(360.0, 150.0, 145.0), 70.0,
             Arc::new(Dielectric {ir: 1.5}),
         ));
         objects.add(boundary.clone());
         objects.add(Arc::new(ConstantMedium::new(
-            boundary.clone(), 0.2, &Color(0.2, 0.4, 0.9),
+            boundary.clone(), 0.2, Color(0.2, 0.4, 0.9),
         )));
         let boundary = Arc::new(Sphere::new(
-            &Point3::new(), 5000.0,
+            Point3::new(), 5000.0,
             Arc::new(Dielectric {ir: 1.5}),
         ));
         objects.add(Arc::new(ConstantMedium::new(
-            boundary.clone(), 0.0001, &Color(1.0, 1.0, 1.0),
+            boundary.clone(), 0.0001, Color(1.0, 1.0, 1.0),
         )));
 
         let emat = Arc::new(Lambertian {
             albedo: Arc::new(ImageTexture::new("earthmap.jpg"))}
         );
         objects.add(Arc::new(Sphere::new(
-            &Point3(400.0, 200.0, 400.0), 100.0, emat.clone(),
+            Point3(400.0, 200.0, 400.0), 100.0, emat.clone(),
         )));
 
         let pertext = Arc::new(MarbleTexture::new(0.1));
         objects.add(Arc::new(Sphere::new(
-            &Point3(220.0, 280.0, 300.0), 80.0,
+            Point3(220.0, 280.0, 300.0), 80.0,
             Arc::new(Lambertian { albedo: pertext.clone() }),
         )));
 
         let mut boxes2 = HittableList::new();
-        let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
+        let white = Arc::new(Lambertian::new(Color(0.73, 0.73, 0.73)));
         let ns = 1000;
         for _j in 0..ns {
             boxes2.add(Arc::new(Sphere::new(
-                &Point3::random_range(0.0, 165.0), 10.0, white.clone(),
+                Point3::random_range(0.0, 165.0), 10.0, white.clone(),
             )));
         }
 
@@ -637,7 +637,7 @@ pub mod defs {
             Arc::new(Rotate::rotate_y(
                 Arc::new(BVHNode::new(&boxes2, 0.0, 1.0)), 15.0
             )),
-            &Vec3(-100.0, 270.0, 395.0),
+            Vec3(-100.0, 270.0, 395.0),
         ))
         );
 
@@ -657,12 +657,12 @@ pub mod defs {
         let lookat = Point3(278.0, 278.0, 0.0);
         let vfov = 40.0;
 
-        let red = Arc::new(Lambertian::new(&Color(0.65, 0.05, 0.05)));
-        let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
-        let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
-        // let light = Arc::new(DiffuseLight::new(&Color(15.0, 15.0, 15.0)));
-        let light = Arc::new(DiffuseLight::new(&Color(5.0, 5.0, 5.0)));
-        let mirror_back = Arc::new(Metal::new(&Color(0.73, 0.73, 0.73), 0.0));
+        let red = Arc::new(Lambertian::new(Color(0.65, 0.05, 0.05)));
+        let white = Arc::new(Lambertian::new(Color(0.73, 0.73, 0.73)));
+        let green = Arc::new(Lambertian::new(Color(0.12, 0.45, 0.15)));
+        // let light = Arc::new(DiffuseLight::new(Color(15.0, 15.0, 15.0)));
+        let light = Arc::new(DiffuseLight::new(Color(5.0, 5.0, 5.0)));
+        let mirror_back = Arc::new(Metal::new(Color(0.73, 0.73, 0.73), 0.0));
         let mirror_front = Arc::new(Dielectric{ir: 1.5});
         let earth = Arc::new(
             Lambertian{albedo: Arc::new(ImageTexture::new("earthmap.jpg"))}
@@ -676,29 +676,29 @@ pub mod defs {
 
         let voronoi = Arc::new(
             Lambertian{
-                albedo: Arc::new(VoronoiTexture::new(&Color(1.0, 1.0, 1.0), 200))
+                albedo: Arc::new(VoronoiTexture::new(Color(1.0, 1.0, 1.0), 200))
             });
         let fun_noise = Arc::new(
             Lambertian{
                 albedo: Arc::new(NoiseTexture::from_texture(voronoi.albedo.clone()))
             });
-        // let mirror = Arc::new(Metal::new(&Color(1.0, 1.0, 1.0), 0.0));
+        // let mirror = Arc::new(Metal::new(Color(1.0, 1.0, 1.0), 0.0));
 
         let mut box1 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 330.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 330.0, 165.0),
             white.clone(),
         ));
         box1 = Arc::new(Rotate::rotate_y(box1, 15.0));
-        box1 = Arc::new(Translate::new(box1, &Vec3(265.0, 0.0, 295.0)));
+        box1 = Arc::new(Translate::new(box1, Vec3(265.0, 0.0, 295.0)));
 
         let mut box2 : Arc<dyn Hittable + Sync + Send> = Arc::new(Boxx::new(
-            &Point3(0.0, 0.0, 0.0),
-            &Point3(165.0, 165.0, 165.0),
+            Point3(0.0, 0.0, 0.0),
+            Point3(165.0, 165.0, 165.0),
             fun_noise.clone(),
         ));
         box2 = Arc::new(Rotate::rotate_y(box2, -18.0));
-        box2 = Arc::new(Translate::new(box2, &Vec3(130.0, 0.0, 65.0)));
+        box2 = Arc::new(Translate::new(box2, Vec3(130.0, 0.0, 65.0)));
 
         let mut mirror: Arc<dyn Hittable + Sync + Send> = Arc::new(HittableList{
             objects: vec![
@@ -711,7 +711,7 @@ pub mod defs {
             ]
         });
 
-        mirror = Arc::new(Translate::new(mirror, &Vec3(-100.0, 0.0, 0.0)));
+        mirror = Arc::new(Translate::new(mirror, Vec3(-100.0, 0.0, 0.0)));
         let light_panel = Arc::new(AARect::xz_rect(
             113.0, 443.0, 127.0, 432.0, 554.0, light.clone()
         ));
@@ -761,13 +761,13 @@ pub mod defs {
         let vfov = 40.0;
 
         let pertext = Arc::new(MarbleTexture::new(4.0));
-        let turq_light = Arc::new(DiffuseLight::new(&Color(0.0, 12., 10.)));
-        let red_light = Arc::new(DiffuseLight::new(&Color(12.0, 0.0, 5.0)));
+        let turq_light = Arc::new(DiffuseLight::new(Color(0.0, 12., 10.)));
+        let red_light = Arc::new(DiffuseLight::new(Color(12.0, 0.0, 5.0)));
 
         let mut objects = HittableList::new();
 
         objects.add(Arc::new(Sphere::new(
-            &Point3(0.0, -1000.0, 0.0),
+            Point3(0.0, -1000.0, 0.0),
             999.5,
             Arc::new(Lambertian {
                 albedo: pertext.clone(),
@@ -775,13 +775,13 @@ pub mod defs {
         )));
 
         objects.add(Arc::new(Sphere::new(
-            &Point3(0.0, 2.0, 0.0),
+            Point3(0.0, 2.0, 0.0),
             2.0,
             Arc::new(Dielectric { ir: 1.5}),
         )));
 
         objects.add(Arc::new(Sphere::new(
-            &Point3(0.0, 2.0, 0.0),
+            Point3(0.0, 2.0, 0.0),
             1.5,
             Arc::new(Lambertian {
                 albedo: pertext.clone(),
@@ -789,13 +789,13 @@ pub mod defs {
         )));
 
         let turq_sphere = Arc::new(Sphere::new(
-            &Point3(6.0, 4.0, -4.0),
+            Point3(6.0, 4.0, -4.0),
             2.0,
             turq_light.clone(),
         ));
 
         let red_sphere = Arc::new(Sphere::new(
-            &Point3(-3.0, 3.0, 4.0),
+            Point3(-3.0, 3.0, 4.0),
             1.0,
             red_light.clone(),
         ));
@@ -822,9 +822,9 @@ pub mod defs {
         let vfov = 40.0;
 
         let wood = Arc::new(WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)));
-        let light = Arc::new(DiffuseLight::new(&Color(7.0, 7.0, 7.0)));
-        let sunlight = Arc::new(DiffuseLight::new(&Color(20.0, 15.5, 11.0)));
-        let white = Arc::new(Metal::new(&Color(0.73, 0.73, 0.73), 0.95));
+        let light = Arc::new(DiffuseLight::new(Color(7.0, 7.0, 7.0)));
+        let sunlight = Arc::new(DiffuseLight::new(Color(20.0, 15.5, 11.0)));
+        let white = Arc::new(Metal::new(Color(0.73, 0.73, 0.73), 0.95));
 
         let mut objects = HittableList{
             objects: vec![
@@ -852,7 +852,7 @@ pub mod defs {
         let mut right_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
             Rotate::rotate_z(panel.clone(), 45.0)
         );
-        right_panel = Arc::new(Translate::new(right_panel.clone(), &Point3(2.0, 0.0, 0.0)));
+        right_panel = Arc::new(Translate::new(right_panel.clone(), Point3(2.0, 0.0, 0.0)));
         objects.add(right_panel.clone());
 
         // TODO(oren): this panel has the weird black section issue that we sometimes
@@ -862,40 +862,40 @@ pub mod defs {
         let mut left_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
             Rotate::rotate_z(panel.clone(), 315.0)
         );
-        left_panel = Arc::new(Translate::new(left_panel.clone(), &Point3(-2.0, 0.0, 0.0)));
+        left_panel = Arc::new(Translate::new(left_panel.clone(), Point3(-2.0, 0.0, 0.0)));
         objects.add(left_panel.clone());
 
         let mut front_panel: Arc<dyn Hittable + Sync + Send> = Arc::new(
             Rotate::rotate_x(panel.clone(), -45.0)
         );
-        front_panel = Arc::new(Translate::new(front_panel.clone(), &Point3(1.0, 1.0, 4.0)));
+        front_panel = Arc::new(Translate::new(front_panel.clone(), Point3(1.0, 1.0, 4.0)));
         objects.add(front_panel.clone());
 
         let sun = Arc::new(Sphere::new(
-            &Point3(0.0, 3.5, 0.0), 1.0,
+            Point3(0.0, 3.5, 0.0), 1.0,
             sunlight.clone()
         ));
 
         objects.add(sun.clone());
 
         let sphere: Arc<dyn Hittable + Sync + Send> = Arc::new(Sphere::new(
-            &Point3(0.0, 0.0, 0.0), 2.0,
+            Point3(0.0, 0.0, 0.0), 2.0,
             Arc::new(Lambertian{albedo: wood.clone()}),
         ));
 
         objects.add(sphere);
 
         let boundary = Arc::new(Sphere::new(
-            &Point3(3.0, 3.0, 0.0), 1.0,
+            Point3(3.0, 3.0, 0.0), 1.0,
             Arc::new(Dielectric {ir: 1.5})
         ));
         objects.add(boundary.clone());
         objects.add(Arc::new(ConstantMedium::new(
-            boundary.clone(), 1.0, &Color(0.2, 0.4, 0.9),
+            boundary.clone(), 1.0, Color(0.2, 0.4, 0.9),
         )));
 
         // let mut block: Arc<dyn Hittable + Sync + Send>= Arc::new(Boxx::new(
-        //     &Point3(-2.0, -2.0, -2.0), &Point3(2.0, 2.0, 2.0),
+        //     Point3(-2.0, -2.0, -2.0), Point3(2.0, 2.0, 2.0),
         //     Arc::new(Lambertian{albedo: wood.clone()}),
         // ));
 
@@ -928,16 +928,16 @@ pub mod defs {
                 MarbleTexture::new(4.)
             )
         });
-        let aluminum = Arc::new(Metal::new(&Color(0.8, 0.85, 0.88), 0.0));
-        let voronoi = Arc::new(VoronoiTexture::new(&Color(1.0, 1.0, 1.0), 200));
+        let aluminum = Arc::new(Metal::new(Color(0.8, 0.85, 0.88), 0.0));
+        let voronoi = Arc::new(VoronoiTexture::new(Color(1.0, 1.0, 1.0), 200));
         let fun_noise = Arc::new(
             NoiseTexture::from_texture(voronoi.clone())
         );
         let noise = Arc::new(Lambertian{albedo: fun_noise.clone()});
-        let light = Arc::new(DiffuseLight::new(&Color(10.0, 10.0, 10.0)));
-        let sunlight = Arc::new(DiffuseLight::new(&Color(20.0, 15.5, 11.0)));
-        let white = Arc::new(Lambertian::new(&Color(0.73, 0.73, 0.73)));
-        let green = Arc::new(Lambertian::new(&Color(0.12, 0.45, 0.15)));
+        let light = Arc::new(DiffuseLight::new(Color(10.0, 10.0, 10.0)));
+        let sunlight = Arc::new(DiffuseLight::new(Color(20.0, 15.5, 11.0)));
+        let white = Arc::new(Lambertian::new(Color(0.73, 0.73, 0.73)));
+        let green = Arc::new(Lambertian::new(Color(0.12, 0.45, 0.15)));
 
         let fun = Arc::new(Lambertian{
             albedo: voronoi.clone(),
@@ -975,13 +975,13 @@ pub mod defs {
             AARect::yz_rect(-2.0, 2.0, -2.0, 2.0, 2.1, light.clone())
         );
         panel2 = Arc::new(Rotate::rotate_y(panel2, -45.0));
-        panel2 = Arc::new(Translate::new(panel2, &Point3(2.0, 0.0, 2.0)));
+        panel2 = Arc::new(Translate::new(panel2, Point3(2.0, 0.0, 2.0)));
         // objects.add(Arc::new(FlipFace::new(panel2.clone())));
 
         let mut block: Arc<dyn Hittable + Sync + Send> = Arc::new(
             Boxx::new(
-                &Point3(-2.0, -2.0, -2.0),
-                &Point3(2.0, 2.0, 2.0),
+                Point3(-2.0, -2.0, -2.0),
+                Point3(2.0, 2.0, 2.0),
                 aluminum.clone(),
                 // marble.clone(),
             )
@@ -991,8 +991,8 @@ pub mod defs {
         // block = Arc::new(Rotate::rotate_x(block, -90.0));
         block = Arc::new(Rotate::rotate_y(block, 45.0));
 
-        // block = Arc::new(Translate::new(block, &Point3(4.0, -2.0, -8.0)));
-        // block = Arc::new(Translate::new(block, &Point3(-4.0, 0.0, 0.0)));
+        // block = Arc::new(Translate::new(block, Point3(4.0, -2.0, -8.0)));
+        // block = Arc::new(Translate::new(block, Point3(-4.0, 0.0, 0.0)));
 
         objects.add(block);
 

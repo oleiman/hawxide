@@ -17,7 +17,7 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(r: &Ray, p: &Point3, out_norm: &Vec3,
+    pub fn new(r: &Ray, p: Point3, out_norm: Vec3,
                t: f64, u: f64, v: f64, mat: Arc<dyn Material + Sync + Send>) -> HitRecord {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
@@ -27,25 +27,25 @@ impl HitRecord {
         // the ray intersects the outer face of the surface and leave
         // the normal alone. Otherwise the ray is inside the surface,
         // so we note that and reverse the direction of the normal
-        let front_face : bool  = dot(&r.dir, out_norm) < 0.;
+        let front_face : bool  = dot(r.dir, out_norm) < 0.;
         HitRecord {
-            p: *p,
+            p,
             norm: if front_face {
-                *out_norm
+                out_norm
             } else {
                 -out_norm
             },
-            mat: mat,
+            mat,
             t, u, v,
             front_face,
         }
     }
 
-    pub fn set_face_normal(&mut self, r: &Ray, out_norm: &Vec3) {
+    pub fn set_face_normal(&mut self, r: &Ray, out_norm: Vec3) {
 
-        self.front_face = dot(&r.dir, out_norm) < 0.;
+        self.front_face = dot(r.dir, out_norm) < 0.;
         self.norm = if self.front_face {
-            *out_norm
+            out_norm
         } else {
             -out_norm
         };
@@ -59,11 +59,11 @@ pub trait Hittable {
     // Give the smallest reasonable AABB for the Hittable
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
 
-    fn pdf_value(&self, _origin: &Point3, _v: &Vec3) -> f64 {
+    fn pdf_value(&self, _origin: Point3, _v: Vec3) -> f64 {
         0.0
     }
 
-    fn random(&self, _origin: &Vec3) -> Vec3 {
+    fn random(&self, _origin: Vec3) -> Vec3 {
         Vec3(1.0, 0.0, 0.0)
     }
 
@@ -78,10 +78,10 @@ pub struct Translate {
 }
 
 impl Translate {
-    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: &Vec3) -> Translate {
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: Vec3) -> Translate {
         Translate {
             obj: obj,
-            offset: *offset,
+            offset: offset,
         }
     }
 }
@@ -95,7 +95,7 @@ impl Hittable for Translate {
         };
         if let Some(hr) = self.obj.hit(&moved_r, t_min, t_max) {
             Some(HitRecord::new(
-                &moved_r, &(hr.p + self.offset), &hr.norm,
+                &moved_r, hr.p + self.offset, hr.norm,
                 hr.t, hr.u, hr.v, hr.mat.clone()
             ))
         } else {
@@ -114,11 +114,11 @@ impl Hittable for Translate {
         }
     }
 
-    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
         self.obj.pdf_value(origin, v)
     }
 
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, origin: Vec3) -> Vec3 {
         self.obj.random(origin)
     }
 }
@@ -204,7 +204,7 @@ impl Rotate {
         (a_coeff, b_coeff)
     }
 
-    fn rot_coeffs_vec(v: &Vec3, axis: Axis) -> ((f64,f64), (f64, f64)) {
+    fn rot_coeffs_vec(v: Vec3, axis: Axis) -> ((f64,f64), (f64, f64)) {
         Self::rot_coeffs(v.0, v.1, v.2, axis)
     }
 
@@ -227,13 +227,13 @@ impl Hittable for Rotate {
 
         // Basically rotate the input Ray opposite the specified rotation
         let (a_axis, b_axis) = Self::off_axes(self.axis);
-        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&r.origin, self.axis);
+        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(r.origin, self.axis);
         origin[a_axis] =
             cos_neg_theta * a_coeff.0 + sin_neg_theta * a_coeff.1;
         origin[b_axis] =
             sin_neg_theta * b_coeff.0 + cos_neg_theta * b_coeff.1;
 
-        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&r.dir, self.axis);
+        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(r.dir, self.axis);
         dir[a_axis] =
             cos_neg_theta * a_coeff.0 + sin_neg_theta * a_coeff.1;
         dir[b_axis] =
@@ -251,20 +251,20 @@ impl Hittable for Rotate {
         let mut normal = hr.norm;
 
         // Then rotate the hit point and the normal vector by theta
-        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&hr.p, self.axis);
+        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(hr.p, self.axis);
         p[a_axis] =
             self.cos_theta * a_coeff.0 + self.sin_theta * a_coeff.1;
         p[b_axis] =
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
-        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(&normal, self.axis);
+        let (a_coeff, b_coeff) = Self::rot_coeffs_vec(normal, self.axis);
         normal[a_axis] =
             self.cos_theta * a_coeff.0 + self.sin_theta * a_coeff.1;
         normal[b_axis] =
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
         Some(HitRecord::new(
-            &rotated_r, &p, &normal, hr.t, hr.u, hr.v, hr.mat.clone()
+            &rotated_r, p, normal, hr.t, hr.u, hr.v, hr.mat.clone()
         ))
 
     }
@@ -273,11 +273,11 @@ impl Hittable for Rotate {
         self.bbox
     }
 
-    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
         self.obj.pdf_value(origin, v)
     }
 
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, origin: Vec3) -> Vec3 {
         self.obj.random(origin)
     }
 }
@@ -309,11 +309,11 @@ impl Hittable for FlipFace {
     }
 
     // TODO(oren): Not sure this is quite right
-    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
         self.obj.pdf_value(origin, v)
     }
 
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, origin: Vec3) -> Vec3 {
         self.obj.random(origin)
     }
 }

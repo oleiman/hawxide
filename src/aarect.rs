@@ -15,10 +15,10 @@ pub struct AARect {
 }
 
 impl AARect {
-    fn new(p0: &Point3, p1: &Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>) -> Self {
+    fn new(p0: Point3, p1: Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>) -> Self {
         assert!(p0.axis(k_axis) == p1.axis(k_axis));
         AARect {
-            p0: *p0, p1: *p1,
+            p0: p0, p1: p1,
             norm: match k_axis {
                 Axis::X => Vec3(1.0, 0.0, 0.0),
                 Axis::Y => Vec3(0.0, 1.0, 0.0),
@@ -31,24 +31,24 @@ impl AARect {
 
     pub fn xy_rect(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
-            &Point3(x0, y0, k),
-            &Point3(x1, y1, k),
+            Point3(x0, y0, k),
+            Point3(x1, y1, k),
             Axis::Z,
             mat,
         )
     }
     pub fn xz_rect(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
-            &Point3(x0, k, z0),
-            &Point3(x1, k, z1),
+            Point3(x0, k, z0),
+            Point3(x1, k, z1),
             Axis::Y,
             mat,
         )
     }
     pub fn yz_rect(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self::new(
-            &Point3(k, y0, z0),
-            &Point3(k, y1, z1),
+            Point3(k, y0, z0),
+            Point3(k, y1, z1),
             Axis::X,
             mat,
         )
@@ -101,7 +101,7 @@ impl Hittable for AARect {
 
         let p = r.at(t);
         Some(HitRecord::new(
-            r, &p, &outward_normal, t, u, v, self.mat.clone(),
+            r, p, outward_normal, t, u, v, self.mat.clone(),
         ))
     }
 
@@ -112,11 +112,11 @@ impl Hittable for AARect {
         })
     }
 
-    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
         if let Some(hr) = self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY) {
             let area = self.area();
             let distance_squared = hr.t * hr.t * v.len_squared();
-            let cosine = f64::abs(dot(v, &hr.norm) / v.len());
+            let cosine = f64::abs(dot(v, hr.norm) / v.len());
             let v = distance_squared / (cosine * area);
             v
         } else {
@@ -124,7 +124,7 @@ impl Hittable for AARect {
         }
     }
 
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, origin: Vec3) -> Vec3 {
         let random_point = match self.k_axis {
             Axis::X => Point3(
                 self.p0.x(),
@@ -142,6 +142,6 @@ impl Hittable for AARect {
                 self.p1.z(),
             ),
         };
-        random_point - *origin
+        random_point - origin
     }
 }
