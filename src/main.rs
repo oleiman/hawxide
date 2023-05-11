@@ -1,11 +1,9 @@
 #![allow(unused)]
 
-use std::io;
 use hawxide::*;
+use pdf::{HittablePDF, MixturePDF};
 
 use std::io::{Write, BufWriter};
-use std::sync::Arc;
-use std::sync::Mutex;
 use rayon::prelude::*;
 
 fn ray_color(r : &Ray,
@@ -24,13 +22,13 @@ fn ray_color(r : &Ray,
             let light_pdf = if scene.lights.empty() {
                 sr.pdf.clone()
             } else {
-                Arc::new(HittablePDF::new(scene.lights.clone(), hr.p))
+                HittablePDF::new(scene.lights.clone(), hr.p).into()
             };
             let mix_pdf = MixturePDF::new(light_pdf.clone(), sr.pdf.clone());
             let scattered = Ray::new(hr.p, mix_pdf.generate(), r.time);
             let pdf_val = mix_pdf.value(scattered.dir);
 
-            assert!(pdf_val > 0.0, "PDF val {:12} < 0", pdf_val);
+            assert!(pdf_val > 0.0, "PDF val {:4} < 0", pdf_val);
 
             emitted +
                 sr.attenuation *
@@ -73,6 +71,7 @@ fn main() {
     let scene = match scene_select {
         1 => {
             aperture = 0.1;
+            samples_per_pixel = 100;
             scene::defs::random_scene()
         },
         2 => scene::defs::two_spheres(),
@@ -97,7 +96,7 @@ fn main() {
         8 => {
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 200;
+            samples_per_pixel = 800;
             scene::defs::cornell_smoke()
         },
         9 => {
@@ -107,9 +106,8 @@ fn main() {
         },
         10 => {
             aspect_ratio = 1.0;
-            // image_width = 600;
             image_width = 600;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 100;
             scene::defs::wacky_cornell_box()
         },
         11 => {
@@ -120,7 +118,7 @@ fn main() {
         13 => scene::defs::noise_experiments(),
         _ => {
             aspect_ratio = 1.0;
-            image_width = 400;
+            image_width = 300;
             samples_per_pixel = 100;
             scene::defs::final_scene()
         }
@@ -196,7 +194,7 @@ fn estimate_pi() {
 }
 
 fn pdf(_x: &Vec3) -> f64 {
-    return  1.0 / (4. * PI);
+    1.0 / (4. * PI)
 }
 
 fn estimate_integral() {

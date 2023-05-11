@@ -14,7 +14,13 @@ pub struct NullPDF;
 
 impl NullPDF {
     pub fn new() -> Self {
-        Self{}
+        Self
+    }
+}
+
+impl From<NullPDF> for Arc<dyn PDensityFn + Sync + Send> {
+    fn from(pdf: NullPDF) -> Arc<dyn PDensityFn + Sync + Send> {
+        Arc::new(pdf)
     }
 }
 
@@ -32,6 +38,12 @@ impl CosPDF {
         let mut uvw = OrthoNormalBasis::new();
         uvw.build_from_w(w);
         Self {uvw}
+    }
+}
+
+impl From<CosPDF> for Arc<dyn PDensityFn + Sync + Send> {
+    fn from(pdf: CosPDF) -> Arc<dyn PDensityFn + Sync + Send> {
+        Arc::new(pdf)
     }
 }
 
@@ -55,11 +67,18 @@ pub struct HittablePDF {
 }
 
 impl HittablePDF {
-    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, origin: Point3) -> Self {
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, origin: Point3)
+               -> Self {
         Self {
-            origin: origin,
-            obj: obj.clone(),
+            origin,
+            obj,
         }
+    }
+}
+
+impl From<HittablePDF> for Arc<dyn PDensityFn + Sync + Send> {
+    fn from(pdf: HittablePDF) -> Arc<dyn PDensityFn + Sync + Send> {
+        Arc::new(pdf)
     }
 }
 
@@ -73,13 +92,20 @@ impl PDensityFn for HittablePDF {
 }
 
 pub struct MixturePDF {
-    p: [Arc<dyn PDensityFn + Sync + Send>; 2],
+    pub p: [Arc<dyn PDensityFn + Sync + Send>; 2],
 }
 
 impl MixturePDF {
     pub fn new(p0: Arc<dyn PDensityFn + Sync + Send>,
-               p1: Arc<dyn PDensityFn + Sync + Send>) -> Self {
+               p1: Arc<dyn PDensityFn + Sync + Send>)
+               -> Self {
         Self {p: [p0, p1]}
+    }
+}
+
+impl From<MixturePDF> for Arc<dyn PDensityFn + Sync + Send> {
+    fn from(pdf: MixturePDF) -> Arc<dyn PDensityFn + Sync + Send> {
+        Arc::new(pdf)
     }
 }
 

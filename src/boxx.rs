@@ -15,34 +15,41 @@ pub struct Boxx {
 }
 
 impl Boxx {
-    pub fn new(p0: Point3, p1: Point3, mat: Arc<dyn Material + Sync + Send>) -> Self {
-        let mut sides = HittableList::new();
-        sides.add(Arc::new(
-            AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p1.z(), mat.clone())
-        ));
-        sides.add(Arc::new(
-            AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p0.z(), mat.clone())
-        ));
+    pub fn new(p0: Point3, p1: Point3, mat: Arc<dyn Material + Sync + Send>)
+               -> Self {
+        let mut sides = HittableList::default();
+        sides.add(
+            AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p1.z(), mat.clone()).into()
+        );
+        sides.add(
+            AARect::xy_rect(p0.x(), p1.x(), p0.y(), p1.y(), p0.z(), mat.clone()).into()
+        );
 
-        sides.add(Arc::new(
-            AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p1.y(), mat.clone())
-        ));
-        sides.add(Arc::new(
-            AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p0.y(), mat.clone())
-        ));
+        sides.add(
+            AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p1.y(), mat.clone()).into()
+        );
+        sides.add(
+            AARect::xz_rect(p0.x(), p1.x(), p0.z(), p1.z(), p0.y(), mat.clone()).into()
+        );
 
-        sides.add(Arc::new(
-            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p1.x(), mat.clone())
-        ));
-        sides.add(Arc::new(
-            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p0.x(), mat.clone())
-        ));
+        sides.add(
+            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p1.x(), mat.clone()).into()
+        );
+        sides.add(
+            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p0.x(), mat.clone()).into()
+        );
 
         Boxx {
             box_min: p0,
             box_max: p1,
             sides
         }
+    }
+}
+
+impl From<Boxx> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: Boxx) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 

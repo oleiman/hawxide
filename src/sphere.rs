@@ -15,11 +15,12 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material + Sync + Send>) -> Sphere {
-        Sphere {
-            center: center,
+    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material + Sync + Send>)
+               -> Sphere {
+        Self {
+            center,
             radius,
-            mat: mat,
+            mat,
         }
     }
 
@@ -36,6 +37,12 @@ impl Sphere {
             phi / (2.0 * PI),
             theta / PI,
         )
+    }
+}
+
+impl From<Sphere> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: Sphere) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 

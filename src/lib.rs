@@ -18,43 +18,15 @@ pub mod onb;
 pub mod pdf;
 pub mod scene;
 
-// TODO(oren): janky, lazy
-
-pub use vec3::Vec3;
-pub use vec3::Color;
-pub use vec3::write_color;
-pub use vec3::{Point3, Axis};
+pub use vec3::{
+    Vec3,
+    Color,
+    Point3,
+    write_color,
+};
 pub use ray::Ray;
-pub use sphere::Sphere;
-pub use moving_sphere::MovingSphere;
-pub use hittable_list::HittableList;
-pub use hit::{Hittable, Translate, Rotate, FlipFace};
 pub use camera::Camera;
-pub use util::{INFINITY,NEG_INFINITY,PI};
-pub use util::random;
-pub use material::{
-    ScatterRecord,
-    Material,
-    Lambertian,
-    Metal,
-    Dielectric,
-    DiffuseLight,
-    Isotropic
-};
-pub use bvh::BVHNode;
-pub use texture::{
-    SolidColor,
-    CheckerTexture,
-    MarbleTexture,
-    ImageTexture,
-    WoodTexture,
-    NoiseTexture,
-    VoronoiTexture,
-};
-pub use aarect::{AARect};
-pub use boxx::Boxx;
-pub use constant_medium::ConstantMedium;
-pub use pdf::{PDensityFn, CosPDF, HittablePDF, MixturePDF};
-pub use scene::{Scene};
-
+pub use scene::Scene;
+pub use util::{INFINITY,NEG_INFINITY,PI,random};
+pub use pdf::PDensityFn;
 

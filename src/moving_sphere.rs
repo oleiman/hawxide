@@ -18,12 +18,13 @@ pub struct MovingSphere {
 impl MovingSphere {
     pub fn new(center0: Point3, center1: Point3,
                time0: f64, time1: f64,
-               radius: f64, mat: Arc<dyn Material + Sync + Send>) -> MovingSphere {
+               radius: f64, mat: Arc<dyn Material + Sync + Send>)
+               -> Self {
         // Moving sphere has two centers. One where it starts (at time0) and another
         // where it ends up (at time1).
-        MovingSphere {
-            center0: center0,
-            center1: center1,
+        Self {
+            center0,
+            center1,
             time0,
             time1,
             radius,
@@ -37,6 +38,12 @@ impl MovingSphere {
         self.center0 +
             ((time - self.time0) / (self.time1 - self.time0)) *
             (self.center1 - self.center0)
+    }
+}
+
+impl From<MovingSphere> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: MovingSphere) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 

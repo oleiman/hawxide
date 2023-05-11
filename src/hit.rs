@@ -68,7 +68,7 @@ pub trait Hittable {
     }
 
     fn empty(&self) -> bool {
-        return false;
+        false
     }
 }
 
@@ -78,11 +78,15 @@ pub struct Translate {
 }
 
 impl Translate {
-    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: Vec3) -> Translate {
-        Translate {
-            obj: obj,
-            offset: offset,
-        }
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: Vec3)
+               -> Self {
+        Self{ obj, offset }
+    }
+}
+
+impl From<Translate> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: Translate) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 
@@ -104,14 +108,10 @@ impl Hittable for Translate {
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
-        if let Some(bb) = self.obj.bounding_box(time0, time1) {
-            Some(AABB{
-                min: bb.min + self.offset,
-                max: bb.max + self.offset,
-            })
-        } else {
-            None
-        }
+        self.obj.bounding_box(time0, time1).map(|bb| AABB{
+            min: bb.min + self.offset,
+            max: bb.max + self.offset,
+        })
     }
 
     fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
@@ -132,19 +132,23 @@ pub struct Rotate {
 }
 
 impl Rotate {
-    pub fn rotate_x(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
+    pub fn rotate_x(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
+                    -> Self {
         Self::new(obj, angle, Axis::X)
     }
 
-    pub fn rotate_y(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
+    pub fn rotate_y(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
+                    -> Self {
         Self::new(obj, angle, Axis::Y)
     }
 
-    pub fn rotate_z(obj: Arc<dyn Hittable + Sync + Send>, angle: f64) -> Self {
+    pub fn rotate_z(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
+                    -> Self {
         Self::new(obj, angle, Axis::Z)
     }
 
-    fn new(obj: Arc<dyn Hittable + Sync + Send>, angle: f64, axis: Axis) -> Self {
+    fn new(obj: Arc<dyn Hittable + Sync + Send>, angle: f64, axis: Axis)
+           -> Self {
         let radians = util::degrees_to_radians(angle);
         let sin_theta = f64::sin(radians);
         let cos_theta = f64::cos(radians);
@@ -183,9 +187,8 @@ impl Rotate {
             }
         }
 
-        Rotate {
-            obj: obj,
-            axis, sin_theta, cos_theta,
+        Self {
+            obj, axis, sin_theta, cos_theta,
             bbox: if hasbox { Some(AABB {min, max}) } else { None },
         }
     }
@@ -217,6 +220,12 @@ impl Rotate {
     }
 }
 
+impl From<Rotate> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: Rotate) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
+    }
+}
+
 impl Hittable for Rotate {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.origin;
@@ -241,11 +250,7 @@ impl Hittable for Rotate {
 
         let rotated_r = Ray { origin, dir, time: r.time };
 
-        let hr = if let Some(hr) = self.obj.hit(&rotated_r, t_min, t_max) {
-            hr
-        } else {
-            return None;
-        };
+        let hr = self.obj.hit(&rotated_r, t_min, t_max)?;
 
         let mut p = hr.p;
         let mut normal = hr.norm;
@@ -287,8 +292,15 @@ pub struct FlipFace {
 }
 
 impl FlipFace {
-    pub fn new(obj: Arc<dyn Hittable + Sync + Send>) -> Self {
-        FlipFace {obj}
+    pub fn new(obj: Arc<dyn Hittable + Sync + Send>)
+               -> Self {
+        Self {obj}
+    }
+}
+
+impl From<FlipFace> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: FlipFace) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 

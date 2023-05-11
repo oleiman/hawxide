@@ -15,21 +15,29 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: Color) -> Self {
+    pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: Color)
+               -> Self {
         Self {
-            boundary: boundary,
+            boundary,
             neg_inv_density: -1.0 / d,
-            phase_fn: Arc::new(Isotropic::new(c)),
+            phase_fn: Isotropic::new(c).into(),
 
         }
     }
 
-    pub fn from_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>) -> Self {
+    pub fn from_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>)
+                        -> Self {
         Self {
-            boundary: boundary,
+            boundary,
             neg_inv_density: -1.0 / d,
-            phase_fn: Arc::new(Isotropic { albedo: a }),
+            phase_fn: Isotropic::from_texture(a).into(),
         }
+    }
+}
+
+impl From<ConstantMedium> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: ConstantMedium) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 
@@ -38,17 +46,8 @@ impl Hittable for ConstantMedium {
         const DEBUG : bool = false;
         let debugging : bool = DEBUG && random::double() < 0.00001;
 
-        let mut hr1 = if let Some(hr) = self.boundary.hit(r, NEG_INFINITY, INFINITY) {
-            hr
-        } else {
-            return None;
-        };
-
-        let mut hr2 = if let Some(hr) = self.boundary.hit(r, hr1.t + 0.0001, INFINITY) {
-            hr
-        } else {
-            return None;
-        };
+        let mut hr1 = self.boundary.hit(r, NEG_INFINITY, INFINITY)?;
+        let mut hr2 = self.boundary.hit(r, hr1.t + 0.0001, INFINITY)?;
 
         if debugging {
             eprintln!("t_min={}, t_max={}", hr1.t, hr2.t);

@@ -7,15 +7,15 @@ use crate::util::random;
 use std::vec::Vec;
 use std::sync::Arc;
 
+#[derive(Default)]
 pub struct HittableList {
     pub objects : Vec<Arc<dyn Hittable + Sync + Send>>,
 }
 
 impl HittableList {
-    pub fn new() -> Self {
-        Self {
-            objects: Vec::new(),
-        }
+    pub fn new(objects: Vec<Arc<dyn Hittable + Sync + Send>>)
+               -> Self {
+        Self {objects}
     }
 
     pub fn clear(&mut self) {
@@ -35,9 +35,9 @@ impl HittableList {
     }
 }
 
-impl Default for HittableList {
-    fn default() -> Self {
-        Self::new()
+impl From<HittableList> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: HittableList) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 
@@ -89,7 +89,7 @@ impl Hittable for HittableList {
     }
 
     fn empty(&self) -> bool {
-        return self.objects.len() == 0;
+        self.objects.is_empty()
     }
 }
 

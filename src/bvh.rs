@@ -14,11 +14,13 @@ pub struct BVHNode {
 }
 
 impl BVHNode {
-    pub fn new(list: &HittableList, time0: f64, time1: f64) -> Self {
+    pub fn new(list: &HittableList, time0: f64, time1: f64)
+               -> Self {
         Self::new_slice(&list.objects, time0, time1)
     }
 
-    pub fn new_slice(src_objects: &[Arc<dyn Hittable + Sync + Send>], time0: f64, time1: f64) -> Self {
+    pub fn new_slice(src_objects: &[Arc<dyn Hittable + Sync + Send>], time0: f64, time1: f64)
+                     -> Self {
         let mut objects = Vec::<Arc<dyn Hittable + Sync + Send>>::new();
         for o in src_objects {
             objects.push(o.clone());
@@ -37,8 +39,8 @@ impl BVHNode {
             _ => {
                 objects.sort_by(comparator);
                 let mid = objects.len() / 2;
-                (Arc::new(BVHNode::new_slice(&objects[0..mid], time0, time1)),
-                 Arc::new(BVHNode::new_slice(&objects[mid..], time0, time1)))
+                (BVHNode::new_slice(&objects[0..mid], time0, time1).into(),
+                 BVHNode::new_slice(&objects[mid..], time0, time1).into())
             }
         };
 
@@ -48,11 +50,17 @@ impl BVHNode {
         assert!(box_left.is_some() && box_right.is_some(),
                 "No bounding box in BVHNode constructor");
 
-        BVHNode {
+        Self {
             left,
             right,
             bbox: AABB::surrounding_box(box_left.unwrap(), box_right.unwrap()),
         }
+    }
+}
+
+impl From<BVHNode> for Arc<dyn Hittable + Sync + Send> {
+    fn from(hh: BVHNode) -> Arc<dyn Hittable + Sync + Send> {
+        Arc::new(hh)
     }
 }
 

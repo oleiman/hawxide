@@ -15,10 +15,14 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
-    pub fn new(r: f64, g: f64, b: f64) -> Self{
-        SolidColor {
-            color_val: Color(r, g, b),
-        }
+    pub fn new(color_val: Color) -> Self {
+        Self { color_val }
+    }
+}
+
+impl From<SolidColor> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: SolidColor) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 
@@ -34,11 +38,17 @@ pub struct CheckerTexture {
 }
 
 impl CheckerTexture {
-    pub fn new(c1: Color, c2: Color) -> CheckerTexture {
-        CheckerTexture {
-            even: Arc::new(SolidColor { color_val: c1}),
-            odd: Arc::new(SolidColor {color_val: c2}),
+    pub fn new(c1: Color, c2: Color) -> Self {
+        Self {
+            even: SolidColor::new(c1).into(),
+            odd: SolidColor::new(c2).into(),
         }
+    }
+}
+
+impl From<CheckerTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: CheckerTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 
@@ -62,17 +72,23 @@ pub struct MarbleTexture {
 
 impl MarbleTexture {
     pub fn new(scale : f64) -> Self {
-        MarbleTexture {
-            noise: Perlin::new(),
-            albedo: Arc::new(SolidColor::new(1.0, 1.0, 1.0)),
+        Self::from_texture(
             scale,
-        }
+            SolidColor::new(Color(1.0, 1.0, 1.0)).into()
+        )
     }
-    pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>) -> Self {
+    pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>)
+                        -> Self {
         Self {
             noise: Perlin::new(),
             albedo, scale,
         }
+    }
+}
+
+impl From<MarbleTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: MarbleTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 
@@ -101,6 +117,12 @@ impl WoodTexture {
     }
 }
 
+impl From<WoodTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: WoodTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
+    }
+}
+
 impl Texture for WoodTexture {
     fn value(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         // let ns = self.noise.turb(&(self.scale * *p), None);
@@ -123,17 +145,21 @@ pub struct NoiseTexture {
 
 impl NoiseTexture {
     pub fn new(c: Color) -> Self {
-        Self {
-            noise: Perlin::new(),
-            color: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
-        }
+        Self::from_texture(SolidColor::new(c).into())
     }
 
-    pub fn from_texture(tex: Arc<dyn Texture + Sync + Send>) -> Self {
+    pub fn from_texture(color: Arc<dyn Texture + Sync + Send>)
+                        -> Self {
         Self {
             noise: Perlin::new(),
-            color: tex.clone(),
+            color
         }
+    }
+}
+
+impl From<NoiseTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: NoiseTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 
@@ -162,9 +188,13 @@ impl VoronoiTexture {
                 Color::random_range(0.0, 0.8),
             ));
         }
-        Self {
-            vn_points,
-        }
+        Self {vn_points}
+    }
+}
+
+impl From<VoronoiTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: VoronoiTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 
@@ -172,18 +202,11 @@ impl Texture for VoronoiTexture {
     fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         let pt = Point3(u, v, 0.0);
         let mp = self.vn_points.iter().min_by(|p1, p2| {
-            (
-                &(
-                    ((*p1).0 - pt).len()
-                )
-            ).partial_cmp(
-                &(
-                    ((*p2).0 - pt).len()
-                )
-            ).unwrap()
+            (((*p1).0 - pt).len()).partial_cmp(
+                &((*p2).0 - pt).len()).unwrap()
         }).unwrap();
 
-        return mp.1 // * (mp.0 - pt).len()
+        mp.1
      }
 }
 
@@ -202,9 +225,15 @@ impl ImageTexture {
                   fname, img.dimensions(), img.color());
         let (width, height) = img.dimensions();
 
-        ImageTexture {
+        Self {
             img, width, height,
         }
+    }
+}
+
+impl From<ImageTexture> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: ImageTexture) -> Arc<dyn Texture + Sync + Send> {
+        Arc::new(tt)
     }
 }
 

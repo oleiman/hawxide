@@ -20,7 +20,7 @@ pub trait Material {
         None
     }
     fn scattering_pdf(&self, _ray_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
-        return 0.0;
+        0.0
     }
     fn emitted(&self, _ray_in: &Ray, _rec: &HitRecord,
                _u: f64, _v: f64, _p: Point3) -> Color {
@@ -33,10 +33,19 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(c: Color) -> Lambertian {
-        Lambertian {
-            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
-        }
+    pub fn new(c: Color) -> Self {
+        Self::from_texture(SolidColor::new(c).into())
+    }
+
+    pub fn from_texture(albedo: Arc<dyn Texture + Sync + Send>)
+                        -> Self {
+        Self { albedo }
+    }
+}
+
+impl From<Lambertian> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Lambertian) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
     }
 }
 
@@ -47,7 +56,7 @@ impl Material for Lambertian {
         Some(ScatterRecord{
             specular_ray: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf: Arc::new(CosPDF::new(rec.norm)),
+            pdf: CosPDF::new(rec.norm).into(),
         })
     }
 
@@ -69,9 +78,15 @@ pub struct Metal {
 impl Metal {
     pub fn new(c: Color, fuzz: f64) -> Self {
         Self {
-            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
+            albedo: SolidColor::new(c).into(),
             fuzz,
         }
+    }
+}
+
+impl From<Metal> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Metal) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
     }
 }
 
@@ -94,7 +109,7 @@ impl Material for Metal {
                 rec.p, dir, ray_in.time)
             ),
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf: Arc::new(NullPDF::new()),
+            pdf: NullPDF::new().into(),
         })
     }
 }
@@ -104,11 +119,21 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
+    pub fn new(ir: f64) -> Self {
+        Self{ ir }
+    }
+
     fn reflectance(cos: f64, ref_idx: f64) -> f64 {
         // Use Schlick's approximation for reflectance
         let mut r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         r0 *= r0;
         r0 + (1. - r0) * (1. - cos).powf(5.)
+    }
+}
+
+impl From<Dielectric> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Dielectric) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
     }
 }
 
@@ -142,7 +167,7 @@ impl Material for Dielectric {
                 ray_in.time
             )),
             attenuation: Color(1.0, 1.0, 1.0),
-            pdf: Arc::new(NullPDF),
+            pdf: NullPDF::new().into(),
         })
     }
 }
@@ -152,10 +177,16 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
-    pub fn new(c: Color) -> DiffuseLight {
-        DiffuseLight {
-            emit: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
+    pub fn new(c: Color) -> Self {
+        Self {
+            emit: SolidColor::new(c).into(),
         }
+    }
+}
+
+impl From<DiffuseLight> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: DiffuseLight) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
     }
 }
 
@@ -176,9 +207,18 @@ pub struct Isotropic {
 
 impl Isotropic {
     pub fn new(c: Color) -> Self {
-        Self {
-            albedo: Arc::new(SolidColor::new(c.r(), c.g(), c.b())),
-        }
+        Self::from_texture(SolidColor::new(c).into())
+    }
+
+    pub fn from_texture(albedo: Arc<dyn Texture + Sync + Send>)
+                        -> Self{
+        Self {albedo}
+    }
+}
+
+impl From<Isotropic> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Isotropic) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
     }
 }
 
@@ -189,7 +229,7 @@ impl Material for Isotropic {
                 rec.p, Vec3::random_in_unit_sphere(), ray_in.time,
             )),
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf: Arc::new(NullPDF::new()),
+            pdf: NullPDF::new().into(),
         })
     }
 }
