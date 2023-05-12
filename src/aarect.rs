@@ -15,9 +15,10 @@ pub struct AARect {
 }
 
 impl AARect {
+    #[must_use]
     fn new(p0: Point3, p1: Point3, k_axis: Axis, mat: Arc<dyn Material + Sync + Send>)
            -> Self {
-        assert!(p0.axis(k_axis) == p1.axis(k_axis));
+        assert!((p0.axis(k_axis) - p1.axis(k_axis)).abs() < 0.000_000_1);
         Self {
             p0, p1,
             norm: match k_axis {
@@ -30,6 +31,7 @@ impl AARect {
         }
     }
 
+    #[must_use]
     pub fn xy_rect(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>)
                    -> Self {
         Self::new(
@@ -39,6 +41,8 @@ impl AARect {
             mat,
         )
     }
+
+    #[must_use]
     pub fn xz_rect(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>)
                    -> Self {
         Self::new(
@@ -48,6 +52,8 @@ impl AARect {
             mat,
         )
     }
+
+    #[must_use]
     pub fn yz_rect(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material + Sync + Send>)
                    -> Self {
         Self::new(
@@ -75,6 +81,7 @@ impl From<AARect> for Arc<dyn Hittable + Sync + Send> {
 }
 
 impl Hittable for AARect {
+    #[allow(clippy::many_single_char_names)]
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let k_axis = self.k_axis;
         let a_axis = match k_axis {

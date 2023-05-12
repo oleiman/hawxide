@@ -2,33 +2,40 @@ use crate::vec3::{Vec3,cross};
 
 use std::ops;
 
+#[derive(Default)]
 pub struct OrthoNormalBasis {
     axis: [Vec3; 3],
 }
 
 impl OrthoNormalBasis {
+    #[must_use]
     pub fn new() -> OrthoNormalBasis {
         OrthoNormalBasis {
             axis: [Vec3::new(), Vec3::new(), Vec3::new()],
         }
     }
 
+    #[must_use]
     pub fn u(&self) -> Vec3 {
         self.axis[0]
     }
 
+    #[must_use]
     pub fn v(&self) -> Vec3 {
         self.axis[1]
     }
 
+    #[must_use]
     pub fn w(&self) -> Vec3 {
         self.axis[2]
     }
 
+    #[must_use]
     pub fn local(&self, a: f64, b: f64, c: f64) -> Vec3 {
         a * self.u() + b * self.v() + c * self.w()
     }
 
+    #[must_use]
     pub fn local_v(&self, a: Vec3) -> Vec3 {
         self.local(a.x(), a.y(), a.z())
     }

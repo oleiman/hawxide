@@ -15,6 +15,7 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
+    #[must_use]
     pub fn new(color_val: Color) -> Self {
         Self { color_val }
     }
@@ -32,12 +33,13 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTexture {
+pub struct Checker {
     even: Arc<dyn Texture + Sync + Send>,
     odd: Arc<dyn Texture + Sync + Send>,
 }
 
-impl CheckerTexture {
+impl Checker {
+    #[must_use]
     pub fn new(c1: Color, c2: Color) -> Self {
         Self {
             even: SolidColor::new(c1).into(),
@@ -46,13 +48,13 @@ impl CheckerTexture {
     }
 }
 
-impl From<CheckerTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: CheckerTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Checker> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Checker) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for CheckerTexture {
+impl Texture for Checker {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines =
             f64::sin(10.0 * p.x()) * f64::sin(10.0 * p.y()) * f64::sin(10.0 * p.z());
@@ -64,19 +66,23 @@ impl Texture for CheckerTexture {
     }
 }
 
-pub struct MarbleTexture {
+pub struct Marble {
     noise: Perlin,
     albedo: Arc<dyn Texture + Sync + Send>,
     scale: f64,
 }
 
-impl MarbleTexture {
+impl Marble {
+
+    #[must_use]
     pub fn new(scale : f64) -> Self {
         Self::from_texture(
             scale,
             SolidColor::new(Color(1.0, 1.0, 1.0)).into()
         )
     }
+
+    #[must_use]
     pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>)
                         -> Self {
         Self {
@@ -86,13 +92,13 @@ impl MarbleTexture {
     }
 }
 
-impl From<MarbleTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: MarbleTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Marble> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Marble) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for MarbleTexture {
+impl Texture for Marble {
     // perlin interpolation can return negative numbers, so we add 1 and divide by 2
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         self.albedo.value(u, v, p) *
@@ -102,13 +108,14 @@ impl Texture for MarbleTexture {
     }
 }
 
-pub struct WoodTexture {
+pub struct Wood {
     noise: Perlin,
     scale: Vec3,
     color: Color,
 }
 
-impl WoodTexture {
+impl Wood {
+    #[must_use]
     pub fn new(scale: Vec3, color: Color) -> Self {
         Self {
             noise: Perlin::new(),
@@ -117,16 +124,16 @@ impl WoodTexture {
     }
 }
 
-impl From<WoodTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: WoodTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Wood> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Wood) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for WoodTexture {
-    fn value(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+impl Texture for Wood {
+    fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         // let ns = self.noise.turb(&(self.scale * *p), None);
-        let ns = self.noise.turb(self.scale * Point3(_u, _v, 0.0), None);
+        let ns = self.noise.turb(self.scale * Point3(u, v, 0.0), None);
         let c1 = self.color * 0.5 * (1.0 + f64::sin(self.scale.y() + 5.0 * ns));
         let c2 = c1 * 0.5 *
             (1.0 + f64::cos(
@@ -138,16 +145,18 @@ impl Texture for WoodTexture {
     }
 }
 
-pub struct NoiseTexture {
+pub struct Noise {
     noise: Perlin,
     color: Arc<dyn Texture + Sync + Send>,
 }
 
-impl NoiseTexture {
+impl Noise {
+    #[must_use]
     pub fn new(c: Color) -> Self {
         Self::from_texture(SolidColor::new(c).into())
     }
 
+    #[must_use]
     pub fn from_texture(color: Arc<dyn Texture + Sync + Send>)
                         -> Self {
         Self {
@@ -157,13 +166,13 @@ impl NoiseTexture {
     }
 }
 
-impl From<NoiseTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: NoiseTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Noise> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Noise) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for NoiseTexture {
+impl Texture for Noise {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         self.color.value(u, v, p) * (
             1.0 +
@@ -175,11 +184,12 @@ impl Texture for NoiseTexture {
     }
 }
 
-pub struct VoronoiTexture {
+pub struct Voronoi {
     vn_points: Vec<(Point3, Color)>,
 }
 
-impl VoronoiTexture {
+impl Voronoi {
+    #[must_use]
     pub fn new(_c: Color, n: u32) -> Self {
         let mut vn_points: Vec<(Point3, Color)> = vec![];
         for _ in 0..n {
@@ -192,13 +202,13 @@ impl VoronoiTexture {
     }
 }
 
-impl From<VoronoiTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: VoronoiTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Voronoi> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Voronoi) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for VoronoiTexture {
+impl Texture for Voronoi {
     fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         let pt = Point3(u, v, 0.0);
         let mp = self.vn_points.iter().min_by(|p1, p2| {
@@ -210,15 +220,17 @@ impl Texture for VoronoiTexture {
      }
 }
 
-pub struct ImageTexture {
+pub struct Image {
     img: DynamicImage,
     width: u32,
     height: u32,
 }
 
 
-impl ImageTexture {
+impl Image {
     const COLOR_SCALE: f64 = 1.0 / 255.0;
+
+    #[must_use]
     pub fn new(fname: &str) -> Self {
         let img = image::open(fname).expect("File not found!");
         eprintln!("{} - dimensions: {:?}; color: {:?}",
@@ -231,20 +243,20 @@ impl ImageTexture {
     }
 }
 
-impl From<ImageTexture> for Arc<dyn Texture + Sync + Send> {
-    fn from(tt: ImageTexture) -> Arc<dyn Texture + Sync + Send> {
+impl From<Image> for Arc<dyn Texture + Sync + Send> {
+    fn from(tt: Image) -> Arc<dyn Texture + Sync + Send> {
         Arc::new(tt)
     }
 }
 
-impl Texture for ImageTexture {
+impl Texture for Image {
     fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
         // Clamp input texture coords to [0,1] x [1,0]
         let u = u.clamp(0.0, 1.0);
         let v = 1.0 - v.clamp(0.0, 1.0); // flip V to image coords
 
-        let mut i = (u * self.width as f64) as u32;
-        let mut j = (v * self.height as f64) as u32;
+        let mut i = (u * f64::from(self.width)) as u32;
+        let mut j = (v * f64::from(self.height)) as u32;
 
         i = i.clamp(0, self.width - 1);
         j = j.clamp(0, self.height - 1);
@@ -252,9 +264,9 @@ impl Texture for ImageTexture {
         let pixel = self.img.get_pixel(i, j);
 
         Color(
-            ImageTexture::COLOR_SCALE * pixel[0] as f64,
-            ImageTexture::COLOR_SCALE * pixel[1] as f64,
-            ImageTexture::COLOR_SCALE * pixel[2] as f64
+            Image::COLOR_SCALE * f64::from(pixel[0]),
+            Image::COLOR_SCALE * f64::from(pixel[1]),
+            Image::COLOR_SCALE * f64::from(pixel[2])
         )
 
     }

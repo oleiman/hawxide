@@ -24,6 +24,7 @@ pub struct Camera {
 
 // TODO(oren): too many args here
 impl Camera {
+    #[must_use]
     pub fn new(scene: &Scene,
                vup: Vec3,
                aspect_ratio: f64,
@@ -73,6 +74,7 @@ impl Camera {
         }
     }
 
+    #[must_use]
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.u * rd.x() + self.v * rd.y();

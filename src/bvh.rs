@@ -14,11 +14,16 @@ pub struct BVHNode {
 }
 
 impl BVHNode {
+    #[must_use]
     pub fn new(list: &HittableList, time0: f64, time1: f64)
                -> Self {
         Self::new_slice(&list.objects, time0, time1)
     }
 
+    /// # Panics
+    ///
+    /// Will panic if either the left or right child has no bounding box
+    #[must_use]
     pub fn new_slice(src_objects: &[Arc<dyn Hittable + Sync + Send>], time0: f64, time1: f64)
                      -> Self {
         let mut objects = Vec::<Arc<dyn Hittable + Sync + Send>>::new();
@@ -27,7 +32,7 @@ impl BVHNode {
         }
 
         let comparator = |a: &Arc<dyn Hittable + Sync + Send>, b: &Arc<dyn Hittable + Sync + Send>| -> Ordering {
-            box_compare(a, b, random::int(0, 2) as usize)
+            box_compare(a, b, random::uint(0, 2))
         };
 
         let (left, right) : (Arc<dyn Hittable + Sync + Send>, Arc<dyn Hittable + Sync + Send>) = match objects.len() {

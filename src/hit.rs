@@ -17,7 +17,8 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(r: &Ray, p: Point3, out_norm: Vec3,
+    #[must_use]
+    pub fn new(ray: &Ray, p: Point3, out_norm: Vec3,
                t: f64, u: f64, v: f64, mat: Arc<dyn Material + Sync + Send>) -> HitRecord {
         // out_norm always points outward from the hittable object
         // instead, we want our hit record norm to point against the
@@ -27,7 +28,7 @@ impl HitRecord {
         // the ray intersects the outer face of the surface and leave
         // the normal alone. Otherwise the ray is inside the surface,
         // so we note that and reverse the direction of the normal
-        let front_face : bool  = dot(r.dir, out_norm) < 0.;
+        let front_face : bool  = dot(ray.dir, out_norm) < 0.;
         HitRecord {
             p,
             norm: if front_face {
@@ -78,6 +79,7 @@ pub struct Translate {
 }
 
 impl Translate {
+    #[must_use]
     pub fn new(obj: Arc<dyn Hittable + Sync + Send>, offset: Vec3)
                -> Self {
         Self{ obj, offset }
@@ -132,16 +134,19 @@ pub struct Rotate {
 }
 
 impl Rotate {
+    #[must_use]
     pub fn rotate_x(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
                     -> Self {
         Self::new(obj, angle, Axis::X)
     }
 
+    #[must_use]
     pub fn rotate_y(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
                     -> Self {
         Self::new(obj, angle, Axis::Y)
     }
 
+    #[must_use]
     pub fn rotate_z(obj: Arc<dyn Hittable + Sync + Send>, angle: f64)
                     -> Self {
         Self::new(obj, angle, Axis::Z)
@@ -292,6 +297,7 @@ pub struct FlipFace {
 }
 
 impl FlipFace {
+    #[must_use]
     pub fn new(obj: Arc<dyn Hittable + Sync + Send>)
                -> Self {
         Self {obj}

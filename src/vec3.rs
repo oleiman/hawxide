@@ -9,16 +9,18 @@ use crate::util::{
     clamp, PI,
 };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 pub type Point3 = Vec3;
 #[allow(non_snake_case)]
+#[must_use]
 pub const fn Point3(x: f64, y: f64, z: f64) -> Point3 {
     Vec3(x, y, z)
 }
 pub type Color = Vec3;
 #[allow(non_snake_case)]
+#[must_use]
 pub const fn Color(r: f64, g: f64, b: f64) -> Point3 {
     Vec3(r, g, b)
 }
@@ -29,15 +31,23 @@ pub enum Axis {
 }
 
 impl Vec3 {
+    #[must_use]
     pub fn new() -> Vec3 { Vec3(0.0, 0.0, 0.0) }
+    #[must_use]
     pub fn x(&self) -> f64 { self.0 }
+    #[must_use]
     pub fn y(&self) -> f64 { self.1 }
+    #[must_use]
     pub fn z(&self) -> f64 { self.2 }
 
+    #[must_use]
     pub fn r(&self) -> f64 { self.0 }
+    #[must_use]
     pub fn g(&self) -> f64 { self.1 }
+    #[must_use]
     pub fn b(&self) -> f64 { self.2 }
 
+    #[must_use]
     pub fn axis(&self, d: Axis) -> f64 {
         match (d) {
             Axis::X => self.x(),
@@ -46,7 +56,10 @@ impl Vec3 {
         }
     }
 
+    #[must_use]
     pub fn len(&self) -> f64 { self.len_squared().sqrt() }
+
+    #[must_use]
     pub fn len_squared(&self) -> f64 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
@@ -56,15 +69,18 @@ impl Vec3 {
         *self / self.len()
     }
 
+    #[must_use]
     pub fn near_zero(&self) -> bool {
         const S : f64 = 1e-8;
         (self.0.abs() < S) && (self.1.abs() < S) && (self.2.abs() < S)
     }
 
+    #[must_use]
     pub fn random() -> Self {
         Vec3(double(), double(), double())
     }
 
+    #[must_use]
     pub fn random_range(min : f64, max : f64) -> Self {
         Vec3(
             double_range(min, max),
@@ -73,6 +89,7 @@ impl Vec3 {
         )
     }
 
+    #[must_use]
     pub fn random_in_unit_disk() -> Vec3 {
         let mut p = Vec3(
             double_range(-1.0, 1.0),
@@ -89,6 +106,7 @@ impl Vec3 {
         p
     }
 
+    #[must_use]
     pub fn random_in_unit_sphere() -> Vec3 {
         let mut p = Self::random_range(-1., 1.);
         while p.len_squared() >= 1.0 {
@@ -97,10 +115,12 @@ impl Vec3 {
         p
     }
 
+    #[must_use]
     pub fn random_unit_vector() -> Vec3 {
         Self::random_in_unit_sphere().unit_vector()
     }
 
+    #[must_use]
     pub fn random_in_hemisphere(norm: Vec3) -> Vec3 {
         let in_unit_sphere = Self::random_in_unit_sphere();
         if dot(in_unit_sphere, norm) > 0.0 {
@@ -110,6 +130,7 @@ impl Vec3 {
         }
     }
 
+    #[must_use]
     pub fn random_to_sphere(r: f64, dist_squared: f64) -> Vec3 {
         let r1 = double();
         let r2 = double();
@@ -123,11 +144,12 @@ impl Vec3 {
     }
 }
 
-// Maybe dot should pass by value (implicity copy)?
+#[must_use]
 pub fn dot(u: Vec3, v: Vec3) -> f64 {
     (u.0 * v.0) + (u.1 * v.1) + (u.2 * v.2)
 }
 
+#[must_use]
 pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
     Vec3(
         u.1 * v.2 - u.2 * v.1,
@@ -136,10 +158,12 @@ pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
     )
 }
 
+#[must_use]
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - (2. * dot(v, n) * n)
 }
 
+#[must_use]
 pub fn refract(uv : Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     let cos_theta = f64::min(dot(-uv, n), 1.0);
     let r_out_perp = etai_over_etat * (uv + cos_theta * n);
@@ -155,8 +179,7 @@ impl ops::Index<usize> for Vec3 {
         match idx {
             0 => &self.0,
             1 => &self.1,
-            2 => &self.2,
-            _ => &self.0, // bogus value to satisfy return type
+            _ => &self.2,
         }
     }
 }
@@ -167,8 +190,7 @@ impl ops::IndexMut<usize> for Vec3 {
         match idx {
             0 => &mut self.0,
             1 => &mut self.1,
-            2 => &mut self.2,
-            _ => &mut self.0,
+            _ => &mut self.2,
         }
     }
 
@@ -286,7 +308,7 @@ impl fmt::Display for Vec3 {
 #[allow(clippy::cast_possible_truncation)]
 pub fn write_color<W: Write>(writer: &mut W, col : Color, samples_per_pixel : i32) {
     // Divide the color by the number of samples
-    let scale = 1.0 / samples_per_pixel as f64;
+    let scale = 1.0 / f64::from(samples_per_pixel);
 
     // assert!(col.r() >= 0. && col.g() >= 0. && col.b() >= 0.);
     // assert!(!col.r().is_nan() && !col.g().is_nan() && !col.b().is_nan());

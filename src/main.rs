@@ -1,6 +1,9 @@
 #![allow(unused)]
 
-use hawxide::*;
+use hawxide::{
+    Camera, Color, INFINITY, PDensityFn, PI, Point3, Ray, Scene, Vec3,
+    pdf, random, scene, write_color,
+};
 use pdf::{HittablePDF, MixturePDF};
 
 use std::io::{Write, BufWriter};
@@ -44,6 +47,7 @@ fn ray_color(r : &Ray,
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn main() {
 
     const MAX_DEPTH : i32 = 50;
@@ -124,7 +128,8 @@ fn main() {
         }
     };
 
-    let image_height : i32 = ((image_width as f64) / aspect_ratio) as i32;
+    #[allow(clippy::cast_possible_truncation)]
+    let image_height : i32 = ((f64::from(image_width)) / aspect_ratio) as i32;
     let vup = Vec3(0., 1., 0.);
     let dist_to_focus = 10.0;
 
@@ -132,7 +137,6 @@ fn main() {
         Camera::new(&scene, vup, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
-
     let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
 
@@ -152,8 +156,7 @@ fn main() {
                     (f64::from(j) + random::double()) / f64::from(image_height - 1);
 
                 let r = cam.get_ray(u, v);
-                pixel_color +=
-                    ray_color(&r, &scene, MAX_DEPTH)
+                pixel_color += ray_color(&r, &scene, MAX_DEPTH);
             };
             pixel_color
         }).collect();
@@ -177,7 +180,7 @@ fn estimate_pi() {
             let mut x = random::double_range(-1.0, 1.0);
             let mut y = random::double_range(-1.0, 1.0);
             if x * x + y * y < 1.0 {
-                inside_circle += 1
+                inside_circle += 1;
             }
             x = 2.0 * ((f64::from(i) + random::double()) / f64::from(sqrt_n)) - 1.0;
             y = 2.0 * ((f64::from(j) + random::double()) / f64::from(sqrt_n)) - 1.0;
@@ -198,7 +201,7 @@ fn pdf(_x: &Vec3) -> f64 {
 }
 
 fn estimate_integral() {
-    let n = 1000000;
+    let n = 1_000_000;
     let mut sum = 0.0;
     for i in 0..n {
         let v = random::cosine_direction();

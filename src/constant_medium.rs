@@ -15,6 +15,7 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
+    #[must_use]
     pub fn new(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, c: Color)
                -> Self {
         Self {
@@ -25,6 +26,7 @@ impl ConstantMedium {
         }
     }
 
+    #[must_use]
     pub fn from_texture(boundary: Arc<dyn Hittable + Sync + Send>, d: f64, a: Arc<dyn Texture + Sync + Send>)
                         -> Self {
         Self {

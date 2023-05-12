@@ -33,10 +33,12 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
+    #[must_use]
     pub fn new(c: Color) -> Self {
         Self::from_texture(SolidColor::new(c).into())
     }
 
+    #[must_use]
     pub fn from_texture(albedo: Arc<dyn Texture + Sync + Send>)
                         -> Self {
         Self { albedo }
@@ -76,6 +78,7 @@ pub struct Metal {
 }
 
 impl Metal {
+    #[must_use]
     pub fn new(c: Color, fuzz: f64) -> Self {
         Self {
             albedo: SolidColor::new(c).into(),
@@ -119,6 +122,7 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
+    #[must_use]
     pub fn new(ir: f64) -> Self {
         Self{ ir }
     }
@@ -177,6 +181,7 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
+    #[must_use]
     pub fn new(c: Color) -> Self {
         Self {
             emit: SolidColor::new(c).into(),
@@ -206,10 +211,12 @@ pub struct Isotropic {
 }
 
 impl Isotropic {
+    #[must_use]
     pub fn new(c: Color) -> Self {
         Self::from_texture(SolidColor::new(c).into())
     }
 
+    #[must_use]
     pub fn from_texture(albedo: Arc<dyn Texture + Sync + Send>)
                         -> Self{
         Self {albedo}

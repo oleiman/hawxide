@@ -13,6 +13,7 @@ pub struct HittableList {
 }
 
 impl HittableList {
+    #[must_use]
     pub fn new(objects: Vec<Arc<dyn Hittable + Sync + Send>>)
                -> Self {
         Self {objects}
@@ -26,10 +27,12 @@ impl HittableList {
         self.objects.push(obj);
     }
 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.objects.len()
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.objects.is_empty()
     }
@@ -83,9 +86,12 @@ impl Hittable for HittableList {
         )
     }
 
+    /// # Panics
+    /// 
+    /// Panics if self.objects is empty
     fn random(&self, origin: Vec3) -> Vec3 {
-        let size = self.objects.len() as i32;
-        self.objects[random::int(0, size - 1) as usize].random(origin)
+        assert!(!self.objects.is_empty());
+        self.objects[random::uint(0, self.objects.len() - 1)].random(origin)
     }
 
     fn empty(&self) -> bool {

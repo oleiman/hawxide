@@ -15,6 +15,7 @@ pub struct Boxx {
 }
 
 impl Boxx {
+    #[must_use]
     pub fn new(p0: Point3, p1: Point3, mat: Arc<dyn Material + Sync + Send>)
                -> Self {
         let mut sides = HittableList::default();
@@ -36,7 +37,7 @@ impl Boxx {
             AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p1.x(), mat.clone()).into()
         );
         sides.add(
-            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p0.x(), mat.clone()).into()
+            AARect::yz_rect(p0.y(), p1.y(), p0.z(), p1.z(), p0.x(), mat).into()
         );
 
         Boxx {

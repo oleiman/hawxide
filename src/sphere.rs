@@ -15,6 +15,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
+    #[must_use]
     pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material + Sync + Send>)
                -> Sphere {
         Self {
@@ -24,7 +25,7 @@ impl Sphere {
         }
     }
 
-    fn get_sphere_uv(&self, p: Point3) -> (f64, f64) {
+    fn get_sphere_uv(p: Point3) -> (f64, f64) {
         // p: given a point on the unit sphere centered at the origin
         // return (u,v) s.t.
         //   u in [0,1]: angle around the Y axis from X=-1 (as a fraction of 2*pi)
@@ -47,6 +48,7 @@ impl From<Sphere> for Arc<dyn Hittable + Sync + Send> {
 }
 
 impl Hittable for Sphere {
+    #[allow(clippy::many_single_char_names)]
     fn hit(&self, r : &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // vector in the direction from sphere center to the ray origin
         let oc : Vec3 = r.origin - self.center;
@@ -74,12 +76,12 @@ impl Hittable for Sphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = self.get_sphere_uv(outward_norm);
+            let (u,v) = Self::get_sphere_uv(outward_norm);
             Some(HitRecord::new(r, p, outward_norm, r1, u, v, self.mat.clone()))
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = self.get_sphere_uv(outward_norm);
+            let (u,v) = Self::get_sphere_uv(outward_norm);
             Some(HitRecord::new(r, p, outward_norm, r2, u, v, self.mat.clone()))
         } else {
             None

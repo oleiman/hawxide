@@ -7,11 +7,14 @@ pub struct Ray {
 }
 
 impl Ray {
+    #[must_use]
     pub fn new(origin: Point3, dir: Vec3, time: f64) -> Self {
         Self {
             origin, dir, time,
         }
     }
+
+    #[must_use]
     pub fn at(&self, t : f64) -> Point3 {
         self.origin + t * self.dir
     }

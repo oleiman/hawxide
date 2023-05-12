@@ -16,6 +16,7 @@ pub struct MovingSphere {
 }
 
 impl MovingSphere {
+    #[must_use]
     pub fn new(center0: Point3, center1: Point3,
                time0: f64, time1: f64,
                radius: f64, mat: Arc<dyn Material + Sync + Send>)
@@ -32,6 +33,7 @@ impl MovingSphere {
         }
     }
 
+    #[must_use]
     pub fn center(&self, time: f64) -> Point3 {
         // Translate center0 along the vector from to center1,
         // scaled by current time as proportion of time1 - time0.

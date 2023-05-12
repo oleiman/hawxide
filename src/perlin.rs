@@ -11,7 +11,14 @@ pub struct Perlin {
     perm_z: [usize; POINT_COUNT],
 }
 
+impl Default for Perlin {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Perlin {
+    #[must_use]
     pub fn new() -> Perlin {
         let ranvec =
             std::array::from_fn(
@@ -28,6 +35,7 @@ impl Perlin {
         }
     }
 
+    #[must_use]
     pub fn turb(&self, p: Point3, depth: Option<i32>) -> f64 {
         static DEFAULT_DEPTH : i32 = 7;
         let mut accum = 0.0f64;
@@ -43,6 +51,8 @@ impl Perlin {
         accum.abs()
     }
 
+    #[allow(clippy::many_single_char_names)]
+    #[must_use]
     pub fn smooth_noise(&self, p: Point3) -> f64 {
         let u = p.x() - f64::floor(p.x());
         let v = p.y() - f64::floor(p.y());
@@ -64,7 +74,7 @@ impl Perlin {
                             self.perm_x[(i+di) as usize & 0xFF] ^
                             self.perm_y[(j+dj) as usize & 0xFF] ^
                             self.perm_z[(k+dk) as usize & 0xFF]
-                    ]
+                    ];
                 }
             }
         }
@@ -80,7 +90,7 @@ impl Perlin {
         for i in 0..2u8 {
             for j in 0..2u8 {
                 for k in 0..2u8 {
-                    let fv = Vec3(i as f64, j as f64, k as f64);
+                    let fv = Vec3(f64::from(i), f64::from(j), f64::from(k));
                     let weight_v = Vec3(u - fv.0, v - fv.1, w - fv.2);
                     accum +=
                         (fv.0 * uu + f64::from(1-i)*(1.-uu)) *
@@ -99,7 +109,7 @@ impl Perlin {
         for i in 0..2u8 {
             for j in 0..2u8 {
                 for k in 0..2u8 {
-                    let fv = Vec3(i as f64, j as f64, k as f64);
+                    let fv = Vec3(f64::from(i), f64::from(j), f64::from(k));
                     accum +=
                         (fv.0 * u + f64::from(1-i)*(1.-u)) *
                         (fv.1 * v + f64::from(1-j)*(1.-v)) *

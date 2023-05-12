@@ -10,9 +10,11 @@ pub trait PDensityFn {
     fn generate(&self) -> Vec3;
 }
 
+#[derive(Default)]
 pub struct NullPDF;
 
 impl NullPDF {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }
@@ -34,6 +36,7 @@ pub struct CosPDF {
 }
 
 impl CosPDF {
+    #[must_use]
     pub fn new(w: Vec3) -> Self {
         let mut uvw = OrthoNormalBasis::new();
         uvw.build_from_w(w);
@@ -67,6 +70,7 @@ pub struct HittablePDF {
 }
 
 impl HittablePDF {
+    #[must_use]
     pub fn new(obj: Arc<dyn Hittable + Sync + Send>, origin: Point3)
                -> Self {
         Self {
@@ -96,6 +100,7 @@ pub struct MixturePDF {
 }
 
 impl MixturePDF {
+    #[must_use]
     pub fn new(p0: Arc<dyn PDensityFn + Sync + Send>,
                p1: Arc<dyn PDensityFn + Sync + Send>)
                -> Self {

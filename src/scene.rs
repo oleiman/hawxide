@@ -15,16 +15,17 @@ pub struct Scene {
 pub mod defs {
     use crate::scene::Scene;
     use crate::vec3::{Point3,Color,Vec3};
-    use crate::texture::*;
-    use crate::material::*;
-    use crate::sphere::*;
-    use crate::hit::*;
-    use crate::aarect::*;
-    use crate::hittable_list::*;
-    use crate::bvh::*;
-    use crate::boxx::*;
-    use crate::moving_sphere::*;
-    use crate::constant_medium::*;
+    use crate::texture;
+    use crate::texture::Texture;
+    use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
+    use crate::sphere::Sphere;
+    use crate::hit::{Hittable, FlipFace, Rotate, Translate};
+    use crate::aarect::AARect;
+    use crate::hittable_list::HittableList;
+    use crate::bvh::BVHNode;
+    use crate::boxx::Boxx;
+    use crate::moving_sphere::MovingSphere;
+    use crate::constant_medium::ConstantMedium;
     use crate::util::random;
     use std::sync::Arc;
 
@@ -32,6 +33,7 @@ pub mod defs {
     const WHITE: Color  = Color(0.73, 0.73, 0.73);
     const GREEN: Color  = Color(0.12, 0.45, 0.15);
 
+    #[must_use]
     pub fn random_scene() -> Scene {
         let lookfrom = Point3(13.0, 2.0, 3.0);
         let lookat = Point3(0.0, 0.0, 0.0);
@@ -40,7 +42,7 @@ pub mod defs {
         let mut world = HittableList::default();
 
         let checker: Arc<dyn Texture + Sync + Send> = 
-            CheckerTexture::new(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9)).into();
+            texture::Checker::new(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9)).into();
 
         let ground_material: Arc<dyn Material + Sync + Send> =
             Lambertian::from_texture(checker.clone()).into();
@@ -112,13 +114,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn two_spheres() -> Scene {
         let lookfrom = Point3(13.0, 2.0, 3.0);
         let lookat = Point3(0.0, 0.0, 0.0);
         let background = Color(0.7, 0.8, 1.0);
         let vfov = 20.0;
 
-        let checker: Arc<dyn Texture + Sync + Send> = CheckerTexture::new(
+        let checker: Arc<dyn Texture + Sync + Send> = texture::Checker::new(
             Color(0.2, 0.3, 0.1),
             Color(0.9, 0.9, 0.9),
         ).into();
@@ -144,6 +147,7 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn empty_cornell_box() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(278.0, 278.0, -800.0);
@@ -191,6 +195,7 @@ pub mod defs {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn cornell_box() -> Scene {
 
         let aluminum: Arc<dyn Material + Sync + Send> =
@@ -235,6 +240,7 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn cornell_sphere() -> Scene {
         let cbox = empty_cornell_box();
 
@@ -274,13 +280,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn two_perlin_spheres() -> Scene {
         let background = Color(0.7, 0.8, 1.0);
         let lookfrom = Point3(13.0, 2.0, 3.0);
         let lookat = Point3(0.0, 0.0, 0.0);
         let vfov = 20.0;
 
-        let pertext: Arc<dyn Texture + Sync + Send> = MarbleTexture::new(4.).into();
+        let pertext: Arc<dyn Texture + Sync + Send> = texture::Marble::new(4.).into();
 
         let world = HittableList {
             objects: vec![
@@ -304,13 +311,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn earth() -> Scene {
         let background = Color(0.7, 0.8, 1.0);
         let lookfrom = Point3(13.0, 2.0, 3.0);
         let lookat = Point3(0.0, 0.0, 0.0);
         let vfov = 20.0;
 
-        let earth_texture: Arc<dyn Texture + Sync + Send> = ImageTexture::new(
+        let earth_texture: Arc<dyn Texture + Sync + Send> = texture::Image::new(
             "earthmap.jpg"
         ).into();
 
@@ -331,13 +339,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn simple_light() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(26.0, 3.0, 6.0);
         let lookat = Point3(0.0, 2.0, 0.0);
         let vfov = 20.0;
 
-        let pertext: Arc<dyn Texture + Sync + Send> = MarbleTexture::new(4.).into();
+        let pertext: Arc<dyn Texture + Sync + Send> = texture::Marble::new(4.).into();
         // let difflight = DiffuseLight::new(Color(4., 4., 4.));
         let difflight: Arc<dyn Material + Sync + Send> =
             DiffuseLight::new(Color(7., 7., 7.)).into();
@@ -370,6 +379,7 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn cornell_smoke() -> Scene {
         let white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
 
@@ -409,6 +419,7 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn fancy_random_scene() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(13.0, 2.0, 3.0);
@@ -417,7 +428,7 @@ pub mod defs {
 
         let mut world = HittableList::default();
 
-        let checker: Arc<dyn Texture + Sync + Send> = CheckerTexture::new(
+        let checker: Arc<dyn Texture + Sync + Send> = texture::Checker::new(
             Color(0.2, 0.3, 0.1),
             Color(0.9, 0.9, 0.9)
         ).into();
@@ -500,7 +511,10 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn final_scene() -> Scene {
+        const BOXES_PER_SIDE : i32 = 20;
+
         let background = Color::new();
         let lookfrom = Point3(478.0, 278.0, -600.0);
         let lookat = Point3(278.0, 278.0, 0.0);
@@ -508,8 +522,6 @@ pub mod defs {
 
         let mut boxes1 = HittableList::default();
         let ground: Arc<dyn Material + Sync + Send> = Lambertian::new(Color(0.48, 0.83, 0.53)).into();
-
-        const BOXES_PER_SIDE : i32 = 20;
 
         for i in 0..BOXES_PER_SIDE {
             for j in 0..BOXES_PER_SIDE {
@@ -576,13 +588,13 @@ pub mod defs {
         ).into());
 
         let emat: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            ImageTexture::new("earthmap.jpg").into()
+            texture::Image::new("earthmap.jpg").into()
         ).into();
         objects.add(Sphere::new(
             Point3(400.0, 200.0, 400.0), 100.0, emat.clone(),
         ).into());
 
-        let pertext: Arc<dyn Texture + Sync + Send> = MarbleTexture::new(0.1).into();
+        let pertext: Arc<dyn Texture + Sync + Send> = texture::Marble::new(0.1).into();
         objects.add(Sphere::new(
             Point3(220.0, 280.0, 300.0), 80.0,
             Lambertian::from_texture(pertext.clone()).into()
@@ -612,6 +624,7 @@ pub mod defs {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn wacky_cornell_box() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(278.0, 278.0, -800.0);
@@ -635,13 +648,13 @@ pub mod defs {
         ).into();
         let mirror_front: Arc<dyn Material + Sync + Send> = Dielectric::new(1.5).into();
         let earth: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            ImageTexture::new("earthmap.jpg").into()
+            texture::Image::new("earthmap.jpg").into()
         ).into();
         let wood: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)).into()
+            texture::Wood::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)).into()
         ).into();
 
-        let voronoi_texture: Arc<dyn Texture + Sync + Send> = VoronoiTexture::new(
+        let voronoi_texture: Arc<dyn Texture + Sync + Send> = texture::Voronoi::new(
             Color(1.0, 1.0, 1.0), 200
         ).into();
         let voronoi: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
@@ -649,7 +662,7 @@ pub mod defs {
         ).into();
 
         let fun_noise: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            NoiseTexture::from_texture(voronoi_texture.clone()).into()
+            texture::Noise::from_texture(voronoi_texture.clone()).into()
         ).into();
             
         // let mirror = Metal::new(Color(1.0, 1.0, 1.0), 0.0);
@@ -718,13 +731,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn subsurface_perlin_spheres() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(13.0, 5.0, 3.0);
         let lookat = Point3(0.0, 0.0, 0.0);
         let vfov = 40.0;
 
-        let pertext: Arc<dyn Texture + Sync + Send> = MarbleTexture::new(4.0).into();
+        let pertext: Arc<dyn Texture + Sync + Send> = texture::Marble::new(4.0).into();
         let turq_light: Arc<dyn Material + Sync + Send> = DiffuseLight::new(
             Color(0.0, 12., 10.)
         ).into();
@@ -775,13 +789,14 @@ pub mod defs {
         }
     }
 
+    #[must_use]
     pub fn solids() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(-4.0, 4.0, 15.0);
         let lookat = Point3(0.0, 0.0, 0.0);
         let vfov = 40.0;
 
-        let wood: Arc<dyn Texture + Sync + Send> = WoodTexture::new(
+        let wood: Arc<dyn Texture + Sync + Send> = texture::Wood::new(
             Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)
         ).into();
         let light: Arc<dyn Material + Sync + Send> = DiffuseLight::new(
@@ -876,6 +891,7 @@ pub mod defs {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn noise_experiments() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(0.0, 0.0, 18.0);
@@ -883,18 +899,18 @@ pub mod defs {
         let vfov = 60.0;
 
         let wood: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            WoodTexture::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)).into()
+            texture::Wood::new(Vec3(4.0, 0.1, 1.0), Color(0.7, 0.3, 0.1)).into()
         ).into();
         let marble: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
-            MarbleTexture::new(4.).into()
+            texture::Marble::new(4.).into()
         ).into();
         let aluminum: Arc<dyn Material + Sync + Send> = Metal::new(
             Color(0.8, 0.85, 0.88), 0.0
         ).into();
-        let voronoi: Arc<dyn Texture + Sync + Send> = VoronoiTexture::new(
+        let voronoi: Arc<dyn Texture + Sync + Send> = texture::Voronoi::new(
             Color(1.0, 1.0, 1.0), 200
         ).into();
-        let fun_noise: Arc<dyn Texture + Sync + Send> = NoiseTexture::from_texture(
+        let fun_noise: Arc<dyn Texture + Sync + Send> = texture::Noise::from_texture(
             voronoi.clone()
         ).into();
         let noise: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(

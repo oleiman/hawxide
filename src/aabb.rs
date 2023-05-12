@@ -3,14 +3,14 @@ use crate::ray::Ray;
 
 use std::mem::swap;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct AABB {
     pub min: Point3,
     pub max: Point3,
 }
 
 impl AABB {
-
+    #[must_use]
     pub fn new() -> Self {
         AABB {
             min: Point3(0.0, 0.0, 0.0),
@@ -21,6 +21,7 @@ impl AABB {
     // NOTE: unoptimized version. kept around for reference.
     // Though the optimized version is not much different, just precomputes
     // the inverse direction and aboids some min/max calls.
+    #[must_use]
     pub fn hit_slow(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
         for a in 0..3 {
             let t0 = f64::min(
@@ -40,6 +41,7 @@ impl AABB {
         true
     }
 
+    #[must_use]
     pub fn hit(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
         for a in 0..3 {
             let inv_dir : f64 = 1.0 / ray.dir[a];
@@ -58,6 +60,7 @@ impl AABB {
     }
 
     // calculate a box that includes both box0 and box1
+    #[must_use]
     pub fn surrounding_box(box0: AABB, box1: AABB) -> AABB {
         AABB {
             min: Point3 (
