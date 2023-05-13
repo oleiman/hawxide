@@ -70,7 +70,7 @@ fn main() {
     let mut image_width : i32 = 400;
     let mut samples_per_pixel : i32 = 400;
 
-    let scene_select: usize = 4;
+    let scene_select: usize = 9;
 
     let scene = match scene_select {
         1 => {
@@ -105,7 +105,7 @@ fn main() {
         },
         9 => {
             aperture = 0.05;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 500;
             scene::defs::fancy_random_scene()
         },
         10 => {

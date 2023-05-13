@@ -502,12 +502,19 @@ pub mod defs {
             DiffuseLight::new(Color(30.0, 30.0, 30.0)).into()
         ).into();
 
-        world.add(light_sphere.clone());
+        let light_panel: Arc<dyn Hittable + Sync + Send> = AARect::xz_rect(
+            -6.0, 6.0, -6.0, 6.0, 10.0,
+            DiffuseLight::new(Color(9.0, 4.0, 9.0)).into()
+        ).into();
+
+        // world.add(light_sphere.clone());
+        world.add(FlipFace::new(light_panel.clone()).into());
 
         Scene {
             lookfrom, lookat, background, vfov,
             world: BVHNode::new(&world, 0.0, 1.0).into(),
-            lights: HittableList::new(vec![light_sphere]).into()
+            lights: HittableList::new(vec![// light_sphere, 
+                                           light_panel]).into()
         }
     }
 
