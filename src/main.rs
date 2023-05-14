@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use hawxide::{
-    Camera, Color, INFINITY, PDensityFn, PI, Point3, Ray, Scene, Vec3,
+    Camera, Color, INFINITY, PDensityFn, PI, Ray, Scene, Vec3,
     pdf, random, scene, write_color,
 };
 use pdf::{HittablePDF, MixturePDF};
@@ -9,7 +9,7 @@ use pdf::{HittablePDF, MixturePDF};
 use std::io::{Write, BufWriter};
 use rayon::prelude::*;
 
-fn ray_color(r : &Ray,
+fn ray_color(r: &Ray,
              scene: &Scene,
              depth: i32) -> Color {
     if depth <= 0 {
@@ -43,6 +43,7 @@ fn ray_color(r : &Ray,
             emitted
         }
     } else {
+        // TODO(oren): this doesn't make a great deal of sense
         scene.background
     }
 }
@@ -54,23 +55,12 @@ fn main() {
 
     // Camera
 
-    const VIEWPORT_HEIGHT : f64 = 2.0;
-    const FOCAL_LENGTH : f64 = 1.0;
-
-    let mut aspect_ratio : f64 = 16.0 / 9.0;
-    let mut image_width : i32 = 400;
-    let mut samples_per_pixel : i32 = 400;
-    let mut lookfrom = Point3(13., 2., 3.);
-    let mut lookat = Point3(0., 0., -0.);
-    let mut vfov = 20.0_f64;
     let mut aperture = 0.0;
-    let mut background = Color(0.0, 0.0, 0.0);
-
     let mut aspect_ratio : f64 = 16.0 / 9.0;
     let mut image_width : i32 = 400;
     let mut samples_per_pixel : i32 = 400;
 
-    let scene_select: usize = 9;
+    let scene_select: usize = 5;
 
     let scene = match scene_select {
         1 => {
