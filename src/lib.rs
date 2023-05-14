@@ -17,6 +17,7 @@ pub mod constant_medium;
 pub mod onb;
 pub mod pdf;
 pub mod scene;
+pub mod triangle;
 
 pub use vec3::{
     Vec3,

@@ -60,7 +60,7 @@ fn main() {
     let mut image_width : i32 = 400;
     let mut samples_per_pixel : i32 = 400;
 
-    let scene_select: usize = 5;
+    let scene_select: usize = 4;
 
     let scene = match scene_select {
         1 => {
@@ -78,7 +78,7 @@ fn main() {
         4 => {
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 100;
+            samples_per_pixel = 400;
             scene::defs::cornell_box()
         },
         5 => scene::defs::two_perlin_spheres(),

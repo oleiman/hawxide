@@ -24,6 +24,7 @@ pub mod defs {
     use crate::hittable_list::HittableList;
     use crate::bvh::BVHNode;
     use crate::boxx::Boxx;
+    use crate::triangle::Triangle;
     use crate::moving_sphere::MovingSphere;
     use crate::constant_medium::ConstantMedium;
     use crate::util::random;
@@ -202,6 +203,12 @@ pub mod defs {
             Metal::new(Color(0.8, 0.85, 0.88), 0.0).into();
         let white: Arc<dyn Material + Sync + Send> =
             Lambertian::new(WHITE).into();
+        let green: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(GREEN).into();
+        let lavender: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
+        let mir: Arc<dyn Material + Sync + Send> =
+            Metal::new(WHITE, 0.0).into();
 
         let mut box1 : Arc<dyn Hittable + Sync + Send> = Boxx::new(
             Point3(0.0, 0.0, 0.0),
@@ -219,14 +226,20 @@ pub mod defs {
         box2 = Rotate::rotate_y(box2, -18.0).into();
         box2 = Translate::new(box2, Vec3(130.0, 0.0, 65.0)).into();
 
+        let mut tri: Arc<dyn Hittable + Sync + Send> = Triangle::new(
+            Point3(0.0, 0.0, 0.0),
+            Point3(0.0, 70.0, 0.0),
+            Point3(70.0, 0.0, 0.0),
+            lavender.clone(),
+        ).into();
+
+        tri = Rotate::rotate_x(tri, 60.0).into();
+        tri = Translate::new(tri, Vec3(200.0, 250.0, 200.0)).into();
+
         let cbox = empty_cornell_box();
 
-        // TODO(oren): do as_any
-        // cbox.world.as_any().downcast_ref::<HittableList>.add(box1);
-        // cbox.world.add(box2);
-
         let world = HittableList::new(vec![
-                box1, box2,
+                box1, box2, tri,
                 cbox.world,
         ]);
 
