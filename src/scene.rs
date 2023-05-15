@@ -28,6 +28,7 @@ pub mod defs {
     use crate::moving_sphere::MovingSphere;
     use crate::constant_medium::ConstantMedium;
     use crate::util::random;
+    use crate::obj::WfObject;
     use std::sync::Arc;
 
     const RED: Color = Color(0.65, 0.05, 0.05);
@@ -510,7 +511,7 @@ pub mod defs {
             Metal::new(Color(0.7, 0.6, 0.5), 0.0).into()
         ).into());
 
-        let light_sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
+        let _light_sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
             Point3(3.0, 2.0, 2.0), 0.6,
             DiffuseLight::new(Color(30.0, 30.0, 30.0)).into()
         ).into();
@@ -1010,4 +1011,106 @@ pub mod defs {
             ]).into(),
         }
     }
+
+    #[must_use]
+    pub fn teapot() -> Scene {
+        let _white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
+        let lavender: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
+
+        let cbox = empty_cornell_box();
+
+        let mut teapot: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new("data/teapot.obj", 40.0, lavender.clone()).into();
+
+        teapot = Rotate::rotate_x(teapot, -15.0).into();
+        teapot = Rotate::rotate_y(teapot, 15.0).into();
+
+        teapot = Translate::new(
+            teapot, Point3(275.0, 200.0, 227.0),
+        ).into();
+
+        let world = HittableList::new(vec![
+            teapot,
+            cbox.world,
+        ]);
+
+        Scene {
+            lookfrom: cbox.lookfrom,
+            lookat: cbox.lookat,
+            background: cbox.background,
+            vfov: cbox.vfov,
+            world: world.into(),
+            lights: cbox.lights,
+        }
+    }
+
+    #[must_use]
+    pub fn obj_in_cornell_box(fname: &str, scale: f64, translate: Vec3) -> Scene {
+        let _white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
+        let lavender: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
+
+        let cbox = empty_cornell_box();
+
+        let mut obj: Arc<dyn Hittable + Sync + Send> =
+        WfObject::new(
+            fname, scale, lavender.clone()
+        ).into();
+
+        // obj = Rotate::rotate_x(obj, -15.0).into();
+        obj = Rotate::rotate_y(obj, 180.0).into();
+
+        obj = Translate::new(obj, translate).into();
+
+        let world = HittableList::new(vec![
+            obj,
+            cbox.world,
+        ]);
+
+        Scene {
+            lookfrom: cbox.lookfrom,
+            lookat: cbox.lookat,
+            background: cbox.background,
+            vfov: cbox.vfov,
+            world: world.into(),
+            lights: cbox.lights,
+        }
+    }
+
+    #[must_use]
+    pub fn tree() -> Scene {
+        let _white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
+        let lavender: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
+
+        let cbox = empty_cornell_box();
+
+        let mut tree: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new(
+                "data/low_poly_tree/Lowpoly_tree_sample.obj", 10.0, lavender.clone()
+            ).into();
+
+        tree = Translate::new(
+            tree, Point3(272.0, 10.0, 272.0),
+        ).into();
+
+        let world = HittableList::new(vec![
+            tree,
+            cbox.world,
+        ]);
+
+        Scene {
+            lookfrom: cbox.lookfrom,
+            lookat: cbox.lookat,
+            background: cbox.background,
+            vfov: cbox.vfov,
+            world: world.into(),
+            lights: cbox.lights,
+        }
+    }
+
 }

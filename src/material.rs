@@ -240,3 +240,69 @@ impl Material for Isotropic {
         })
     }
 }
+
+pub struct WfMtl {
+    pub model: u8,
+    pub diffuse: Lambertian,
+    pub specular: Metal,
+    pub ambient: DiffuseLight,
+}
+
+impl WfMtl {
+    #[must_use]
+    pub fn new(model: u8,
+               diffuse: Lambertian,
+               specular: Metal,
+               ambient: DiffuseLight) -> WfMtl {
+        assert!(model <= 2, "Model {} not supported", model);
+        WfMtl {
+            diffuse,
+            specular,
+            ambient,
+            model,
+        }
+    }
+}
+
+impl From<WfMtl> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: WfMtl) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
+    }
+}
+
+impl Material for WfMtl {
+    fn emitted(&self, ray_in: &Ray, rec: &HitRecord,
+               u: f64, v: f64, p: Point3) -> Color {
+        if self.model == 0 {
+            self.diffuse.albedo.value(u, v, p)
+        } else {
+            self.ambient.emitted(ray_in, rec, u, v, p)
+        }
+    }
+
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let sel = random::double();
+        match self.model {
+            0 => {
+                // self.diffuse.scatter(ray_in, rec)
+                None
+            },
+            1 => {
+                self.diffuse.scatter(ray_in, rec)
+            },
+            _ => {
+                // TODO(oren): maybe change the ratio?
+                if sel < 0.9 {
+                    self.diffuse.scatter(ray_in, rec)
+                } else {
+                    self.specular.scatter(ray_in, rec)
+                }
+            }
+        }
+
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        self.diffuse.scattering_pdf(ray_in, rec, scattered)
+    }
+}

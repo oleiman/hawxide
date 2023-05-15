@@ -33,6 +33,7 @@ fn ray_color(r: &Ray,
 
             assert!(pdf_val > 0.0, "PDF val {:4} < 0", pdf_val);
 
+
             emitted +
                 sr.attenuation *
                 hr.mat.scattering_pdf(r, &hr, &scattered) *
@@ -60,7 +61,7 @@ fn main() {
     let mut image_width : i32 = 400;
     let mut samples_per_pixel : i32 = 400;
 
-    let scene_select: usize = 4;
+    let scene_select: usize = 15;
 
     let scene = match scene_select {
         1 => {
@@ -78,7 +79,7 @@ fn main() {
         4 => {
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 400;
+            samples_per_pixel = 50;
             scene::defs::cornell_box()
         },
         5 => scene::defs::two_perlin_spheres(),
@@ -110,6 +111,26 @@ fn main() {
         },
         12 => scene::defs::solids(),
         13 => scene::defs::noise_experiments(),
+        14 => {
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 100;
+            scene::defs::teapot()
+        },
+        15 => {
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
+            scene::defs::obj_in_cornell_box(
+                "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
+            )
+        },
+        16 => {
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 50;
+            scene::defs::tree()
+        },
         _ => {
             aspect_ratio = 1.0;
             image_width = 300;
