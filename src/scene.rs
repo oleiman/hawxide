@@ -86,7 +86,7 @@ pub mod defs {
                         _ => {
                             Sphere::new(
                                 center, 0.2,
-                                Dielectric::new(1.5).into()
+                                Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
                             ).into()
                         }
                     }
@@ -96,7 +96,7 @@ pub mod defs {
         }
         world.add(Sphere::new(
             Point3(0., 1., 0.), 1.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into());
 
         world.add(Sphere::new(
@@ -270,7 +270,7 @@ pub mod defs {
 
         let sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
             Point3(190.0, 90.0, 190.0), 90.0,
-            Dielectric::new(1.5).into(),
+            Dielectric::new(1.5, 0.005, Color(0.2, 0.8, 0.7)).into(),
         ).into();
 
         let world = HittableList::new(vec![
@@ -487,7 +487,7 @@ pub mod defs {
                         _ => {
                             Sphere::new(
                                 center, 0.2,
-                                Dielectric::new(1.5).into()
+                                Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
                             ).into()
                         }
                     }
@@ -498,7 +498,7 @@ pub mod defs {
 
         world.add(Sphere::new(
             Point3(0., 1., 0.), 1.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into());
 
         world.add(Sphere::new(
@@ -585,7 +585,7 @@ pub mod defs {
 
         objects.add(Sphere::new(
             Point3(260.0, 150.0, 45.0), 50.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into());
         objects.add(Sphere::new(
             Point3(0.0, 150.0, 145.0), 50.0,
@@ -594,7 +594,7 @@ pub mod defs {
 
         let boundary: Arc<dyn Hittable + Sync + Send> = Sphere::new(
             Point3(360.0, 150.0, 145.0), 70.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into();
         objects.add(boundary.clone());
         objects.add(ConstantMedium::new(
@@ -602,7 +602,7 @@ pub mod defs {
         ).into());
         let boundary: Arc<dyn Hittable + Sync + Send> = Sphere::new(
             Point3::new(), 5000.0,
-            Dielectric::new(1.5).into(),
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into(),
         ).into();
         objects.add(ConstantMedium::new(
             boundary.clone(), 0.0001, Color(1.0, 1.0, 1.0),
@@ -667,7 +667,8 @@ pub mod defs {
         let mirror_back: Arc<dyn Material + Sync + Send> = Metal::new(
             Color(0.73, 0.73, 0.73), 0.0
         ).into();
-        let mirror_front: Arc<dyn Material + Sync + Send> = Dielectric::new(1.5).into();
+        let mirror_front: Arc<dyn Material + Sync + Send> =
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into();
         let earth: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
             texture::Image::new("earthmap.jpg").into()
         ).into();
@@ -778,7 +779,7 @@ pub mod defs {
         objects.add(Sphere::new(
             Point3(0.0, 2.0, 0.0),
             2.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into());
 
         objects.add(Sphere::new(
@@ -887,7 +888,7 @@ pub mod defs {
 
         let boundary: Arc<dyn Hittable + Sync + Send> = Sphere::new(
             Point3(3.0, 3.0, 0.0), 1.0,
-            Dielectric::new(1.5).into()
+            Dielectric::new(1.5, 0.0, Color(1.0, 1.0, 1.0)).into()
         ).into();
         objects.add(boundary.clone());
         objects.add(ConstantMedium::new(

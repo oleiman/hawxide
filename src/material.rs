@@ -119,12 +119,19 @@ impl Material for Metal {
 
 pub struct Dielectric {
     pub ir : f64,
+    pub density: f64,
+    pub vol_color: Color,
+    pub albedo: Arc<dyn Texture + Sync + Send>,
 }
 
 impl Dielectric {
     #[must_use]
-    pub fn new(ir: f64) -> Self {
-        Self{ ir }
+    pub fn new(ir: f64, density: f64, vol_color: Color) -> Self {
+        Self {
+            ir, density,vol_color,
+            albedo: SolidColor::new(Color(1.0, 1.0, 1.0)).into(),
+
+        }
     }
 
     fn reflectance(cos: f64, ref_idx: f64) -> f64 {
@@ -132,6 +139,10 @@ impl Dielectric {
         let mut r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         r0 *= r0;
         r0 + (1. - r0) * (1. - cos).powf(5.)
+    }
+
+    fn absorbance(dist: f64, c: Color, alpha: f64) -> Color {
+        (Color(1.0, 1.0, 1.0) - c) * alpha * -dist
     }
 }
 
@@ -149,6 +160,15 @@ impl Material for Dielectric {
         } else {
             self.ir
         };
+
+        let attenuation = if rec.front_face {
+            self.albedo.value(rec.u, rec.v, rec.p)
+        } else {
+            let absorb = Self::absorbance(rec.t, self.vol_color, self.density);
+            let atten = absorb.exp();
+            self.albedo.value(rec.u, rec.v, rec.p) * atten
+        };
+
 
         let unit_direction = ray_in.dir.unit_vector();
         let cos_theta = vec3::dot(-unit_direction, rec.norm).min(1.0);
@@ -170,7 +190,7 @@ impl Material for Dielectric {
                 direction,
                 ray_in.time
             )),
-            attenuation: Color(1.0, 1.0, 1.0),
+            attenuation,
             pdf: NullPDF::new().into(),
         })
     }

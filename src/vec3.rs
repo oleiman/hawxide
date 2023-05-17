@@ -48,6 +48,11 @@ impl Vec3 {
     pub fn b(&self) -> f64 { self.2 }
 
     #[must_use]
+    pub fn exp(&self) -> Self {
+        Vec3(self.r().exp(), self.g().exp(), self.b().exp())
+    }
+
+    #[must_use]
     pub fn axis(&self, d: Axis) -> f64 {
         match (d) {
             Axis::X => self.x(),

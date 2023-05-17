@@ -61,7 +61,7 @@ fn main() {
     let mut image_width : i32 = 400;
     let mut samples_per_pixel : i32 = 400;
 
-    let scene_select: usize = 15;
+    let scene_select: usize = 3;
 
     let scene = match scene_select {
         1 => {
