@@ -6,8 +6,10 @@ use hawxide::{
 };
 use pdf::{HittablePDF, MixturePDF};
 
+use std::fs::File;
 use std::io::{Write, BufWriter};
 use rayon::prelude::*;
+use clap::Parser;
 
 fn ray_color(r: &Ray,
              scene: &Scene,
@@ -49,94 +51,67 @@ fn ray_color(r: &Ray,
     }
 }
 
+#[derive(Parser, Debug)]
+struct Cli {
+    /// Output image width in pixels
+    #[arg(short, long, default_value_t = 400)]
+    width: i32,
+
+    /// Aspect ratio
+    #[arg(short = 'r', long, default_value_t = 16.0 / 9.0)]
+    aspect_ratio: f64,
+
+    /// Camera aperture
+    #[arg(short, long, default_value_t = 0.0)]
+    aperture: f64,
+
+    /// Samples per pixel
+    #[arg(short = 'n', long, default_value_t = 400)]
+    samples: i32,
+
+    /// Scene select (1 - 16; >16 defaults to cover scene from RTOW)
+    #[arg(short, long, default_value_t = 3)]
+    scene: usize,
+
+    /// Output file (stdout if omitted)
+    #[arg(short, long)]
+    outfile: Option<std::path::PathBuf>,
+}
+
 #[allow(clippy::too_many_lines)]
 fn main() {
 
+    let args = Cli::parse();
     const MAX_DEPTH : i32 = 50;
 
     // Camera
 
-    let mut aperture = 0.0;
-    let mut aspect_ratio : f64 = 16.0 / 9.0;
-    let mut image_width : i32 = 400;
-    let mut samples_per_pixel : i32 = 400;
-
-    let scene_select: usize = 3;
+    let aperture = args.aperture;
+    let aspect_ratio = args.aspect_ratio;
+    let image_width = args.width;
+    let samples_per_pixel = args.samples;
+    let scene_select = args.scene;
 
     let scene = match scene_select {
-        1 => {
-            aperture = 0.1;
-            samples_per_pixel = 100;
-            scene::defs::random_scene()
-        },
+        1 => scene::defs::random_scene(),
         2 => scene::defs::two_spheres(),
-        3 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 100;
-            scene::defs::cornell_sphere()
-        },
-        4 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 50;
-            scene::defs::cornell_box()
-        },
+        3 =>scene::defs::cornell_sphere(),
+        4 => scene::defs::cornell_box(),
         5 => scene::defs::two_perlin_spheres(),
         6 => scene::defs::earth(),
-        7 => {
-            samples_per_pixel = 200;
-            scene::defs::simple_light()
-        },
-        8 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 800;
-            scene::defs::cornell_smoke()
-        },
-        9 => {
-            aperture = 0.05;
-            samples_per_pixel = 500;
-            scene::defs::fancy_random_scene()
-        },
-        10 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 100;
-            scene::defs::wacky_cornell_box()
-        },
-        11 => {
-            samples_per_pixel = 1000;
-            scene::defs::subsurface_perlin_spheres()
-        },
+        7 => scene::defs::simple_light(),
+        8 => scene::defs::cornell_smoke(),
+        9 => scene::defs::fancy_random_scene(),
+        10 => scene::defs::wacky_cornell_box(),
+        11 => scene::defs::subsurface_perlin_spheres(),
         12 => scene::defs::solids(),
         13 => scene::defs::noise_experiments(),
-        14 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 100;
-            scene::defs::teapot()
-        },
-        15 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 200;
-            scene::defs::obj_in_cornell_box(
-                "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
-            )
-        },
-        16 => {
-            aspect_ratio = 1.0;
-            image_width = 600;
-            samples_per_pixel = 50;
-            scene::defs::tree()
-        },
-        _ => {
-            aspect_ratio = 1.0;
-            image_width = 300;
-            samples_per_pixel = 100;
-            scene::defs::final_scene()
-        }
+        14 => scene::defs::teapot(),
+        15 => scene::defs::obj_in_cornell_box(
+            "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
+        ),
+        16 => scene::defs::tree(),
+        _ => scene::defs::final_scene()
     };
 
     #[allow(clippy::cast_possible_truncation)]
@@ -147,8 +122,17 @@ fn main() {
     let cam =
         Camera::new(&scene, vup, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
+    let mut stdout = if let Some(fname) = args.outfile {
+        Box::new(
+            BufWriter::new(File::create(fname).expect("Unable to open file"))
+        ) as Box<dyn Write>
+    } else {
+        Box::new(
+            BufWriter::new(std::io::stdout().lock())
+        ) as Box<dyn Write>
+    };
+
     // Render
-    let mut stdout = BufWriter::new(std::io::stdout().lock());
     let mut stderr = BufWriter::new(std::io::stderr().lock());
 
     writeln!(stdout, "P3");
