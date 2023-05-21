@@ -12,6 +12,9 @@ pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
     pub mat: Arc<dyn Material + Sync + Send>,
+    phi_max: f64,
+    theta_min: f64,
+    theta_max: f64,
 }
 
 impl Sphere {
@@ -22,10 +25,16 @@ impl Sphere {
             center,
             radius,
             mat,
+            phi_max: 2.0 * PI,
+            theta_min: 0.0,
+            theta_max: PI,
+
         }
     }
 
-    fn get_sphere_uv(p: Point3) -> (f64, f64) {
+    // TODO(oren): these are calculated on the normal vector, need to go back to
+    // the book and recall why that is
+    fn get_sphere_uv(&self, p: Point3) -> (f64, f64, Vec3, Vec3) {
         // p: given a point on the unit sphere centered at the origin
         // return (u,v) s.t.
         //   u in [0,1]: angle around the Y axis from X=-1 (as a fraction of 2*pi)
@@ -33,12 +42,31 @@ impl Sphere {
 
         let theta = f64::acos(-p.y());
         let phi = f64::atan2(-p.z(), p.x()) + PI;
+        let u = phi / self.phi_max; //(2.0 * PI);
+        let v = theta / (self.theta_max - self.theta_min); //PI;
+
+        // Source: https://www.pbr-book.org/3ed-2018/Shapes/Spheres
+        // let z_radius = f64::sqrt(p.x() * p.x() + p.y() * p.y());
+        // assert!(z_radius == 1.0, "z radius: {:3}", z_radius);
+        // let inv_z_radius = 1.0 / z_radius;
+        // NOTE(oren): already ostensibly on the unit sphere, so no need to
+        // normalize for sin/cos
+        let cos_phi = p.x();
+        let sin_phi = -p.z();
+
+        let dpdu = Vec3(self.phi_max * p.z(), self.phi_max * p.x(), 0.0);
+        let dpdv = (self.theta_max - self.theta_min) * Vec3(
+            -p.y() * cos_phi,
+            -p.y() * sin_phi,
+            -self.radius * f64::sin(theta)
+        );
 
         (
-            phi / (2.0 * PI),
-            theta / PI,
+            u, v,
+            dpdu, dpdv,
         )
     }
+
 }
 
 impl From<Sphere> for Arc<dyn Hittable + Sync + Send> {
@@ -76,13 +104,17 @@ impl Hittable for Sphere {
         if t_min <= r1 && r1 <= t_max {
             let p : Point3 = r.at(r1);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = Self::get_sphere_uv(outward_norm);
-            Some(HitRecord::new(r, p, outward_norm, r1, u, v, self.mat.clone()))
+            let (u,v,dpdu,dpdv) = self.get_sphere_uv(outward_norm);
+            Some(HitRecord::with_dps(
+                r, p, outward_norm, r1, u, v, self.mat.clone(), dpdu, dpdv)
+            )
         } else if t_min <= r2 && r2 <= t_max {
             let p : Point3 = r.at(r2);
             let outward_norm : Vec3 = (p - self.center) / self.radius;
-            let (u,v) = Self::get_sphere_uv(outward_norm);
-            Some(HitRecord::new(r, p, outward_norm, r2, u, v, self.mat.clone()))
+            let (u,v,dpdu,dpdv) = self.get_sphere_uv(outward_norm);
+            Some(HitRecord::with_dps(
+                r, p, outward_norm, r2, u, v, self.mat.clone(), dpdu, dpdv)
+            )
         } else {
             None
         }
