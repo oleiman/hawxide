@@ -118,7 +118,7 @@ impl Texture for Marble {
         self.albedo.value(u, v, p) *
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
-                            10.0 * self.noise.turb(p, Some(10))))
+                            10.0 * self.noise.turb(p, None)))
         // Color(1.0, 1.0, 1.0) * self.noise.turb(p, None)
     }
 }
@@ -288,13 +288,15 @@ impl Texture for Image {
 }
 
 pub struct RandomBump {
+    scale: f64,
     noise: Perlin,
 }
 
 impl RandomBump {
-    pub fn new() -> Self{
+    pub fn new(scale: f64) -> Self{
         Self {
-            noise: Perlin::new(),
+            scale,
+            noise: Perlin::with_point_scaling(scale),
         }
     }
 }
@@ -307,7 +309,7 @@ impl From<RandomBump> for Arc<dyn FloatTexture + Sync + Send> {
 
 impl FloatTexture for RandomBump {
     fn value(&self, _u: f64, _v: f64, p: Point3) -> f64 {
-        f64::sin(self.noise.turb(4. * p, None))
+            self.scale * self.scale * f64::sin(self.noise.turb(p, None))
     }
 }
 

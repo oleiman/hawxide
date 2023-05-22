@@ -84,7 +84,7 @@ impl HitRecord {
         // eprintln!("{}", f64::acos(dot(self.norm, n) / (self.norm.len() * n.len())));
 
         // TODO(oren): danger zone
-        self.norm = n;
+        // self.norm = n;
         self.shading_geo = ShadingGeometry{
             n, dpdu, dpdv,
         }

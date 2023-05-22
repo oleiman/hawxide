@@ -88,12 +88,12 @@ impl Material for Lambertian {
         Some(ScatterRecord{
             specular_ray: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf: CosPDF::new(rec.norm).into(),
+            pdf: CosPDF::new(rec.shading_geo.n).into(),
         })
     }
 
     fn scattering_pdf(&self, _ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cosine = vec3::dot(rec.norm, scattered.dir.unit_vector());
+        let cosine = vec3::dot(rec.shading_geo.n, scattered.dir.unit_vector());
         if cosine < 0.0 {
             0.0
         } else {
@@ -126,14 +126,14 @@ impl From<Metal> for Arc<dyn Material + Sync + Send> {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
                -> Option<ScatterRecord> {
-        let reflected = vec3::reflect(ray_in.dir.unit_vector(), rec.norm);
+        let reflected = vec3::reflect(ray_in.dir.unit_vector(), rec.shading_geo.n);
         let f = match self.fuzz {
             f if f <= 1.0 => f,
             _ => 1.0,
         };
 
         let dir = reflected + f * Vec3::random_in_unit_sphere();
-        if vec3::dot(dir, rec.norm) <= 0.0 {
+        if vec3::dot(dir, rec.shading_geo.n) <= 0.0 {
             return None;
         }
 
@@ -201,7 +201,7 @@ impl Material for Dielectric {
 
 
         let unit_direction = ray_in.dir.unit_vector();
-        let cos_theta = vec3::dot(-unit_direction, rec.norm).min(1.0);
+        let cos_theta = vec3::dot(-unit_direction, rec.shading_geo.n).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract: bool =
@@ -209,9 +209,9 @@ impl Material for Dielectric {
             Dielectric::reflectance(cos_theta, refraction_ratio) > random::double();
 
         let direction = if cannot_refract {
-            vec3::reflect(unit_direction, rec.norm)
+            vec3::reflect(unit_direction, rec.shading_geo.n)
         } else {
-            vec3::refract(unit_direction, rec.norm, refraction_ratio)
+            vec3::refract(unit_direction, rec.shading_geo.n, refraction_ratio)
         };
 
         Some(ScatterRecord {
@@ -364,9 +364,9 @@ pub struct Corroded {
 
 impl Corroded {
     #[must_use]
-    pub fn new(mat: Arc<dyn Material + Sync + Send>) -> Self {
+    pub fn new(scale: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self {
-            bump_t: RandomBump::new().into(),
+            bump_t: RandomBump::new(scale).into(),
             // bump_t: CheckerBump::new(-5.0, 0.0).into(),
             mat: mat.clone(),
         }
