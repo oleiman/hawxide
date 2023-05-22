@@ -1,4 +1,4 @@
-use crate::vec3::{Vec3, Point3, dot, Axis};
+use crate::vec3::{Vec3, Point3, dot, Axis, cross};
 use crate::ray::Ray;
 use crate::material::Material;
 use crate::aabb::AABB;
@@ -6,6 +6,7 @@ use crate::util;
 
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct ShadingGeometry {
     pub n: Vec3,
     // for recomputing the normal if we perturb the hit point later
@@ -16,6 +17,7 @@ pub struct ShadingGeometry {
     // pub dndv: Vec3,
 }
 
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub norm: Vec3,
@@ -63,11 +65,30 @@ impl HitRecord {
                     t: f64, u: f64, v: f64, mat: Arc<dyn Material + Sync + Send>,
                     dpdu: Vec3, dpdv: Vec3) -> HitRecord {
         let mut hr = Self::new(ray, p, out_norm, t, u, v, mat);
+        // eprintln!("norm: {}, pd_cross: {}, dot: {}",
+        //           hr.norm, cross(dpdu, dpdv).unit_vector(),
+        //           dot(hr.norm, cross(dpdu, dpdv).unit_vector())
+        // );
         hr.shading_geo.dpdu = dpdu;
         hr.shading_geo.dpdv = dpdv;
         hr
     }
 
+    pub fn set_shading_geometry(&mut self, dpdu: Vec3, dpdv: Vec3) {
+        let mut n = cross(dpdu, dpdv).unit_vector();
+
+        if dot(self.norm, n) < 0.0 {
+            n = -n;
+        }
+
+        // eprintln!("{}", f64::acos(dot(self.norm, n) / (self.norm.len() * n.len())));
+
+        // TODO(oren): danger zone
+        self.norm = n;
+        self.shading_geo = ShadingGeometry{
+            n, dpdu, dpdv,
+        }
+    }
 
 
     pub fn set_face_normal(&mut self, r: &Ray, out_norm: Vec3) {

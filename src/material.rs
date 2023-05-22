@@ -3,7 +3,7 @@ use crate::hit::HitRecord;
 use crate::vec3::{Color, Vec3, Point3};
 use crate::vec3;
 use crate::util::random;
-use crate::texture::{Texture,SolidColor};
+use crate::texture::{Texture,FloatTexture,SolidColor,RandomBump,CheckerBump};
 use crate::util::PI;
 use crate::pdf::{PDensityFn,CosPDF,NullPDF};
 
@@ -25,6 +25,36 @@ pub trait Material {
     fn emitted(&self, _ray_in: &Ray, _rec: &HitRecord,
                _u: f64, _v: f64, _p: Point3) -> Color {
         Color(0.0, 0.0, 0.0)
+    }
+
+    fn bump(&self, d: &Arc<dyn FloatTexture + Sync + Send>, rec: &HitRecord) -> HitRecord {
+        let mut rec = (*rec).clone();
+        let mut rec_eval = rec.clone();
+        let du = 0.01;
+        let dv = 0.01;
+
+        // eprintln!("dpdu: {}, dpdv: {}", rec.shading_geo.dpdu, rec.shading_geo.dpdv);
+
+        rec_eval.p = rec.p + du * rec.shading_geo.dpdu;
+        rec_eval.u = rec.u + du;
+        let u_disp = d.value(rec_eval.u, rec_eval.v, rec_eval.p);
+
+        rec_eval.p = rec.p + dv * rec.shading_geo.dpdv;
+        rec_eval.u = rec.u;
+        rec_eval.v = rec.v + dv;
+        let v_disp = d.value(rec_eval.u, rec_eval.v, rec_eval.p);
+
+        let disp = d.value(rec.u, rec.v, rec.p);
+
+        let dpdu = rec.shading_geo.dpdu +
+            (u_disp - disp) / du * rec.shading_geo.n;
+
+        let dpdv = rec.shading_geo.dpdv +
+            (v_disp - disp) / dv * rec.shading_geo.n;
+
+        rec.set_shading_geometry(dpdu, dpdv);
+
+        rec
     }
 }
 
@@ -326,3 +356,42 @@ impl Material for WfMtl {
         self.diffuse.scattering_pdf(ray_in, rec, scattered)
     }
 }
+
+pub struct Corroded {
+    pub bump_t: Arc<dyn FloatTexture + Sync + Send>,
+    pub mat: Arc<dyn Material + Sync + Send>,
+}
+
+impl Corroded {
+    #[must_use]
+    pub fn new(mat: Arc<dyn Material + Sync + Send>) -> Self {
+        Self {
+            bump_t: RandomBump::new().into(),
+            // bump_t: CheckerBump::new(-5.0, 0.0).into(),
+            mat: mat.clone(),
+        }
+    }
+}
+
+impl From<Corroded> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Corroded) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
+    }
+}
+
+impl Material for Corroded {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
+        -> Option<ScatterRecord> {
+        let rec = self.bump(&self.bump_t, rec);
+        self.mat.scatter(ray_in, &rec)
+        // self.mat.scatter(ray_in, rec)
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let rec = self.bump(&self.bump_t, rec);
+        self.mat.scattering_pdf(ray_in, &rec, scattered)
+            // self.mat.scattering_pdf(ray_in, rec, scattered)
+    }
+
+}
+
