@@ -1,4 +1,4 @@
-use crate::vec3::{Vec3, Point3, dot, Axis};
+use crate::vec3::{Vec3, Point3, dot, Axis, cross};
 use crate::ray::Ray;
 use crate::material::Material;
 use crate::aabb::AABB;
@@ -6,6 +6,7 @@ use crate::util;
 
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct ShadingGeometry {
     pub n: Vec3,
     // for recomputing the normal if we perturb the hit point later
@@ -16,6 +17,7 @@ pub struct ShadingGeometry {
     // pub dndv: Vec3,
 }
 
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub norm: Vec3,
@@ -68,6 +70,25 @@ impl HitRecord {
         hr
     }
 
+    pub fn set_shading_geometry(&mut self, dpdu: Vec3, dpdv: Vec3) {
+        let mut n = cross(dpdu, dpdv).unit_vector();
+
+        if n.is_nan() {
+            return;
+        }
+
+        if dot(self.norm, n) < 0.0 {
+            n = -n;
+        }
+
+        // eprintln!("{}", f64::acos(dot(self.norm, n) / (self.norm.len() * n.len())));
+
+        // TODO(oren): danger zone
+        // self.norm = n;
+        self.shading_geo = ShadingGeometry{
+            n, dpdu, dpdv,
+        }
+    }
 
 
     pub fn set_face_normal(&mut self, r: &Ray, out_norm: Vec3) {
@@ -128,9 +149,10 @@ impl Hittable for Translate {
             time: r.time,
         };
         if let Some(hr) = self.obj.hit(&moved_r, t_min, t_max) {
-            Some(HitRecord::new(
+            Some(HitRecord::with_dps(
                 &moved_r, hr.p + self.offset, hr.norm,
-                hr.t, hr.u, hr.v, hr.mat.clone()
+                hr.t, hr.u, hr.v, hr.mat.clone(),
+                hr.shading_geo.dpdu, hr.shading_geo.dpdv,
             ))
         } else {
             None
@@ -301,8 +323,9 @@ impl Hittable for Rotate {
         normal[b_axis] =
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
-        Some(HitRecord::new(
-            &rotated_r, p, normal, hr.t, hr.u, hr.v, hr.mat.clone()
+        Some(HitRecord::with_dps(
+            &rotated_r, p, normal, hr.t, hr.u, hr.v, hr.mat.clone(),
+            hr.shading_geo.dpdu, hr.shading_geo.dpdv,
         ))
 
     }

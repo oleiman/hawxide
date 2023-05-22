@@ -3,7 +3,7 @@ use crate::hit::HitRecord;
 use crate::vec3::{Color, Vec3, Point3};
 use crate::vec3;
 use crate::util::random;
-use crate::texture::{Texture,SolidColor};
+use crate::texture::{Texture,FloatTexture,SolidColor,RandomBump,CheckerBump};
 use crate::util::PI;
 use crate::pdf::{PDensityFn,CosPDF,NullPDF};
 
@@ -25,6 +25,36 @@ pub trait Material {
     fn emitted(&self, _ray_in: &Ray, _rec: &HitRecord,
                _u: f64, _v: f64, _p: Point3) -> Color {
         Color(0.0, 0.0, 0.0)
+    }
+
+    fn bump(&self, d: &Arc<dyn FloatTexture + Sync + Send>, rec: &HitRecord) -> HitRecord {
+        let mut rec = (*rec).clone();
+        let mut rec_eval = rec.clone();
+        let du = 0.01;
+        let dv = 0.01;
+
+        // eprintln!("dpdu: {}, dpdv: {}", rec.shading_geo.dpdu, rec.shading_geo.dpdv);
+
+        rec_eval.p = rec.p + du * rec.shading_geo.dpdu;
+        rec_eval.u = rec.u + du;
+        let u_disp = d.value(rec_eval.u, rec_eval.v, rec_eval.p);
+
+        rec_eval.p = rec.p + dv * rec.shading_geo.dpdv;
+        rec_eval.u = rec.u;
+        rec_eval.v = rec.v + dv;
+        let v_disp = d.value(rec_eval.u, rec_eval.v, rec_eval.p);
+
+        let disp = d.value(rec.u, rec.v, rec.p);
+
+        let dpdu = rec.shading_geo.dpdu +
+            (u_disp - disp) / du * rec.shading_geo.n;
+
+        let dpdv = rec.shading_geo.dpdv +
+            (v_disp - disp) / dv * rec.shading_geo.n;
+
+        rec.set_shading_geometry(dpdu, dpdv);
+
+        rec
     }
 }
 
@@ -58,12 +88,12 @@ impl Material for Lambertian {
         Some(ScatterRecord{
             specular_ray: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf: CosPDF::new(rec.norm).into(),
+            pdf: CosPDF::new(rec.shading_geo.n).into(),
         })
     }
 
     fn scattering_pdf(&self, _ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cosine = vec3::dot(rec.norm, scattered.dir.unit_vector());
+        let cosine = vec3::dot(rec.shading_geo.n, scattered.dir.unit_vector());
         if cosine < 0.0 {
             0.0
         } else {
@@ -96,14 +126,14 @@ impl From<Metal> for Arc<dyn Material + Sync + Send> {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
                -> Option<ScatterRecord> {
-        let reflected = vec3::reflect(ray_in.dir.unit_vector(), rec.norm);
+        let reflected = vec3::reflect(ray_in.dir.unit_vector(), rec.shading_geo.n);
         let f = match self.fuzz {
             f if f <= 1.0 => f,
             _ => 1.0,
         };
 
         let dir = reflected + f * Vec3::random_in_unit_sphere();
-        if vec3::dot(dir, rec.norm) <= 0.0 {
+        if vec3::dot(dir, rec.shading_geo.n) <= 0.0 {
             return None;
         }
 
@@ -171,7 +201,7 @@ impl Material for Dielectric {
 
 
         let unit_direction = ray_in.dir.unit_vector();
-        let cos_theta = vec3::dot(-unit_direction, rec.norm).min(1.0);
+        let cos_theta = vec3::dot(-unit_direction, rec.shading_geo.n).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract: bool =
@@ -179,9 +209,9 @@ impl Material for Dielectric {
             Dielectric::reflectance(cos_theta, refraction_ratio) > random::double();
 
         let direction = if cannot_refract {
-            vec3::reflect(unit_direction, rec.norm)
+            vec3::reflect(unit_direction, rec.shading_geo.n)
         } else {
-            vec3::refract(unit_direction, rec.norm, refraction_ratio)
+            vec3::refract(unit_direction, rec.shading_geo.n, refraction_ratio)
         };
 
         Some(ScatterRecord {
@@ -326,3 +356,41 @@ impl Material for WfMtl {
         self.diffuse.scattering_pdf(ray_in, rec, scattered)
     }
 }
+
+pub struct Corroded {
+    pub bump_t: Arc<dyn FloatTexture + Sync + Send>,
+    pub mat: Arc<dyn Material + Sync + Send>,
+}
+
+impl Corroded {
+    #[must_use]
+    pub fn new(scale: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
+        Self {
+            bump_t: RandomBump::new(scale).into(),
+            mat: mat.clone(),
+        }
+    }
+}
+
+impl From<Corroded> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: Corroded) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
+    }
+}
+
+impl Material for Corroded {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord)
+        -> Option<ScatterRecord> {
+        let rec = self.bump(&self.bump_t, rec);
+        self.mat.scatter(ray_in, &rec)
+        // self.mat.scatter(ray_in, rec)
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let rec = self.bump(&self.bump_t, rec);
+        self.mat.scattering_pdf(ray_in, &rec, scattered)
+            // self.mat.scattering_pdf(ray_in, rec, scattered)
+    }
+
+}
+

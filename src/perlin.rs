@@ -9,6 +9,7 @@ pub struct Perlin {
     perm_x: [usize; POINT_COUNT],
     perm_y: [usize; POINT_COUNT],
     perm_z: [usize; POINT_COUNT],
+    scale: f64,
 }
 
 impl Default for Perlin {
@@ -19,7 +20,11 @@ impl Default for Perlin {
 
 impl Perlin {
     #[must_use]
-    pub fn new() -> Perlin {
+    pub fn new() -> Self {
+        Self::with_point_scaling(1.0)
+    }
+
+    pub fn with_point_scaling(scale: f64) -> Self {
         let ranvec =
             std::array::from_fn(
                 |_| Vec3::random_range(-1., 1.).unit_vector()
@@ -32,6 +37,7 @@ impl Perlin {
             perm_x,
             perm_y,
             perm_z,
+            scale,
         }
     }
 
@@ -54,6 +60,7 @@ impl Perlin {
     #[allow(clippy::many_single_char_names)]
     #[must_use]
     pub fn smooth_noise(&self, p: Point3) -> f64 {
+        let p = p / self.scale;
         let u = p.x() - f64::floor(p.x());
         let v = p.y() - f64::floor(p.y());
         let w = p.z() - f64::floor(p.z());

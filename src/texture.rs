@@ -10,6 +10,10 @@ pub trait Texture {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
 
+pub trait FloatTexture {
+    fn value(&self, u: f64, v: f64, p: Point3) -> f64;
+}
+
 pub struct SolidColor {
     color_val: Color,
 }
@@ -78,15 +82,25 @@ impl Marble {
     pub fn new(scale : f64) -> Self {
         Self::from_texture(
             scale,
-            SolidColor::new(Color(1.0, 1.0, 1.0)).into()
+            SolidColor::new(Color(1.0, 1.0, 1.0)).into(),
+            1.0,
         )
     }
 
     #[must_use]
-    pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>)
+    pub fn with_point_scaling(scale: f64, p_scale: f64) -> Self {
+        Self::from_texture(
+            scale,
+            SolidColor::new(Color(1.0, 1.0, 1.0)).into(),
+            p_scale,
+        )
+    }
+
+    #[must_use]
+    pub fn from_texture(scale: f64, albedo: Arc<dyn Texture + Sync + Send>, p_scale: f64)
                         -> Self {
         Self {
-            noise: Perlin::new(),
+            noise: Perlin::with_point_scaling(p_scale),
             albedo, scale,
         }
     }
@@ -104,7 +118,8 @@ impl Texture for Marble {
         self.albedo.value(u, v, p) *
             0.5 * (1. +
                    f64::sin(self.scale * p.z() +
-                            10. * self.noise.turb(p, None)))
+                            10.0 * self.noise.turb(p, None)))
+        // Color(1.0, 1.0, 1.0) * self.noise.turb(p, None)
     }
 }
 
@@ -271,3 +286,64 @@ impl Texture for Image {
 
     }
 }
+
+pub struct RandomBump {
+    scale: f64,
+    noise: Perlin,
+}
+
+impl RandomBump {
+    pub fn new(scale: f64) -> Self{
+        Self {
+            scale,
+            noise: Perlin::with_point_scaling(scale),
+        }
+    }
+}
+
+impl From<RandomBump> for Arc<dyn FloatTexture + Sync + Send> {
+    fn from(tt: RandomBump) -> Arc<dyn FloatTexture + Sync + Send> {
+        Arc::new(tt)
+    }
+}
+
+impl FloatTexture for RandomBump {
+    fn value(&self, _u: f64, _v: f64, p: Point3) -> f64 {
+            self.scale * self.scale * f64::sin(self.noise.turb(p, None))
+    }
+}
+
+pub struct CheckerBump {
+    even: f64,
+    odd: f64,
+}
+
+impl CheckerBump {
+    #[must_use]
+    pub fn new(even: f64, odd: f64) -> Self {
+        Self {
+            even, odd,
+        }
+    }
+}
+
+impl From<CheckerBump> for Arc<dyn FloatTexture + Sync + Send> {
+    fn from(tt: CheckerBump) -> Arc<dyn FloatTexture + Sync + Send> {
+        Arc::new(tt)
+    }
+}
+
+impl FloatTexture for CheckerBump {
+    fn value(&self, _u: f64, _v: f64, p: Point3) -> f64 {
+        const SCALE: f64 = 10.0;
+        let sines =
+            f64::sin(SCALE * p.x()) * f64::sin(SCALE * p.y()) * f64::sin(SCALE * p.z());
+        if sines < 0.0 {
+            self.odd
+        } else {
+            self.even
+        }
+    }
+}
+
+

@@ -1,4 +1,4 @@
-use crate::vec3::{Vec3,Point3,dot};
+use crate::vec3::{Vec3,Point3,dot,cross};
 use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
@@ -46,19 +46,28 @@ impl Sphere {
         let v = theta / (self.theta_max - self.theta_min); //PI;
 
         // Source: https://www.pbr-book.org/3ed-2018/Shapes/Spheres
-        // let z_radius = f64::sqrt(p.x() * p.x() + p.y() * p.y());
-        // assert!(z_radius == 1.0, "z radius: {:3}", z_radius);
-        // let inv_z_radius = 1.0 / z_radius;
-        // NOTE(oren): already ostensibly on the unit sphere, so no need to
-        // normalize for sin/cos
-        let cos_phi = p.x();
-        let sin_phi = -p.z();
+        // TODO(oren): don't really understand the y_radius step, like why we
+        // want to scale x and y in this way. May not be necessary because we are already
+        // on the unit sphere at this point?
 
-        let dpdu = Vec3(self.phi_max * p.z(), self.phi_max * p.x(), 0.0);
+        let y_radius = f64::sqrt(p.x() * p.x() + p.z() * p.z());
+        let inv_y_radius = 1.0 / y_radius;
+        // eprintln!("p: {}, len: {:4}, y_radius: {:4}", p, p.len(), y_radius);
+        // let inv_y_radius = 1.0;
+
+        let cos_phi = p.x() * inv_y_radius;
+        let sin_phi = p.z() * inv_y_radius;
+
+        assert!(
+            -1.0 <= cos_phi && cos_phi <= 1.0 && -1.0 <= sin_phi && sin_phi <= 1.0 ,
+            "{} {}", cos_phi, sin_phi
+        );
+
+        let dpdu = Vec3(-self.phi_max * p.z(), 0.0,  self.phi_max * p.x());
         let dpdv = (self.theta_max - self.theta_min) * Vec3(
-            -p.y() * cos_phi,
-            -p.y() * sin_phi,
-            -self.radius * f64::sin(theta)
+            p.y() * cos_phi,
+            -self.radius * f64::sin(theta),
+            p.y() * sin_phi,
         );
 
         (
