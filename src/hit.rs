@@ -65,10 +65,6 @@ impl HitRecord {
                     t: f64, u: f64, v: f64, mat: Arc<dyn Material + Sync + Send>,
                     dpdu: Vec3, dpdv: Vec3) -> HitRecord {
         let mut hr = Self::new(ray, p, out_norm, t, u, v, mat);
-        // eprintln!("norm: {}, pd_cross: {}, dot: {}",
-        //           hr.norm, cross(dpdu, dpdv).unit_vector(),
-        //           dot(hr.norm, cross(dpdu, dpdv).unit_vector())
-        // );
         hr.shading_geo.dpdu = dpdu;
         hr.shading_geo.dpdv = dpdv;
         hr
@@ -76,6 +72,10 @@ impl HitRecord {
 
     pub fn set_shading_geometry(&mut self, dpdu: Vec3, dpdv: Vec3) {
         let mut n = cross(dpdu, dpdv).unit_vector();
+
+        if n.is_nan() {
+            return;
+        }
 
         if dot(self.norm, n) < 0.0 {
             n = -n;
@@ -149,9 +149,10 @@ impl Hittable for Translate {
             time: r.time,
         };
         if let Some(hr) = self.obj.hit(&moved_r, t_min, t_max) {
-            Some(HitRecord::new(
+            Some(HitRecord::with_dps(
                 &moved_r, hr.p + self.offset, hr.norm,
-                hr.t, hr.u, hr.v, hr.mat.clone()
+                hr.t, hr.u, hr.v, hr.mat.clone(),
+                hr.shading_geo.dpdu, hr.shading_geo.dpdv,
             ))
         } else {
             None
@@ -322,8 +323,9 @@ impl Hittable for Rotate {
         normal[b_axis] =
             self.sin_theta * b_coeff.0 + self.cos_theta * b_coeff.1;
 
-        Some(HitRecord::new(
-            &rotated_r, p, normal, hr.t, hr.u, hr.v, hr.mat.clone()
+        Some(HitRecord::with_dps(
+            &rotated_r, p, normal, hr.t, hr.u, hr.v, hr.mat.clone(),
+            hr.shading_geo.dpdu, hr.shading_geo.dpdv,
         ))
 
     }

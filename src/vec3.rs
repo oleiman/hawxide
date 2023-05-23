@@ -81,6 +81,11 @@ impl Vec3 {
     }
 
     #[must_use]
+    pub fn is_nan(&self) -> bool {
+        self.0.is_nan() || self.1.is_nan() || self.2.is_nan()
+    }
+
+    #[must_use]
     pub fn random() -> Self {
         Vec3(double(), double(), double())
     }

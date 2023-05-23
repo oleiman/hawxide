@@ -367,7 +367,6 @@ impl Corroded {
     pub fn new(scale: f64, mat: Arc<dyn Material + Sync + Send>) -> Self {
         Self {
             bump_t: RandomBump::new(scale).into(),
-            // bump_t: CheckerBump::new(-5.0, 0.0).into(),
             mat: mat.clone(),
         }
     }
