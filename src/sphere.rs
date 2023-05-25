@@ -1,4 +1,4 @@
-use crate::vec3::{Vec3,Point3,dot,cross};
+use crate::vec3::{Vec3,Point3,dot};
 use crate::ray::Ray;
 use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
