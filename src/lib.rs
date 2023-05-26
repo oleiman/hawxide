@@ -19,6 +19,7 @@ pub mod pdf;
 pub mod scene;
 pub mod triangle;
 pub mod cylinder;
+pub mod disk;
 pub mod obj;
 
 pub use vec3::{
