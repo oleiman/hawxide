@@ -18,7 +18,7 @@ use std::vec::Vec;
 
 pub struct WfObject {
     pub triangles: HittableList,
-    pub meshes: Vec<TriangleMesh>,
+    pub meshes: Vec<Arc<TriangleMesh>>,
     pub mat: Arc<dyn Material + Sync + Send>,
 }
 
@@ -39,11 +39,10 @@ impl WfObject {
                 Self::get_material(m)
             }).collect();
 
-        let meshes: Vec<TriangleMesh> = vec![];
-        let triangles = HittableList::default();
-
         let mut result = Self {
-            meshes, triangles, mat: default_mat.clone(),
+            meshes: vec![],
+            triangles: HittableList::default(),
+            mat: default_mat.clone(),
         };
 
         for m in &models {
@@ -77,20 +76,18 @@ impl WfObject {
 
             let n_vertices = positions.len();
 
-            result.meshes.push(TriangleMesh::new(
+            result.meshes.push(Arc::new(TriangleMesh::new(
                 n_faces, &indices,
                 n_vertices, &positions,
                 if !normals.is_empty() { Some(&normals) } else { None },
                 None, // tangents
                 if !uvs.is_empty() { Some(&uvs) } else { None },
                 mat,
-            ));
+            )));
 
             result.triangles.add(HittableList::new(
                 (0..n_faces).map(|i| {
-                    // Arc::new(Triangle::new(result.meshes.last().unwrap(), i))
-                    //     as Arc<dyn Hittable + Sync + Send>
-                    Triangle::new(result.meshes.last().unwrap(), i).into()
+                    Triangle::new(result.meshes.last().unwrap().clone(), i).into()
                 }).collect()
             ).into());
         }

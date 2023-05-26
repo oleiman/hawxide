@@ -1,9 +1,5 @@
 use crate::vec3::{Vec3,Point3};
-use crate::ray::Ray;
-use crate::hit::{HitRecord,Hittable};
 use crate::material::Material;
-use crate::aabb::AABB;
-use crate::util::PI;
 
 use std::sync::Arc;
 use std::vec::Vec;
@@ -56,3 +52,9 @@ impl TriangleMesh {
         }
     }
 }
+
+// impl From<TriangleMesh> for Arc<TriangleMesh> {
+//     fn from(hh: TriangleMesh) -> Arc<TriangleMesh> {
+//         Arc::new(hh)
+//     }
+// }

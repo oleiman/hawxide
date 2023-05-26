@@ -1082,6 +1082,7 @@ pub mod defs {
         let copper = Corroded::new(10.0,
             Metal::new(COPPER, 0.0).into()
         );
+        let copper = Metal::new(COPPER, 0.0);
         // let copper = Corroded::new(10.0,
         //     Lambertian::new(COPPER).into()
         // );

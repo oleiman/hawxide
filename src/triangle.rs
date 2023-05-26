@@ -8,28 +8,37 @@ use crate::onb::OrthoNormalBasis;
 
 use std::sync::Arc;
 
-pub struct Triangle<'a> {
+pub struct Triangle {
     // pub norm: Vec3,
-    pub mesh: &'a TriangleMesh,
-    pub v: &'a [usize],
+    pub mesh: Arc<TriangleMesh>,
+    pub i_min: usize,
+    pub i_max: usize,
+    // pub v: &'a [usize],
     // pub mat: Arc<dyn Material + Sync + Send>
 }
 
-impl<'a> Triangle<'a> {
+impl Triangle {
     #[must_use]
-    pub fn new(mesh: &'a TriangleMesh, t_idx: usize) -> Self {
+    pub fn new(mesh: Arc<TriangleMesh>, t_idx: usize) -> Self {
         // TODO(oren): it would be nice to not store the normal, but I need it for other
         // stuff, right?
         Self {
             // v0, v1, v2, norm: cross(v1 - v0, v2 - v0).unit_vector(), mat,
             mesh,
-            v: &mesh.vertex_indices[t_idx * 3..(t_idx * 3 + 3)],
+            i_min: t_idx * 3,
+            i_max: t_idx * 3 + 2,
+            // v: &mesh.vertex_indices[t_idx * 3..(t_idx * 3 + 3)],
         }
     }
 
     #[must_use]
+    fn v(&self) -> &[usize] {
+        &self.mesh.vertex_indices[self.i_min..=self.i_max]
+    }
+
+    #[must_use]
     fn vertex(&self, i: usize) -> Point3 {
-        self.mesh.p[self.v[i]]
+        self.mesh.p[self.v()[i]]
     }
 
     #[must_use]
@@ -40,9 +49,9 @@ impl<'a> Triangle<'a> {
     fn get_uvs(&self) -> [(f64,f64); 3] {
         if let Some(uv) = &self.mesh.uv {
             [
-                uv[self.v[0]],
-                uv[self.v[1]],
-                uv[self.v[2]],
+                uv[self.v()[0]],
+                uv[self.v()[1]],
+                uv[self.v()[2]],
             ]
         } else {
             [
@@ -81,13 +90,13 @@ impl<'a> Triangle<'a> {
     }
 }
 
-impl From<Triangle<'_>> for Arc<dyn Hittable + Sync + Send> {
+impl From<Triangle> for Arc<dyn Hittable + Sync + Send> {
     fn from(hh: Triangle) -> Arc<dyn Hittable + Sync + Send> {
         Arc::new(hh)
     }
 }
 
-impl Hittable for Triangle<'_> {
+impl Hittable for Triangle {
     #[allow(clippy::many_single_char_names)]
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let e1 = self.vertex(1) - self.vertex(0);
