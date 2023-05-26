@@ -20,6 +20,7 @@ pub mod scene;
 pub mod triangle;
 pub mod cylinder;
 pub mod disk;
+pub mod triangle_mesh;
 pub mod obj;
 
 pub use vec3::{

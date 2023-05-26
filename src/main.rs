@@ -33,7 +33,7 @@ fn ray_color(r: &Ray,
             let scattered = Ray::new(hr.p, mix_pdf.generate(), r.time);
             let pdf_val = mix_pdf.value(scattered.dir);
 
-            assert!(pdf_val > 0.0, "PDF val {:4} < 0", pdf_val);
+            assert!(pdf_val > 0.0, "PDF val {:4} < 0; p: {}", pdf_val, hr.p);
 
 
             emitted +
@@ -133,7 +133,8 @@ fn main() {
     };
 
     // Render
-    let mut stderr = BufWriter::new(std::io::stderr().lock());
+    // let mut stderr = BufWriter::new(std::io::stderr().lock());
+    let mut stderr = BufWriter::new(std::io::stderr());
 
     writeln!(stdout, "P3");
     writeln!(stdout, "{} {}", image_width, image_height);

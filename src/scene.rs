@@ -17,8 +17,10 @@ pub mod defs {
     use crate::vec3::{Point3,Color,Vec3};
     use crate::texture;
     use crate::texture::Texture;
-    use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
+    use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal, Corroded};
     use crate::sphere::Sphere;
+    use crate::cylinder::Cylinder;
+    use crate::disk::Disk;
     use crate::hit::{Hittable, FlipFace, Rotate, Translate};
     use crate::aarect::AARect;
     use crate::hittable_list::HittableList;
@@ -34,6 +36,7 @@ pub mod defs {
     const RED: Color = Color(0.65, 0.05, 0.05);
     const WHITE: Color  = Color(0.73, 0.73, 0.73);
     const GREEN: Color  = Color(0.12, 0.45, 0.15);
+    const COPPER: Color = Color(184.0/256., 115.0/256., 51.0/256.);
 
     #[must_use]
     pub fn random_scene() -> Scene {
@@ -227,20 +230,20 @@ pub mod defs {
         box2 = Rotate::rotate_y(box2, -18.0).into();
         box2 = Translate::new(box2, Vec3(130.0, 0.0, 65.0)).into();
 
-        let mut tri: Arc<dyn Hittable + Sync + Send> = Triangle::new(
-            Point3(0.0, 0.0, 0.0),
-            Point3(0.0, 70.0, 0.0),
-            Point3(70.0, 0.0, 0.0),
-            lavender.clone(),
-        ).into();
+        // let mut tri: Arc<dyn Hittable + Sync + Send> = Triangle::new(
+        //     Point3(0.0, 0.0, 0.0),
+        //     Point3(0.0, 70.0, 0.0),
+        //     Point3(70.0, 0.0, 0.0),
+        //     lavender.clone(),
+        // ).into();
 
-        tri = Rotate::rotate_x(tri, 60.0).into();
-        tri = Translate::new(tri, Vec3(200.0, 250.0, 200.0)).into();
+        // tri = Rotate::rotate_x(tri, 60.0).into();
+        // tri = Translate::new(tri, Vec3(200.0, 250.0, 200.0)).into();
 
         let cbox = empty_cornell_box();
 
         let world = HittableList::new(vec![
-                box1, box2, tri,
+                box1, box2, // tri,
                 cbox.world,
         ]);
 
@@ -259,6 +262,35 @@ pub mod defs {
         let cbox = empty_cornell_box();
 
         let white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        // let copper = Lambertian::new(COPPER);
+        // let copper = Metal::new(Color(0.7, 0.6, 0.5), 0.0);
+
+        let earth: Arc<dyn Material + Sync + Send> = Lambertian::from_texture(
+            texture::Image::new("earthmap.jpg").into()
+        ).into();
+
+        let mut copper: Arc<dyn Material + Sync + Send> = Corroded::new(10.0,
+            Metal::new(COPPER, 0.7).into()
+        ).into();
+        copper = Corroded::new(10.0,
+            Lambertian::new(COPPER).into()
+        ).into();
+        let glass: Arc<dyn Material + Sync + Send> = Corroded::new(10.0,
+            Dielectric::new(1.5, 0.005, COPPER).into()
+        ).into();
+        copper = Lambertian::new(COPPER).into();
+        copper = Metal::new(COPPER, 0.2).into();
+
+        let pertext: Arc<dyn Texture + Sync + Send> =
+            texture::Marble::with_point_scaling(1.0, 10.0).into();
+        let stone = Corroded::new(10.0, Lambertian::from_texture(pertext.clone()).into());
+        // let stone = Lambertian::from_texture(pertext.clone());
+        let voronoi: Arc<dyn Texture + Sync + Send> = texture::Voronoi::new(
+            Color(1.0, 1.0, 1.0), 200
+        ).into();
+
+        let light: Arc<dyn Material + Sync + Send> =
+            DiffuseLight::new(Color(15.0, 15.0, 15.0)).into();
 
         let mut box1: Arc<dyn Hittable + Sync + Send> = Boxx::new(
             Point3(0.0, 0.0, 0.0),
@@ -268,25 +300,37 @@ pub mod defs {
         box1 = Rotate::rotate_y(box1, 15.0).into();
         box1 = Translate::new(box1, Vec3(265.0, 0.0, 295.0)).into();
 
-        let sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
-            Point3(190.0, 90.0, 190.0), 90.0,
-            Dielectric::new(1.5, 0.005, Color(0.2, 0.8, 0.7)).into(),
+        let mut sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
+            Point3(0.0, 0.0, 0.0), 45.0,
+            light.clone(),
         ).into();
 
+        // sphere = Rotate::rotate_y(sphere, 180.).into();
+        sphere = Translate::new(sphere,Point3(190.0, 90.0, 190.0)).into();
+
+        let mut cylinder: Arc<dyn Hittable + Sync + Send> = HittableList::new(vec![
+            Cylinder::new(90.0, -90.0, 90.0, copper.clone()).into(),
+            Disk::new(80.0, 20.0, 90.0, copper.clone()).into(),
+        ]).into();
+
+        // cylinder = Rotate::rotate_x(cylinder, -45.0).into();
+        cylinder = Translate::new(cylinder, Point3(190.0, 90.0, 190.0)).into();
+
         let world = HittableList::new(vec![
-                box1,
-                sphere.clone(),
-                cbox.world,
+            box1,
+            cylinder.clone(),
+            sphere.clone(),
+            cbox.world,
         ]);
 
         let lights = HittableList::new(vec![
             cbox.lights.clone(),
-            sphere.clone()
+            // sphere.clone(),
         ]);
 
         Scene {
-            lookfrom: cbox.lookfrom,
-            lookat: cbox.lookat,
+            lookfrom: cbox.lookfrom  + Point3(0.0, 0.0, 600.0),
+            lookat: cbox.lookat - Point3(50.0, 100.0, 0.0),
             background: cbox.background,
             vfov: cbox.vfov,
             world: world.into(),
@@ -301,7 +345,21 @@ pub mod defs {
         let lookat = Point3(0.0, 0.0, 0.0);
         let vfov = 20.0;
 
+        let copper = Corroded::new(1.0,
+            Metal::new(COPPER, 0.0).into()
+        );
+        // let copper = Metal::new(COPPER, 0.0);
+        // let copper = Corroded::new(
+        //     Lambertian::new(COPPER).into()
+        // );
+        // let copper = Corroded::new(
+        //     Dielectric::new(0.5, 0.4, COPPER).into()
+        // );
+
         let pertext: Arc<dyn Texture + Sync + Send> = texture::Marble::new(4.).into();
+        // let copper = Corroded::new(
+        //     Lambertian::from_texture(pertext.clone()).into()
+        // );
 
         let world = HittableList {
             objects: vec![
@@ -313,7 +371,9 @@ pub mod defs {
                 Sphere::new(
                     Point3(0.0, 2.0, 0.0),
                     2.0,
-                    Lambertian::from_texture(pertext.clone()).into()
+                    // Lambertian::from_texture(pertext.clone()).into()
+                    copper.into()
+                    // // Corroded::new(Lambertian::from_texture(pertext.clone()).into()).into()
                 ).into(),
             ]
         };
@@ -1019,11 +1079,17 @@ pub mod defs {
         let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
         let lavender: Arc<dyn Material + Sync + Send> =
             Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
+        let copper = Corroded::new(10.0,
+            Metal::new(COPPER, 0.0).into()
+        );
+        // let copper = Corroded::new(10.0,
+        //     Lambertian::new(COPPER).into()
+        // );
 
         let cbox = empty_cornell_box();
 
         let mut teapot: Arc<dyn Hittable + Sync + Send> =
-            WfObject::new("data/teapot.obj", 40.0, lavender.clone()).into();
+            WfObject::new("data/teapot.obj", 40.0, copper.into()).into();
 
         teapot = Rotate::rotate_x(teapot, -15.0).into();
         teapot = Rotate::rotate_y(teapot, 15.0).into();
