@@ -13,6 +13,7 @@ pub struct Triangle {
     pub mesh: Arc<TriangleMesh>,
     pub i_min: usize,
     pub i_max: usize,
+    pub vs: [usize; 3],
     // pub v: &'a [usize],
     // pub mat: Arc<dyn Material + Sync + Send>
 }
@@ -22,11 +23,27 @@ impl Triangle {
     pub fn new(mesh: Arc<TriangleMesh>, t_idx: usize) -> Self {
         // TODO(oren): it would be nice to not store the normal, but I need it for other
         // stuff, right?
+        let i_min = t_idx * 3;
+        let i_max = t_idx * 3 + 2;
+        let verts: &[usize] = &mesh.vertex_indices[i_min..=i_max];
+
+        let vs = [
+            mesh.p[verts[0]],
+            mesh.p[verts[1]],
+            mesh.p[verts[2]],
+        ];
+
+        let vs = [
+            mesh.vertex_indices[i_min],
+            mesh.vertex_indices[i_min + 1],
+            mesh.vertex_indices[i_min + 2],
+        ];
         Self {
             // v0, v1, v2, norm: cross(v1 - v0, v2 - v0).unit_vector(), mat,
             mesh,
             i_min: t_idx * 3,
             i_max: t_idx * 3 + 2,
+            vs,
             // v: &mesh.vertex_indices[t_idx * 3..(t_idx * 3 + 3)],
         }
     }
@@ -38,7 +55,10 @@ impl Triangle {
 
     #[must_use]
     fn vertex(&self, i: usize) -> Point3 {
-        self.mesh.p[self.v()[i]]
+        // self.mesh.p[self.v()[i]]
+        self.mesh.p[self.vs[i]]
+        // self.vs[i]
+
     }
 
     #[must_use]
@@ -49,9 +69,9 @@ impl Triangle {
     fn get_uvs(&self) -> [(f64,f64); 3] {
         if let Some(uv) = &self.mesh.uv {
             [
-                uv[self.v()[0]],
-                uv[self.v()[1]],
-                uv[self.v()[2]],
+                uv[self.vs[0]],
+                uv[self.vs[1]],
+                uv[self.vs[2]],
             ]
         } else {
             [
