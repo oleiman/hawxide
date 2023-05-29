@@ -85,6 +85,18 @@ impl Triangle {
             )
         }
     }
+
+    fn compute_shading_normals(&self, hr: &mut HitRecord, b: (f64, f64, f64)) {
+        let ns = if let Some(norms) = &self.mesh.n {
+            (b.0 * norms[self.vs[0]] + 
+             b.1 * norms[self.vs[1]] + 
+             b.2 * norms[self.vs[2]]).unit_vector()
+        } else {
+            hr.norm
+        };
+
+        hr.shading_geo.n = ns;
+    }
 }
 
 impl From<Triangle> for Arc<dyn Hittable + Sync + Send> {
@@ -114,8 +126,10 @@ impl Hittable for Triangle {
             return None;
         }
 
+        let inv_det = 1.0 / det;
+
         let Vec3(t_hit, u, v) =
-            (1.0 / det) *
+            inv_det *
             Vec3(dot(q_vec, e2), dot(p_vec, t_vec), dot(q_vec, r.dir));
 
         if u < 0.0 || v < 0.0 || u > 1.0 || u + v > 1.0 {
@@ -130,10 +144,21 @@ impl Hittable for Triangle {
 
         // cross(dpdu, dpdv).unit_vector()
 
-        Some(HitRecord::with_dps(
+        let mut hr = HitRecord::with_dps(
             r, p_hit, norm,
             t_hit, u, v, self.mesh.mat.clone(), dpdu, dpdv,
-        ))
+        );
+
+        self.compute_shading_normals(
+            &mut hr,
+            (
+                1.0 - u - v,
+                u,
+                v,
+            ),
+        );
+
+        Some(hr)
 
     }
 
