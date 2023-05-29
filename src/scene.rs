@@ -1079,13 +1079,14 @@ pub mod defs {
         let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
         let lavender: Arc<dyn Material + Sync + Send> =
             Lambertian::new(Color(191.0 / 256.0, 64.0 / 256.0, 191.0 / 256.0)).into();
-        let copper = Corroded::new(10.0,
+        let copper = Corroded::new(20.0,
             Metal::new(COPPER, 0.0).into()
         );
-        let copper = Metal::new(COPPER, 0.0);
-        // let copper = Corroded::new(10.0,
+        // let copper = Metal::new(COPPER, 0.0);
+        // let copper = Corroded::new(20.,
         //     Lambertian::new(COPPER).into()
         // );
+        // let copper = Lambertian::new(COPPER);
 
         let cbox = empty_cornell_box();
 

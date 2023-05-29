@@ -62,7 +62,7 @@ impl Triangle {
         (a.0 - b.0, a.1 - b.1)
     }
 
-    fn get_partial_derivatives(&self) -> (Vec3, Vec3) {
+    fn get_partial_derivatives(&self) -> (Vec3, Vec3, Vec3) {
         let [uv0, uv1, uv2] = self.get_uvs();
         let duv02 = Self::pair_sub(uv0, uv2);
         let duv12 = Self::pair_sub(uv1, uv2);
@@ -75,12 +75,13 @@ impl Triangle {
             onb.build_from_w(cross(
                 self.vertex(2) - self.vertex(0),
                 self.vertex(1) - self.vertex(0)));
-            (onb.u(), onb.v())
+            (onb.u(), onb.v(), cross(onb.u(), onb.v()).unit_vector())
         } else {
             let invdet = 1.0 / determinant;
             (
                 ( duv12.1 * dp02 - duv02.1 * dp12) * invdet,
                 (-duv12.0 * dp02 + duv02.0 * dp12) * invdet,
+                cross(dp02, dp12).unit_vector(),
             )
         }
     }
@@ -125,12 +126,12 @@ impl Hittable for Triangle {
 
         let p_hit = self.bary_to_cart(u, v);
 
-        let (dpdu, dpdv) = self.get_partial_derivatives();
+        let (dpdu, dpdv, norm) = self.get_partial_derivatives();
 
-        // TODO(oren): make sure normal is outward facing I guess? Also
-        // I guess it should come from the normals array if possible?
+        // cross(dpdu, dpdv).unit_vector()
+
         Some(HitRecord::with_dps(
-            r, p_hit, cross(dpdu, dpdv).unit_vector(),
+            r, p_hit, norm,
             t_hit, u, v, self.mesh.mat.clone(), dpdu, dpdv,
         ))
 
