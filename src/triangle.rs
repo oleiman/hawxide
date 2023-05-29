@@ -12,9 +12,7 @@ pub struct Triangle {
     // pub norm: Vec3,
     pub mesh: Arc<TriangleMesh>,
     pub i_min: usize,
-    pub i_max: usize,
     pub vs: [usize; 3],
-    // pub v: &'a [usize],
     // pub mat: Arc<dyn Material + Sync + Send>
 }
 
@@ -24,41 +22,19 @@ impl Triangle {
         // TODO(oren): it would be nice to not store the normal, but I need it for other
         // stuff, right?
         let i_min = t_idx * 3;
-        let i_max = t_idx * 3 + 2;
-        let verts: &[usize] = &mesh.vertex_indices[i_min..=i_max];
-
-        let vs = [
-            mesh.p[verts[0]],
-            mesh.p[verts[1]],
-            mesh.p[verts[2]],
-        ];
-
-        let vs = [
-            mesh.vertex_indices[i_min],
-            mesh.vertex_indices[i_min + 1],
-            mesh.vertex_indices[i_min + 2],
-        ];
         Self {
-            // v0, v1, v2, norm: cross(v1 - v0, v2 - v0).unit_vector(), mat,
-            mesh,
-            i_min: t_idx * 3,
-            i_max: t_idx * 3 + 2,
-            vs,
-            // v: &mesh.vertex_indices[t_idx * 3..(t_idx * 3 + 3)],
+            vs: [
+                mesh.vertex_indices[i_min],
+                mesh.vertex_indices[i_min + 1],
+                mesh.vertex_indices[i_min + 2],
+            ],
+            mesh, i_min,
         }
     }
 
     #[must_use]
-    fn v(&self) -> &[usize] {
-        &self.mesh.vertex_indices[self.i_min..=self.i_max]
-    }
-
-    #[must_use]
     fn vertex(&self, i: usize) -> Point3 {
-        // self.mesh.p[self.v()[i]]
         self.mesh.p[self.vs[i]]
-        // self.vs[i]
-
     }
 
     #[must_use]
@@ -132,7 +108,8 @@ impl Hittable for Triangle {
 
         // if we want to do culling, we would discard intersections on one side
         // i.e. discard if determinant is l.t. epsilon
-        if det.abs() < 0.000_001 {
+        // if det.abs() < 0.000_001 {
+        if det < 0.000_001 {
             return None;
         }
 
@@ -161,29 +138,31 @@ impl Hittable for Triangle {
 
     // Give the smallest reasonable AABB for the Hittable
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
+        let (a, b, c) = (self.vertex(0), self.vertex(1), self.vertex(2));
+
         let min_x = f64::min(
-            f64::min(self.vertex(0).x(), self.vertex(1).x()),
-            self.vertex(2).x()
+            f64::min(a.x(), b.x()),
+            c.x()
         );
         let min_y = f64::min(
-            f64::min(self.vertex(0).y(), self.vertex(1).y()),
-            self.vertex(2).y()
+            f64::min(a.y(), b.y()),
+            c.y()
         );
         let min_z = f64::min(
-            f64::min(self.vertex(0).z(), self.vertex(1).z()),
-            self.vertex(2).z()
+            f64::min(a.z(), b.z()),
+            c.z()
         );
 
         let max_x = f64::max(
-            f64::max(self.vertex(0).x(), self.vertex(1).x()),
-            self.vertex(2).x());
+            f64::max(a.x(), b.x()),
+            c.x());
         let max_y = f64::max(
-            f64::max(self.vertex(0).y(), self.vertex(1).y()),
-            self.vertex(2).y()
+            f64::max(a.y(), b.y()),
+            c.y()
         );
         let max_z = f64::max(
-            f64::max(self.vertex(0).z(), self.vertex(1).z()),
-            self.vertex(2).z()
+            f64::max(a.z(), b.z()),
+            c.z()
         );
 
         Some(AABB {
