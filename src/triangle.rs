@@ -39,7 +39,7 @@ impl Triangle {
 
     #[must_use]
     fn bary_to_cart(&self, u: f64, v: f64) -> Point3 {
-        (1.0 - u - v)*self.vertex(0) + u * self.vertex(1) + v * self.vertex(2)
+        (1.0 - u - v) * self.vertex(0) + u * self.vertex(1) + v * self.vertex(2)
     }
 
     fn get_uvs(&self) -> [(f64,f64); 3] {
@@ -53,7 +53,7 @@ impl Triangle {
             [
                 (0.0, 0.0),
                 (1.0, 0.0),
-                (1.0, 1.1),
+                (1.0, 1.0),
             ]
         }
     }
@@ -88,8 +88,8 @@ impl Triangle {
 
     fn compute_shading_normals(&self, hr: &mut HitRecord, b: (f64, f64, f64)) {
         let ns = if let Some(norms) = &self.mesh.n {
-            (b.0 * norms[self.vs[0]] + 
-             b.1 * norms[self.vs[1]] + 
+            (b.0 * norms[self.vs[0]] +
+             b.1 * norms[self.vs[1]] +
              b.2 * norms[self.vs[2]]).unit_vector()
         } else {
             hr.norm
@@ -128,33 +128,43 @@ impl Hittable for Triangle {
 
         let inv_det = 1.0 / det;
 
-        let Vec3(t_hit, u, v) =
+        let Vec3(t_hit, b1, b2) =
             inv_det *
             Vec3(dot(q_vec, e2), dot(p_vec, t_vec), dot(q_vec, r.dir));
 
-        if u < 0.0 || v < 0.0 || u > 1.0 || u + v > 1.0 {
+        let b0 = 1.0 - b1 - b2;
+
+        if b1 < 0.0 || b2 < 0.0 || b1 > 1.0 || b1 + b2 > 1.0 {
             return None;
         } else if t_hit < t_min || t_hit > t_max {
             return None;
         }
 
-        let p_hit = self.bary_to_cart(u, v);
+        let p_hit = self.bary_to_cart(b1, b2);
+
+        // duplicate, waste
+        let [uv0, uv1, uv2] = self.get_uvs();
 
         let (dpdu, dpdv, norm) = self.get_partial_derivatives();
 
         // cross(dpdu, dpdv).unit_vector()
 
+        let (uhit, vhit) = (
+            (b0 * uv0.0 + b1 * uv1.0 + b2 * uv2.0),
+            (b0 * uv0.1 + b1 * uv1.1 + b2 * uv2.1),
+        );
+
         let mut hr = HitRecord::with_dps(
             r, p_hit, norm,
-            t_hit, u, v, self.mesh.mat.clone(), dpdu, dpdv,
+            t_hit, uhit, vhit, self.mesh.mat.clone(), dpdu, dpdv,
         );
 
         self.compute_shading_normals(
             &mut hr,
             (
-                1.0 - u - v,
-                u,
-                v,
+                b0,
+                b1,
+                b2,
             ),
         );
 

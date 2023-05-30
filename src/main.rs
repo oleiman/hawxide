@@ -111,6 +111,7 @@ fn main() {
             "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
         ),
         16 => scene::defs::tree(),
+        17 => scene::defs::purple_flower(),
         _ => scene::defs::final_scene()
     };
 

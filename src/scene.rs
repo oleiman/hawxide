@@ -1086,7 +1086,10 @@ pub mod defs {
         // let copper = Corroded::new(20.,
         //     Lambertian::new(COPPER).into()
         // );
-        // let copper = Lambertian::new(COPPER);
+        let copper = Lambertian::new(COPPER);
+        // let copper = Lambertian::from_texture(
+        //     texture::Marble::new(0.5).into()
+        // );
 
         let cbox = empty_cornell_box();
 
@@ -1169,6 +1172,44 @@ pub mod defs {
 
         let world = HittableList::new(vec![
             tree,
+            cbox.world,
+        ]);
+
+        Scene {
+            lookfrom: cbox.lookfrom,
+            lookat: cbox.lookat,
+            background: cbox.background,
+            vfov: cbox.vfov,
+            world: world.into(),
+            lights: cbox.lights,
+        }
+    }
+
+    #[must_use]
+    pub fn purple_flower() -> Scene {
+        let _white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
+
+        let tex = Lambertian::from_texture(
+            texture::Image::new("data/purple_flower/purple_flower_mm_1.jpg").into()
+        );
+
+        let cbox = empty_cornell_box();
+
+        let mut teapot: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new(
+                "data/purple_flower/purple_flower_mm.obj",
+                2.0, tex.into()).into();
+
+        teapot = Rotate::rotate_x(teapot, -15.0).into();
+        teapot = Rotate::rotate_y(teapot, 15.0).into();
+
+        teapot = Translate::new(
+            teapot, Point3(275.0, 200.0, 227.0),
+        ).into();
+
+        let world = HittableList::new(vec![
+            teapot,
             cbox.world,
         ]);
 

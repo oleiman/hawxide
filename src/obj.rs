@@ -8,6 +8,7 @@ use crate::hittable_list::HittableList;
 use crate::bvh::BVHNode;
 use crate::material::{Metal, Lambertian, DiffuseLight, WfMtl};
 use crate::triangle_mesh::TriangleMesh;
+use crate::texture;
 
 use tobj;
 
@@ -32,7 +33,12 @@ impl WfObject {
         assert!(obj.is_ok());
         let (models, mats_r) = obj.unwrap();
         assert!(mats_r.is_ok());
-        let mats = mats_r.unwrap();
+        // let mats = mats_r.unwrap();
+
+        let mats = match mats_r {
+            Ok(mats) => mats,
+            Err(_) => vec![],
+        };
 
         let materials: Vec<Arc<dyn Material + Sync + Send>> =
             mats.iter().map(|m| {
@@ -94,79 +100,6 @@ impl WfObject {
         result
     }
 
-    // pub fn 
-
-    // #[must_use]
-    // pub fn old_new(fname: &str, scale: f64, mat: Arc<dyn Material + Sync + Send>) -> Self{
-    //     let mut load_opts = tobj::OFFLINE_RENDERING_LOAD_OPTIONS;
-    //     load_opts.triangulate = true;
-    //     let obj = tobj::load_obj(fname, &load_opts);
-    //     assert!(obj.is_ok());
-    //     let (models, mats_r) = obj.unwrap();
-    //     assert!(mats_r.is_ok());
-    //     let mats = mats_r.unwrap();
-
-    //     let materials: Vec<Arc<dyn Material + Sync + Send>> =
-    //         mats.iter().map(|m| {
-    //             Self::get_material(m)
-    //         }).collect();
-
-    //     let mut triangles = HittableList::default();
-    //     let mut n_points = 0usize;
-    //     let mut n_faces = 0usize;
-
-    //     for m in &models {
-    //         let mesh = &m.mesh;
-
-    //         let mat: Arc<dyn Material + Sync + Send> =
-    //             if let Some(m_id) = mesh.material_id {
-    //                 assert!(m_id <= materials.len());
-    //                 if m_id <= materials.len() {
-    //                     materials[m_id].clone()
-    //                 } else {
-    //                     mat.clone()
-    //                 }
-    //             } else {
-    //                 mat.clone()
-    //             };
-
-    //         let mut points: Vec<Point3> = vec![];
-    //         for p in mesh.positions.chunks(3) {
-    //             points.push(
-    //                 Point3(p[0], p[1], p[2]) * scale
-    //             );
-    //         }
-
-    //         let mut m_tri = HittableList::default();
-
-    //         for face in mesh.indices.chunks(3) {
-    //             if face.len() != 3 {
-    //                 continue;
-    //             }
-    //             let p0_i = face[0] as usize;
-    //             let p1_i = face[1] as usize;
-    //             let p2_i = face[2] as usize;
-
-
-    //             m_tri.add(Triangle::new(
-    //                 points[p0_i], points[p1_i], points[p2_i], mat.clone()
-    //             ).into());
-    //         }
-
-    //         n_faces += m_tri.len();
-    //         n_points += points.len();
-    //         triangles.add(m_tri.into());
-    //     }
-
-    //     eprintln!("{}: models: {}, positions: {}, faces: {}, materials: {}",
-    //               fname, models.len(), n_points, n_faces, mats.len(),
-    //     );
-
-    //     Self {
-    //         triangles, mat
-    //     }
-    // }
-
     fn get_material (mm: &tobj::Material) -> Arc<dyn Material + Sync + Send> {
 
         let dc = if let Some([r, g, b]) = mm.diffuse {
@@ -185,6 +118,13 @@ impl WfObject {
             Color(0.2, 0.2, 0.2)
         };
         let ns = if let Some(ns) = mm.shininess { ns } else { 0.0 };
+
+        if let Some(tx) = &mm.diffuse_texture {
+            let name = format!("data/purple_flower/{}", tx);
+            return Lambertian::from_texture(
+                texture::Image::new(&name).into()
+            ).into();
+        }
 
         match mm.illumination_model {
             Some(x) => {
