@@ -26,7 +26,6 @@ pub mod defs {
     use crate::hittable_list::HittableList;
     use crate::bvh::BVHNode;
     use crate::boxx::Boxx;
-    use crate::triangle::Triangle;
     use crate::moving_sphere::MovingSphere;
     use crate::constant_medium::ConstantMedium;
     use crate::util::random;
@@ -1187,29 +1186,29 @@ pub mod defs {
 
     #[must_use]
     pub fn purple_flower() -> Scene {
-        let _white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
+        let white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
         let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
 
-        let tex = Lambertian::from_texture(
-            texture::Image::new("data/purple_flower/purple_flower_mm_1.jpg").into()
-        );
+        // let tex = Lambertian::from_texture(
+        //     texture::Image::new("data/purple_flower/purple_flower_mm_1.jpg").into()
+        // );
 
         let cbox = empty_cornell_box();
 
-        let mut teapot: Arc<dyn Hittable + Sync + Send> =
+        let mut flower: Arc<dyn Hittable + Sync + Send> =
             WfObject::new(
                 "data/purple_flower/purple_flower_mm.obj",
-                2.0, tex.into()).into();
+                2.0, white.into()).into();
 
-        teapot = Rotate::rotate_x(teapot, -15.0).into();
-        teapot = Rotate::rotate_y(teapot, 15.0).into();
+        flower = Rotate::rotate_x(flower, -25.0).into();
+        flower = Rotate::rotate_y(flower, 180.0).into();
 
-        teapot = Translate::new(
-            teapot, Point3(275.0, 200.0, 227.0),
+        flower = Translate::new(
+            flower, Point3(275.0, 200.0, 227.0),
         ).into();
 
         let world = HittableList::new(vec![
-            teapot,
+            flower,
             cbox.world,
         ]);
 
