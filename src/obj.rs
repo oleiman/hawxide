@@ -51,6 +51,9 @@ impl WfObject {
             mat: default_mat.clone(),
         };
 
+        let mut n_total: usize = 0;
+        let mut v_total: usize = 0;
+
         for m in &models {
             let mesh = &m.mesh;
             let mat = if let Some(m_id) = mesh.material_id {
@@ -82,6 +85,9 @@ impl WfObject {
 
             let n_vertices = positions.len();
 
+            n_total += n_faces;
+            v_total += n_vertices;
+
             result.meshes.push(Arc::new(TriangleMesh::new(
                 n_faces, &indices,
                 n_vertices, &positions,
@@ -91,14 +97,16 @@ impl WfObject {
                 mat,
             )));
 
-            result.triangles.add(HittableList::new(
-                (0..n_faces).map(|i| {
-                    Triangle::new(result.meshes.last().unwrap().clone(), i).into()
-                }).collect()
+            result.triangles.add(BVHNode::new(
+                &HittableList::new(
+                    (0..n_faces).map(|i| {
+                        Triangle::new(result.meshes.last().unwrap().clone(), i).into()
+                    }).collect()
+                ), 0.0, 1.0
             ).into());
         }
-        eprintln!("{}: N: {}",
-                  fname.as_ref().display(), result.triangles.len(), );
+        eprintln!("{}: N: {}, V: {}",
+                  fname.as_ref().display(), n_total, v_total );
         result
     }
 
@@ -146,7 +154,7 @@ impl WfObject {
 
 impl From<WfObject> for Arc<dyn Hittable + Sync + Send> {
     fn from(hh: WfObject) -> Arc<dyn Hittable + Sync + Send> {
-        BVHNode::new(&hh.triangles, 0.0, 1.0).into()
+        Arc::new(hh)
     }
 }
 
