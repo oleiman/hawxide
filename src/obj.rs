@@ -14,6 +14,7 @@ use tobj;
 
 use std::sync::Arc;
 use std::vec::Vec;
+use std::path::Path;
 
 // TODO(oren): may want to pre-compute the bounding box
 
@@ -25,15 +26,14 @@ pub struct WfObject {
 
 impl WfObject {
     #[must_use]
-    pub fn new(fname: &str, scale: f64, default_mat: Arc<dyn Material + Sync + Send>) -> Self {
+    pub fn new<P: AsRef<Path>>(fname: P, scale: f64,
+                               default_mat: Arc<dyn Material + Sync + Send>) -> Self {
         let mut load_opts = tobj::OFFLINE_RENDERING_LOAD_OPTIONS;
         load_opts.triangulate = true;
         load_opts.single_index = true;
-        let obj = tobj::load_obj(fname, &load_opts);
+        let obj = tobj::load_obj(fname.as_ref(), &load_opts);
         assert!(obj.is_ok());
         let (models, mats_r) = obj.unwrap();
-        assert!(mats_r.is_ok());
-        // let mats = mats_r.unwrap();
 
         let mats = match mats_r {
             Ok(mats) => mats,
@@ -42,7 +42,7 @@ impl WfObject {
 
         let materials: Vec<Arc<dyn Material + Sync + Send>> =
             mats.iter().map(|m| {
-                Self::get_material(m)
+                Self::get_material(m, fname.as_ref().parent())
             }).collect();
 
         let mut result = Self {
@@ -97,11 +97,12 @@ impl WfObject {
                 }).collect()
             ).into());
         }
+        eprintln!("{}: N: {}",
+                  fname.as_ref().display(), result.triangles.len(), );
         result
     }
 
-    fn get_material (mm: &tobj::Material) -> Arc<dyn Material + Sync + Send> {
-
+    fn get_material (mm: &tobj::Material, dir: Option<&Path>) -> Arc<dyn Material + Sync + Send> {
         let dc = if let Some([r, g, b]) = mm.diffuse {
             Color(r, g, b)
         } else {
@@ -120,9 +121,10 @@ impl WfObject {
         let ns = if let Some(ns) = mm.shininess { ns } else { 0.0 };
 
         if let Some(tx) = &mm.diffuse_texture {
-            let name = format!("data/purple_flower/{}", tx);
+            let name = 
+                dir.unwrap_or(Path::new(".")).join(tx);
             return Lambertian::from_texture(
-                texture::Image::new(&name).into()
+                texture::Image::new(name.as_path()).into()
             ).into();
         }
 

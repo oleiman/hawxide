@@ -22,12 +22,13 @@ impl Triangle {
         // TODO(oren): it would be nice to not store the normal, but I need it for other
         // stuff, right?
         let i_min = t_idx * 3;
+        let vs = [
+            mesh.vertex_indices[i_min],
+            mesh.vertex_indices[i_min + 1],
+            mesh.vertex_indices[i_min + 2],
+        ];
         Self {
-            vs: [
-                mesh.vertex_indices[i_min],
-                mesh.vertex_indices[i_min + 1],
-                mesh.vertex_indices[i_min + 2],
-            ],
+            vs,
             mesh, i_min,
         }
     }
@@ -86,16 +87,16 @@ impl Triangle {
         }
     }
 
-    fn compute_shading_normals(&self, hr: &mut HitRecord, b: (f64, f64, f64)) {
-        let ns = if let Some(norms) = &self.mesh.n {
-            (b.0 * norms[self.vs[0]] +
-             b.1 * norms[self.vs[1]] +
-             b.2 * norms[self.vs[2]]).unit_vector()
+    fn compute_shading_normals(&self, b: (f64, f64, f64)) -> Option<Vec3> {
+        if let Some(norms) = &self.mesh.n {
+            Some(
+                (b.0 * norms[self.vs[0]] +
+                 b.1 * norms[self.vs[1]] +
+                 b.2 * norms[self.vs[2]]).unit_vector()
+            )
         } else {
-            hr.norm
-        };
-
-        hr.shading_geo.n = ns;
+            None
+        }
     }
 }
 
@@ -159,17 +160,13 @@ impl Hittable for Triangle {
             t_hit, uhit, vhit, self.mesh.mat.clone(), dpdu, dpdv,
         );
 
-        self.compute_shading_normals(
-            &mut hr,
-            (
-                b0,
-                b1,
-                b2,
-            ),
-        );
+        // assert!(self.mesh.n.is_none());
+
+        if let Some(sn) = self.compute_shading_normals((b0,b1,b2)) {
+            hr.shading_geo.n = sn;
+        };
 
         Some(hr)
-
     }
 
     // Give the smallest reasonable AABB for the Hittable
