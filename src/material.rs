@@ -5,13 +5,14 @@ use crate::vec3;
 use crate::util::random;
 use crate::texture::{Texture,FloatTexture,SolidColor,RandomBump,CheckerBump};
 use crate::util::PI;
-use crate::pdf::{PDensityFn,CosPDF,NullPDF};
+use crate::pdf::{PDensityFn,CosPDF,NullPDF,PhongPDF};
 
 use std::sync::Arc;
 
 pub struct ScatterRecord {
     pub specular_ray: Option<Ray>,
     pub attenuation: Color,
+    pub specular_color: Option<Color>,
     pub pdf: Arc<dyn PDensityFn + Sync + Send>,
 }
 
@@ -87,6 +88,7 @@ impl Material for Lambertian {
                -> Option<ScatterRecord> {
         Some(ScatterRecord{
             specular_ray: None,
+            specular_color: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
             pdf: CosPDF::new(rec.shading_geo.n).into(),
         })
@@ -141,6 +143,7 @@ impl Material for Metal {
             specular_ray: Some(Ray::new(
                 rec.p, dir, ray_in.time)
             ),
+            specular_color: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
             pdf: NullPDF::new().into(),
         })
@@ -220,6 +223,7 @@ impl Material for Dielectric {
                 direction,
                 ray_in.time
             )),
+            specular_color: None,
             attenuation,
             pdf: NullPDF::new().into(),
         })
@@ -285,6 +289,7 @@ impl Material for Isotropic {
             specular_ray: Some(Ray::new(
                 rec.p, Vec3::random_in_unit_sphere(), ray_in.time,
             )),
+            specular_color: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
             pdf: NullPDF::new().into(),
         })
@@ -295,19 +300,21 @@ pub struct WfMtl {
     pub model: u8,
     pub diffuse: Lambertian,
     pub specular: Metal,
-    pub ambient: DiffuseLight,
+    pub ns: f64,
+    pub ambient: SolidColor,
 }
 
 impl WfMtl {
     #[must_use]
-    pub fn new(model: u8,
+    pub fn new(model: u8, ns: f64,
                diffuse: Lambertian,
                specular: Metal,
-               ambient: DiffuseLight) -> WfMtl {
-        assert!(model <= 2, "Model {} not supported", model);
+               ambient: SolidColor) -> WfMtl {
+        // assert!(model <= 2, "Model {} not supported", model);
         WfMtl {
             diffuse,
             specular,
+            ns,
             ambient,
             model,
         }
@@ -321,17 +328,7 @@ impl From<WfMtl> for Arc<dyn Material + Sync + Send> {
 }
 
 impl Material for WfMtl {
-    fn emitted(&self, ray_in: &Ray, rec: &HitRecord,
-               u: f64, v: f64, p: Point3) -> Color {
-        if self.model == 0 {
-            self.diffuse.albedo.value(u, v, p)
-        } else {
-            self.ambient.emitted(ray_in, rec, u, v, p)
-        }
-    }
-
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let sel = random::double();
         match self.model {
             0 => {
                 // self.diffuse.scatter(ray_in, rec)
@@ -341,12 +338,39 @@ impl Material for WfMtl {
                 self.diffuse.scatter(ray_in, rec)
             },
             _ => {
-                // TODO(oren): maybe change the ratio?
-                if sel < 0.9 {
-                    self.diffuse.scatter(ray_in, rec)
-                } else {
-                    self.specular.scatter(ray_in, rec)
+                let sel = random::double();
+                let dir = ray_in.dir.unit_vector();
+                let cos_theta = vec3::dot(
+                    dir,
+                    vec3::reflect(dir, rec.norm).unit_vector()
+                );
+                assert!(cos_theta < 1.000_001);
+                let reflect: bool = cos_theta < 0.0;
+                // TODO(oren): actually want reflection probability relative
+                // to the angle between the incident ray and the normal!
+                // let mut sr = if reflect {
+                //     // let diffuse_probability = 1.0 - cos_theta.abs().powf(self.ns);
+                //     let diffuse_probability = 0.95;
+                //     if sel < diffuse_probability {
+                //         self.diffuse.scatter(ray_in, rec)
+                //     } else {
+                //         self.specular.scatter(ray_in, rec)
+                //     }
+                // } else {
+                //     self.diffuse.scatter(ray_in, rec)
+                // }?;
+
+                let mut sr = self.diffuse.scatter(ray_in, rec)?;
+
+                if reflect && sel >= 0.5 {
+                    sr.attenuation = self.specular.albedo.value(rec.u, rec.v, rec.p);
                 }
+
+                sr.attenuation = 0.5 * (
+                    sr.attenuation + self.ambient.value(rec.u, rec.v, rec.p)
+                );
+
+                Some(sr)
             }
         }
 
@@ -394,3 +418,51 @@ impl Material for Corroded {
 
 }
 
+pub struct AnisotropicPhong {
+    pub albedo: Arc<dyn Texture + Sync + Send>,
+    pub specular: Arc<dyn Texture + Sync + Send>,
+}
+
+impl AnisotropicPhong {
+    #[must_use]
+    pub fn new(albedo: Arc<dyn Texture + Sync + Send>,
+               specular: Arc<dyn Texture + Sync +Send>) -> Self {
+        Self {
+            albedo, specular
+        }
+    }
+}
+
+impl From<AnisotropicPhong> for Arc<dyn Material + Sync + Send> {
+    fn from(mm: AnisotropicPhong) -> Arc<dyn Material + Sync + Send> {
+        Arc::new(mm)
+    }
+}
+
+impl Material for AnisotropicPhong {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let pdf: Arc<dyn PDensityFn + Sync + Send> =
+            PhongPDF::new(ray_in.dir, rec.shading_geo.n).into();
+        let mut sr = ScatterRecord {
+            specular_ray: None,
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            specular_color: Some(self.specular.value(rec.u, rec.v, rec.p)),
+            pdf: pdf.clone()
+        };
+        let dir = pdf.generate(&mut sr);
+        sr.specular_ray = Some(Ray::new(
+            rec.p, dir, ray_in.time,
+        ));
+        Some(sr)
+    }
+
+    fn scattering_pdf(&self, _ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        // Extremely wrong
+        let cosine = vec3::dot(rec.shading_geo.n, scattered.dir.unit_vector());
+        if cosine < 0.0 {
+            0.0
+        } else {
+            cosine / PI
+        }
+    }
+}

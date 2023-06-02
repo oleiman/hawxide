@@ -105,8 +105,8 @@ impl WfObject {
                 ), 0.0, 1.0
             ).into());
         }
-        eprintln!("{}: N: {}, V: {}",
-                  fname.as_ref().display(), n_total, v_total );
+        eprintln!("{}: N: {}, V: {}, models: {}",
+                  fname.as_ref().display(), n_total, v_total, models.len());
         result
     }
 
@@ -136,13 +136,15 @@ impl WfObject {
             ).into();
         }
 
+        // Lambertian::new(dc).into()
         match mm.illumination_model {
             Some(x) => {
                 WfMtl::new(
-                    x,
+                    x, ns,
                     Lambertian::new(dc),
-                    Metal::new(sc, 1.0 - ns / 1000.0),
-                    DiffuseLight::new(ac),
+                    // Metal::new(sc, 1.0 - ns / 1000.0),
+                    Metal::new(sc, 0.0),
+                    texture::SolidColor::new(ac),
                 ).into()
             },
             _ => {

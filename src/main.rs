@@ -19,7 +19,7 @@ fn ray_color(r: &Ray,
     }
     if let Some(hr) = scene.world.hit(r, 0.001, INFINITY) {
         let emitted = hr.mat.emitted(r, &hr, hr.u, hr.v, hr.p);
-        if let Some(sr) =  hr.mat.scatter(r, &hr) {
+        if let Some(mut sr) =  hr.mat.scatter(r, &hr) {
             if let Some(spec_r) = sr.specular_ray {
                 return sr.attenuation
                     * ray_color(&spec_r, scene, depth - 1);
@@ -30,11 +30,10 @@ fn ray_color(r: &Ray,
                 HittablePDF::new(scene.lights.clone(), hr.p).into()
             };
             let mix_pdf = MixturePDF::new(light_pdf.clone(), sr.pdf.clone());
-            let scattered = Ray::new(hr.p, mix_pdf.generate(), r.time);
+            let scattered = Ray::new(hr.p, mix_pdf.generate(&mut sr), r.time);
             let pdf_val = mix_pdf.value(scattered.dir);
 
             assert!(pdf_val > 0.0, "PDF val {:4} < 0; p: {}", pdf_val, hr.p);
-
 
             emitted +
                 sr.attenuation *
@@ -112,6 +111,8 @@ fn main() {
         ),
         16 => scene::defs::tree(),
         17 => scene::defs::purple_flower(),
+        18 => scene::defs::mori(),
+        19 => scene::defs::mitsuba(),
         _ => scene::defs::final_scene()
     };
 

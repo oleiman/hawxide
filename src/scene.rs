@@ -17,7 +17,11 @@ pub mod defs {
     use crate::vec3::{Point3,Color,Vec3};
     use crate::texture;
     use crate::texture::Texture;
-    use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal, Corroded};
+    use crate::material::{
+        Dielectric, DiffuseLight, Lambertian,
+        Material, Metal, Corroded,
+        AnisotropicPhong,
+    };
     use crate::sphere::Sphere;
     use crate::cylinder::Cylinder;
     use crate::disk::Disk;
@@ -278,7 +282,7 @@ pub mod defs {
             Dielectric::new(1.5, 0.005, COPPER).into()
         ).into();
         copper = Lambertian::new(COPPER).into();
-        copper = Metal::new(COPPER, 0.2).into();
+        // copper = Metal::new(COPPER, 0.2).into();
 
         let pertext: Arc<dyn Texture + Sync + Send> =
             texture::Marble::with_point_scaling(1.0, 10.0).into();
@@ -299,9 +303,16 @@ pub mod defs {
         box1 = Rotate::rotate_y(box1, 15.0).into();
         box1 = Translate::new(box1, Vec3(265.0, 0.0, 295.0)).into();
 
+        let phong: Arc<dyn Material + Sync + Send> = AnisotropicPhong::new(
+            texture::SolidColor::new(COPPER).into(),
+            texture::SolidColor::new(WHITE).into(),
+        ).into();
+
         let mut sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
-            Point3(0.0, 0.0, 0.0), 45.0,
-            light.clone(),
+            Point3(0.0, 0.0, 0.0), 90.0,
+            // light.clone(),
+            // copper.clone(),
+            phong.clone(),
         ).into();
 
         // sphere = Rotate::rotate_y(sphere, 180.).into();
@@ -317,7 +328,7 @@ pub mod defs {
 
         let world = HittableList::new(vec![
             box1,
-            cylinder.clone(),
+            // cylinder.clone(),
             sphere.clone(),
             cbox.world,
         ]);
@@ -328,8 +339,10 @@ pub mod defs {
         ]);
 
         Scene {
-            lookfrom: cbox.lookfrom  + Point3(0.0, 0.0, 600.0),
-            lookat: cbox.lookat - Point3(50.0, 100.0, 0.0),
+            lookfrom: cbox.lookfrom  // + Point3(0.0, 0.0, 600.0)
+                ,
+            lookat: cbox.lookat // - Point3(50.0, 100.0, 0.0)
+                ,
             background: cbox.background,
             vfov: cbox.vfov,
             world: world.into(),
@@ -1222,4 +1235,65 @@ pub mod defs {
         }
     }
 
+    pub fn mori() -> Scene {
+        let background = Color(0.0, 0.0, 0.0);
+        let lookfrom = Point3(-1.0, 1.8, -5.0);
+        let lookat = Point3(0.0, 0.0, 0.0);
+        let vfov = 40.0;
+
+        let white: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(GREEN).into();
+
+        let light: Arc<dyn Material + Sync + Send> =
+            DiffuseLight::new(Color(10.0, 10.0, 10.0)).into();
+
+        let light_panel: Arc<dyn Hittable + Sync + Send> = AARect::xz_rect(
+            -3.0, 3.0, -3.0, 3.0, 4.0, light.clone()
+        ).into();
+
+        let mut mori: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new("data/mori/testObj.obj", 1.0, white.into()).into();
+
+        // mori = Rotate::rotate_y(mori, 180.0).into();
+
+        let world = HittableList::new(vec![
+            mori, FlipFace::new(light_panel.clone()).into()
+        ]);
+
+        Scene {
+            lookfrom, lookat, background, vfov, world: world.into(),
+            lights: HittableList::new(vec![light_panel]).into()
+        }
+    }
+
+    pub fn mitsuba() -> Scene {
+        let background = Color(0.0, 0.0, 0.0);
+        let lookfrom = Point3(2.0, 6.0, 12.0);
+        let lookat = Point3(0.0, 0.0, 0.0);
+        let vfov = 40.0;
+
+        let white: Arc<dyn Material + Sync + Send> =
+            Lambertian::new(GREEN).into();
+
+        let light: Arc<dyn Material + Sync + Send> =
+            DiffuseLight::new(Color(15.0, 15.0, 15.0)).into();
+
+        let light_panel: Arc<dyn Hittable + Sync + Send> = AARect::xz_rect(
+            -2.0, 2.0, -2.0, 2.0, 10.0, light.clone()
+        ).into();
+
+        let mut mitsuba: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new("tmp/mitsuba/mitsuba.obj", 1.0, white.into()).into();
+
+        // mitsuba = Rotate::rotate_y(mitsuba, 180.0).into();
+
+        let world = HittableList::new(vec![
+            mitsuba, FlipFace::new(light_panel.clone()).into()
+        ]);
+
+        Scene {
+            lookfrom, lookat, background, vfov, world: world.into(),
+            lights: HittableList::new(vec![light_panel]).into()
+        }
+    }
 }

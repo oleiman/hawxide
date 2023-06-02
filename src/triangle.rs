@@ -122,8 +122,10 @@ impl Hittable for Triangle {
 
         // if we want to do culling, we would discard intersections on one side
         // i.e. discard if determinant is l.t. epsilon
-        // if det.abs() < 0.000_001 {
-        if det < 0.000_001 {
+        // NOTE(oren): doesn't seem to be much of a performance hit either way, so
+        // may as well keep everything I guess? 
+        if det.abs() < 0.000_001 {
+        // if det < 0.000_001 {
             return None;
         }
 
@@ -198,9 +200,13 @@ impl Hittable for Triangle {
             c.z()
         );
 
+        // Adjust the bounding box to account for situations where the triangle is
+        // alligned to some axis. More efficient approach would be to subtract off a
+        // fraction of the geometric normal, but we're not storing that currently
+        // and the calculation has some cost; might be a wash.
         Some(AABB {
-            min: Point3(min_x, min_y, min_z),
-            max: Point3(max_x, max_y, max_z)
+            min: Point3(min_x, min_y, min_z) - Point3(0.000_001, 0.000_001, 0.000_001),
+            max: Point3(max_x, max_y, max_z) + Point3(0.000_001, 0.000_001, 0.000_001),
         })
     }
 
