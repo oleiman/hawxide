@@ -305,7 +305,8 @@ pub mod defs {
 
         let phong: Arc<dyn Material + Sync + Send> = AnisotropicPhong::new(
             texture::SolidColor::new(COPPER).into(),
-            texture::SolidColor::new(WHITE).into(),
+            texture::SolidColor::new(RED).into(),
+            10.0, 500.0,
         ).into();
 
         let mut sphere: Arc<dyn Hittable + Sync + Send> = Sphere::new(
@@ -1202,10 +1203,6 @@ pub mod defs {
         let white: Arc<dyn Material + Sync + Send> = Lambertian::new(WHITE).into();
         let _green: Arc<dyn Material + Sync + Send> = Lambertian::new(GREEN).into();
 
-        // let tex = Lambertian::from_texture(
-        //     texture::Image::new("data/purple_flower/purple_flower_mm_1.jpg").into()
-        // );
-
         let cbox = empty_cornell_box();
 
         let mut flower: Arc<dyn Hittable + Sync + Send> =
@@ -1213,11 +1210,11 @@ pub mod defs {
                 "data/purple_flower/purple_flower_mm.obj",
                 2.0, white.into()).into();
 
-        flower = Rotate::rotate_x(flower, -25.0).into();
-        flower = Rotate::rotate_y(flower, 180.0).into();
+        flower = Rotate::rotate_x(flower, -80.0).into();
+        flower = Rotate::rotate_y(flower, 140.0).into();
 
         flower = Translate::new(
-            flower, Point3(275.0, 200.0, 227.0),
+            flower, Point3(272.0, 272.0, 227.0),
         ).into();
 
         let world = HittableList::new(vec![
@@ -1235,7 +1232,7 @@ pub mod defs {
         }
     }
 
-    pub fn mori() -> Scene {
+    pub fn knob1() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(-1.0, 1.8, -5.0);
         let lookat = Point3(0.0, 0.0, 0.0);
@@ -1245,19 +1242,17 @@ pub mod defs {
             Lambertian::new(GREEN).into();
 
         let light: Arc<dyn Material + Sync + Send> =
-            DiffuseLight::new(Color(10.0, 10.0, 10.0)).into();
+            DiffuseLight::new(Color(15.0, 15.0, 15.0)).into();
 
         let light_panel: Arc<dyn Hittable + Sync + Send> = AARect::xz_rect(
-            -3.0, 3.0, -3.0, 3.0, 4.0, light.clone()
+            -2.0, 2.0, -2.0, 2.0, 4.0, light.clone()
         ).into();
 
-        let mut mori: Arc<dyn Hittable + Sync + Send> =
-            WfObject::new("data/mori/testObj.obj", 1.0, white.into()).into();
-
-        // mori = Rotate::rotate_y(mori, 180.0).into();
+        let mut knob1: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new("data/knob1/testObj.obj", 1.0, white.into()).into();
 
         let world = HittableList::new(vec![
-            mori, FlipFace::new(light_panel.clone()).into()
+            knob1, FlipFace::new(light_panel.clone()).into()
         ]);
 
         Scene {
@@ -1266,7 +1261,7 @@ pub mod defs {
         }
     }
 
-    pub fn mitsuba() -> Scene {
+    pub fn knob2() -> Scene {
         let background = Color(0.0, 0.0, 0.0);
         let lookfrom = Point3(2.0, 6.0, 12.0);
         let lookat = Point3(0.0, 0.0, 0.0);
@@ -1282,13 +1277,11 @@ pub mod defs {
             -2.0, 2.0, -2.0, 2.0, 10.0, light.clone()
         ).into();
 
-        let mut mitsuba: Arc<dyn Hittable + Sync + Send> =
-            WfObject::new("tmp/mitsuba/mitsuba.obj", 1.0, white.into()).into();
-
-        // mitsuba = Rotate::rotate_y(mitsuba, 180.0).into();
+        let mut knob2: Arc<dyn Hittable + Sync + Send> =
+            WfObject::new("data/knob2/mitsuba.obj", 1.0, white.into()).into();
 
         let world = HittableList::new(vec![
-            mitsuba, FlipFace::new(light_panel.clone()).into()
+            knob2, FlipFace::new(light_panel.clone()).into()
         ]);
 
         Scene {

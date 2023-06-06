@@ -246,10 +246,10 @@ pub struct PhongPDF {
 
 impl PhongPDF {
     #[must_use]
-    pub fn new(incident: Vec3, norm: Vec3) -> Self {
+    pub fn new(incident: Vec3, norm: Vec3, nu: f64, nv: f64) -> Self {
         let diffuse = CosPDF::new(norm);
         let specular = PhongSpecularPDF::new(
-            incident.unit_vector(), norm, 1000.0, 1000.0);
+            incident.unit_vector(), norm, nu, nv);
         Self {
             diffuse,
             specular,
@@ -283,10 +283,9 @@ impl PDensityFn for PhongPDF {
         if sel < diffuse_p {
             self.diffuse.generate(sr)
         } else {
-            // eprintln!("specular");
-            sr.attenuation =
-                0.8 * sr.specular_color.unwrap_or(Color(1.0, 1.0, 1.0)) +
-                0.2 * sr.attenuation;
+            sr.attenuation = sr.specular_color.unwrap_or(Color(1.0, 1.0, 1.0));
+                // 0.8 * sr.specular_color.unwrap_or(Color(1.0, 1.0, 1.0)) +
+                // 0.2 * sr.attenuation;
             spec
         }
     }

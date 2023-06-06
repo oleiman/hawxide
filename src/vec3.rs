@@ -315,6 +315,18 @@ impl fmt::Display for Vec3 {
     }
 }
 
+impl From<Vec3> for [f64;3] {
+    fn from(v: Vec3) -> [f64;3] {
+        [v.0, v.1, v.2]
+    }
+}
+
+impl From<[f64;3]> for Vec3 {
+    fn from(a: [f64;3]) -> Vec3 {
+        Vec3(a[0], a[1], a[2])
+    }
+}
+
 #[allow(clippy::cast_possible_truncation)]
 pub fn write_color<W: Write>(writer: &mut W, col : Color, samples_per_pixel : i32) {
     // Divide the color by the number of samples

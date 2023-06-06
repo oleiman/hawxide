@@ -241,6 +241,7 @@ pub struct Image {
     img: DynamicImage,
     width: u32,
     height: u32,
+    k: Color,
 }
 
 
@@ -249,19 +250,19 @@ impl Image {
 
     #[must_use]
     pub fn new<P: AsRef<Path>>(fname: P) -> Self {
+        Self::with_k(fname, Color(1.0, 1.0, 1.0))
+    }
+
+    #[must_use]
+    pub fn with_k<P: AsRef<Path>>(fname: P, k: Color) -> Self {
         let img = image::open(fname.as_ref()).expect("File not found!");
         eprintln!("{} - dimensions: {:?}; color: {:?}",
                   fname.as_ref().display(), img.dimensions(), img.color());
         let (width, height) = img.dimensions();
 
         Self {
-            img, width, height,
+            img, width, height, k,
         }
-    }
-
-    #[must_use]
-    pub fn from_path(path: &Path) -> Self {
-        Self::new(path.to_str().unwrap())
     }
 }
 
@@ -289,7 +290,7 @@ impl Texture for Image {
             Image::COLOR_SCALE * f64::from(pixel[0]),
             Image::COLOR_SCALE * f64::from(pixel[1]),
             Image::COLOR_SCALE * f64::from(pixel[2])
-        )
+        ) * self.k
     }
 }
 

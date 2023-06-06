@@ -111,8 +111,8 @@ fn main() {
         ),
         16 => scene::defs::tree(),
         17 => scene::defs::purple_flower(),
-        18 => scene::defs::mori(),
-        19 => scene::defs::mitsuba(),
+        18 => scene::defs::knob1(),
+        19 => scene::defs::knob2(),
         _ => scene::defs::final_scene()
     };
 

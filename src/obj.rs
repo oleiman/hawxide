@@ -6,8 +6,9 @@ use crate::aabb::AABB;
 use crate::triangle::Triangle;
 use crate::hittable_list::HittableList;
 use crate::bvh::BVHNode;
-use crate::material::{Metal, Lambertian, DiffuseLight, WfMtl};
+use crate::material::{Metal, Lambertian, WfMtl};
 use crate::triangle_mesh::TriangleMesh;
+use crate::texture::Texture;
 use crate::texture;
 
 use tobj;
@@ -110,47 +111,38 @@ impl WfObject {
         result
     }
 
+    fn get_texture(fname: &Option<String>,
+                   dir: &Option<&Path>,
+                   k: Color) -> Arc<dyn Texture + Sync + Send> {
+        if let Some(tx) = &fname {
+            let name = dir.unwrap_or(Path::new(".")).join(tx);
+            texture::Image::with_k(name.as_path(), k).into()
+        } else {
+            texture::SolidColor::new(k).into()
+        }
+    }
+
     fn get_material (mm: &tobj::Material, dir: Option<&Path>) -> Arc<dyn Material + Sync + Send> {
-        let dc = if let Some([r, g, b]) = mm.diffuse {
-            Color(r, g, b)
-        } else {
-            Color(0.8, 0.8, 0.8)
-        };
-        let sc = if let Some([r, g, b]) = mm.specular {
-            Color(r, g, b)
-        } else {
-            Color(1.0, 1.0, 1.0)
-        };
-        let ac = if let Some([r, g, b]) = mm.ambient {
-            Color(r, g, b)
-        } else {
-            Color(0.2, 0.2, 0.2)
-        };
-        let ns = if let Some(ns) = mm.shininess { ns } else { 0.0 };
+        let k_d = mm.diffuse.unwrap_or([0.8, 0.8, 0.8]).into();
+        let k_s = mm.specular.unwrap_or([1.0, 1.0, 1.0]).into();
+        let k_a = mm.ambient.unwrap_or([0.2, 0.2, 0.2]).into();
+        let ns = mm.shininess.unwrap_or(0.0);
 
-        if let Some(tx) = &mm.diffuse_texture {
-            let name = 
-                dir.unwrap_or(Path::new(".")).join(tx);
-            return Lambertian::from_texture(
-                texture::Image::new(name.as_path()).into()
-            ).into();
-        }
+        // TODO(oren): should multiply by the Kd value
+        let diffuse: Arc<dyn Texture + Sync + Send> =
+            Self::get_texture(&mm.diffuse_texture, &dir, k_d);
 
-        // Lambertian::new(dc).into()
-        match mm.illumination_model {
-            Some(x) => {
-                WfMtl::new(
-                    x, ns,
-                    Lambertian::new(dc),
-                    // Metal::new(sc, 1.0 - ns / 1000.0),
-                    Metal::new(sc, 0.0),
-                    texture::SolidColor::new(ac),
-                ).into()
-            },
-            _ => {
-                Lambertian::new(dc).into()
-            },
-        }
+        let specular: Arc<dyn Texture + Sync + Send> =
+            Self::get_texture(&mm.specular_texture, &dir, k_s);
+
+        let ambient: Arc<dyn Texture + Sync + Send> =
+            Self::get_texture(&mm.ambient_texture, &dir, k_a);
+
+        let model = if let Some(m) = mm.illumination_model { m } else { 1 };
+
+        WfMtl::new(
+            model, ns, diffuse, specular, ambient,
+        ).into()
     }
 }
 

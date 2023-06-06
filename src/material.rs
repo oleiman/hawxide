@@ -3,7 +3,7 @@ use crate::hit::HitRecord;
 use crate::vec3::{Color, Vec3, Point3};
 use crate::vec3;
 use crate::util::random;
-use crate::texture::{Texture,FloatTexture,SolidColor,RandomBump,CheckerBump};
+use crate::texture::{Texture,FloatTexture,SolidColor,RandomBump};
 use crate::util::PI;
 use crate::pdf::{PDensityFn,CosPDF,NullPDF,PhongPDF};
 
@@ -298,24 +298,26 @@ impl Material for Isotropic {
 
 pub struct WfMtl {
     pub model: u8,
+    pub phong: AnisotropicPhong,
     pub diffuse: Lambertian,
-    pub specular: Metal,
     pub ns: f64,
-    pub ambient: SolidColor,
+    pub ambient: Arc<dyn Texture + Sync + Send>,
 }
 
 impl WfMtl {
     #[must_use]
     pub fn new(model: u8, ns: f64,
-               diffuse: Lambertian,
-               specular: Metal,
-               ambient: SolidColor) -> WfMtl {
-        // assert!(model <= 2, "Model {} not supported", model);
+               diffuse: Arc<dyn Texture + Sync + Send>,
+               specular: Arc<dyn Texture + Sync + Send>,
+               ambient: Arc<dyn Texture + Sync + Send>) -> WfMtl {
         WfMtl {
-            diffuse,
-            specular,
+            phong: AnisotropicPhong::new(
+                diffuse.clone(), specular.clone(),
+                ns, ns,
+            ),
+            diffuse: Lambertian::from_texture(diffuse.clone()),
             ns,
-            ambient,
+            ambient: ambient.clone(),
             model,
         }
     }
@@ -335,40 +337,17 @@ impl Material for WfMtl {
                 None
             },
             1 => {
-                self.diffuse.scatter(ray_in, rec)
+                let mut sr = self.diffuse.scatter(ray_in, rec)?;
+                // TODO(oren): what's the right intensity here? in general?
+                // I believe this is a property of the light?
+                sr.attenuation = 
+                    0.8 * sr.attenuation + 0.2 * self.ambient.value(rec.u, rec.v, rec.p);
+                Some(sr)
             },
             _ => {
-                let sel = random::double();
-                let dir = ray_in.dir.unit_vector();
-                let cos_theta = vec3::dot(
-                    dir,
-                    vec3::reflect(dir, rec.norm).unit_vector()
-                );
-                assert!(cos_theta < 1.000_001);
-                let reflect: bool = cos_theta < 0.0;
-                // TODO(oren): actually want reflection probability relative
-                // to the angle between the incident ray and the normal!
-                // let mut sr = if reflect {
-                //     // let diffuse_probability = 1.0 - cos_theta.abs().powf(self.ns);
-                //     let diffuse_probability = 0.95;
-                //     if sel < diffuse_probability {
-                //         self.diffuse.scatter(ray_in, rec)
-                //     } else {
-                //         self.specular.scatter(ray_in, rec)
-                //     }
-                // } else {
-                //     self.diffuse.scatter(ray_in, rec)
-                // }?;
-
-                let mut sr = self.diffuse.scatter(ray_in, rec)?;
-
-                if reflect && sel >= 0.5 {
-                    sr.attenuation = self.specular.albedo.value(rec.u, rec.v, rec.p);
-                }
-
-                sr.attenuation = 0.5 * (
-                    sr.attenuation + self.ambient.value(rec.u, rec.v, rec.p)
-                );
+                let mut sr = self.phong.scatter(ray_in, rec)?;
+                sr.attenuation = 
+                    0.5 * sr.attenuation + 0.5 * self.ambient.value(rec.u, rec.v, rec.p);
 
                 Some(sr)
             }
@@ -377,7 +356,11 @@ impl Material for WfMtl {
     }
 
     fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        self.diffuse.scattering_pdf(ray_in, rec, scattered)
+        match self.model {
+            x if x <= 1 => self.diffuse.scattering_pdf(ray_in, rec, scattered),
+            _ => self.phong.scattering_pdf(ray_in, rec, scattered)
+        }
+        // self.diffuse.scattering_pdf(ray_in, rec, scattered)
     }
 }
 
@@ -421,14 +404,17 @@ impl Material for Corroded {
 pub struct AnisotropicPhong {
     pub albedo: Arc<dyn Texture + Sync + Send>,
     pub specular: Arc<dyn Texture + Sync + Send>,
+    nu: f64,
+    nv: f64,
 }
 
 impl AnisotropicPhong {
     #[must_use]
     pub fn new(albedo: Arc<dyn Texture + Sync + Send>,
-               specular: Arc<dyn Texture + Sync +Send>) -> Self {
+               specular: Arc<dyn Texture + Sync +Send>,
+               nu: f64, nv: f64) -> Self {
         Self {
-            albedo, specular
+            albedo, specular, nu, nv,
         }
     }
 }
@@ -442,7 +428,7 @@ impl From<AnisotropicPhong> for Arc<dyn Material + Sync + Send> {
 impl Material for AnisotropicPhong {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let pdf: Arc<dyn PDensityFn + Sync + Send> =
-            PhongPDF::new(ray_in.dir, rec.shading_geo.n).into();
+            PhongPDF::new(ray_in.dir, rec.shading_geo.n, self.nu, self.nv).into();
         let mut sr = ScatterRecord {
             specular_ray: None,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
