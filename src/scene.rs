@@ -1,7 +1,19 @@
 use crate::vec3::{Point3,Color};
-use crate::hit::Hittable;
+use crate::hit::{Hittable, FlipFace};
+use crate::hittable_list::HittableList;
+use crate::texture;
+use crate::texture::Texture;
+use crate::material;
+use crate::material::Material;
+use crate::sphere::Sphere;
+use crate::aarect::AARect;
 
 use std::sync::Arc;
+use std::fs::File;
+use std::io::{Read};
+use std::error::Error;
+use std::collections::hash_map::HashMap;
+use serde_json::{Value, from_value};
 
 pub struct Scene {
     pub lookfrom: Point3,
@@ -10,6 +22,142 @@ pub struct Scene {
     pub vfov: f64,
     pub world: Arc<dyn Hittable + Sync + Send>,
     pub lights: Arc<dyn Hittable + Sync + Send>,
+}
+
+impl Scene {
+    pub fn from_reader<R: Read>(reader: R) -> Result<Scene, Box<dyn Error>> {
+        let s: Value = serde_json::from_reader(reader)?;
+
+        let lookfrom: Point3 = from_value(s["lookfrom"].clone())?;
+        let lookat: Point3 = from_value(s["lookat"].clone())?;
+        let background: Color = from_value(s["background"].clone()).unwrap_or_else(
+            |_e| Color(0.0, 0.0, 0.0)
+        );
+        let vfov: f64 = from_value(s["vfov"].clone()).unwrap_or_else(
+            |_e| 20.0
+        );
+
+        let textures: HashMap<String, Arc<dyn Texture + Sync + Send>> =
+            s["textures"].as_object().unwrap().iter().map(
+                |(name, value)| {
+                    let o = value.as_object().unwrap();
+                    let p = o["params"].as_array().unwrap();
+                    (
+                        name.clone(),
+                        match o["type"].as_str() {
+                            Some("Checker") => {
+                                texture::Checker::new(
+                                    from_value(p[0].clone()).unwrap(),
+                                    from_value(p[1].clone()).unwrap()
+                                ).into()
+                            },
+                            _ => panic!("remove me")
+                        }
+                     )
+                }
+            ).collect();
+
+        let materials: HashMap<String, Arc<dyn Material + Sync + Send>> =
+            s["materials"].as_object().unwrap().iter().map(
+                |(name, value)| {
+                    let o = value.as_object().unwrap();
+                    (
+                        name.clone(),
+                        match o["type"].as_str() {
+                            Some("Lambertian") => {
+                                let t = if let Some(t) = o.get("texture") {
+                                    textures[t.as_str().unwrap()].clone()
+                                } else {
+                                    texture::SolidColor::new(
+                                        from_value(o["color"].clone()).unwrap()
+                                    ).into()
+                                };
+                                material::Lambertian::from_texture(t).into()
+                            }
+                            Some(x) => panic!("Not implemented: {}", x),
+                            None => panic!("Material without type")
+                        }
+                    )
+                }
+            ).collect();
+
+        let mut world = HittableList::new(
+            s["world"].as_array().unwrap().iter().map(
+                |obj| {
+                    let obj = obj.as_object().unwrap();
+                    let mat = obj["material"].as_str().unwrap();
+                    match obj["type"].as_str() {
+                        Some("Sphere") => {
+                            Sphere::new(
+                                from_value(obj["center"].clone()).unwrap(),
+                                from_value(obj["radius"].clone()).unwrap(),
+                                materials[mat].clone()
+                            ).into()
+                        },
+                        Some("AARect") => {
+                            let b = obj["bounds"].as_array().unwrap();
+                            let ctor = match obj["orientation"].as_str().unwrap() {
+                                "yz" => AARect::yz_rect,
+                                "xz" => AARect::xz_rect,
+                                "xy" => AARect::xy_rect,
+                                e => panic!("Invalid orientation: {}", e)
+                            };
+                            ctor(
+                                from_value(b[0].clone()).unwrap(),
+                                from_value(b[1].clone()).unwrap(),
+                                from_value(b[2].clone()).unwrap(),
+                                from_value(b[3].clone()).unwrap(),
+                                from_value(obj["height"].clone()).unwrap(),
+                                materials[mat].clone()
+                            ).into()
+                        },
+                        Some(x) => panic!("Not implemented: {}", x),
+                        None => panic!("Hittable missing type"),
+                    }
+                }
+            ).collect()
+        );
+
+        let lights = HittableList::new(
+            s["lights"].as_array().unwrap().iter().map(
+                |obj| {
+                    let obj = obj.as_object().unwrap();
+                    let mat = material::DiffuseLight::new(
+                        Color(1.0, 1.0, 1.0) *
+                            from_value::<f64>(obj["intensity"].clone()).unwrap());
+                     match obj["type"].as_str() {
+                        Some("AARect") => {
+                            let b = obj["bounds"].as_array().unwrap();
+                            let ctor = match obj["orientation"].as_str().unwrap() {
+                                "yz" => AARect::yz_rect,
+                                "xz" => AARect::xz_rect,
+                                "xy" => AARect::xy_rect,
+                                e => panic!("Invalid orientation: {}", e)
+                            };
+                            let h : Arc<dyn Hittable + Sync + Send> = ctor(
+                                from_value(b[0].clone()).unwrap(),
+                                from_value(b[1].clone()).unwrap(),
+                                from_value(b[2].clone()).unwrap(),
+                                from_value(b[3].clone()).unwrap(),
+                                from_value(obj["height"].clone()).unwrap(),
+                                mat.into()
+                            ).into();
+                            world.add(FlipFace::new(h.clone()).into());
+                            h
+                        },
+                        Some(x) => panic!("Not implemented: {}", x),
+                        None => panic!("Light missing type"),
+                    }
+                }
+            ).collect()
+        );
+
+        Ok(Scene{
+            lookfrom, lookat, background, vfov,
+            world: world.into(),
+            lights: lights.into()
+        })
+    }
 }
 
 pub mod defs {

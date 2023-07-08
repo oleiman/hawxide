@@ -9,7 +9,9 @@ use crate::util::{
     clamp, PI,
 };
 
-#[derive(Copy, Clone, Default)]
+use serde::{Deserialize};
+
+#[derive(Copy, Clone, Default, Deserialize)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 pub type Point3 = Vec3;

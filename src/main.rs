@@ -7,7 +7,7 @@ use hawxide::{
 use pdf::{HittablePDF, MixturePDF};
 
 use std::fs::File;
-use std::io::{Write, BufWriter};
+use std::io::{Write, BufWriter, BufReader};
 use rayon::prelude::*;
 use clap::Parser;
 
@@ -72,6 +72,10 @@ struct Cli {
     #[arg(short, long, default_value_t = 3)]
     scene: usize,
 
+    /// JSON representation of a scene
+    #[arg(short = 'j', long)]
+    json: Option<std::path::PathBuf>,
+
     /// Output file (stdout if omitted)
     #[arg(short, long)]
     outfile: Option<std::path::PathBuf>,
@@ -91,29 +95,36 @@ fn main() {
     let samples_per_pixel = args.samples;
     let scene_select = args.scene;
 
-    let scene = match scene_select {
-        1 => scene::defs::random_scene(),
-        2 => scene::defs::two_spheres(),
-        3 =>scene::defs::cornell_sphere(),
-        4 => scene::defs::cornell_box(),
-        5 => scene::defs::two_perlin_spheres(),
-        6 => scene::defs::earth(),
-        7 => scene::defs::simple_light(),
-        8 => scene::defs::cornell_smoke(),
-        9 => scene::defs::fancy_random_scene(),
-        10 => scene::defs::wacky_cornell_box(),
-        11 => scene::defs::subsurface_perlin_spheres(),
-        12 => scene::defs::solids(),
-        13 => scene::defs::noise_experiments(),
-        14 => scene::defs::teapot(),
-        15 => scene::defs::obj_in_cornell_box(
-            "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
-        ),
-        16 => scene::defs::tree(),
-        17 => scene::defs::purple_flower(),
-        18 => scene::defs::knob1(),
-        19 => scene::defs::knob2(),
-        _ => scene::defs::final_scene()
+    let scene = if let Some(fname) = args.json {
+        eprintln!("Loading JSON scene: {}", fname.display());
+        let f = File::open(fname).expect("Could not open file");
+        let reader = BufReader::new(f);
+        scene::Scene::from_reader(reader).expect("Json parse error")
+    } else {
+        match scene_select {
+            1 => scene::defs::random_scene(),
+            2 => scene::defs::two_spheres(),
+            3 =>scene::defs::cornell_sphere(),
+            4 => scene::defs::cornell_box(),
+            5 => scene::defs::two_perlin_spheres(),
+            6 => scene::defs::earth(),
+            7 => scene::defs::simple_light(),
+            8 => scene::defs::cornell_smoke(),
+            9 => scene::defs::fancy_random_scene(),
+            10 => scene::defs::wacky_cornell_box(),
+            11 => scene::defs::subsurface_perlin_spheres(),
+            12 => scene::defs::solids(),
+            13 => scene::defs::noise_experiments(),
+            14 => scene::defs::teapot(),
+            15 => scene::defs::obj_in_cornell_box(
+                "data/al.obj", 60.0, Vec3(272.0, 272.0, 272.0)
+            ),
+            16 => scene::defs::tree(),
+            17 => scene::defs::purple_flower(),
+            18 => scene::defs::knob1(),
+            19 => scene::defs::knob2(),
+            _ => scene::defs::final_scene()
+        }
     };
 
     #[allow(clippy::cast_possible_truncation)]
